@@ -39,6 +39,13 @@
     "directSubtitle": "Sélectionnez les commandes ouvertes du fournisseur, complétez l'entrepôt, la quantité, l'emplacement et les informations de lot/série, puis finalisez la réception physique en un seul flux.",
     "directPageTitle": "Saisie de réception de marchandises",
     "directPageHintAria": "À propos de la saisie de réception de marchandises",
+    "importSubtitle": "Sélectionnez les commandes ouvertes du fournisseur, complétez l'entrepôt, la quantité, l'emplacement et les informations de lot/série, puis finalisez la réception physique en un seul flux.",
+    "importPageTitle": "Saisie de réception import",
+    "importPageHintAria": "À propos de la saisie de réception import",
+    "importCustomer": "Sélection du dossier d'importation",
+    "importSelectCustomer": "Sélectionner un dossier d'importation...",
+    "importSearchCustomer": "Rechercher un code / nom de dossier d'importation…",
+    "importCustomerEmpty": "Aucun dossier d'importation trouvé.",
     "orderlessSubtitle": "Créez une tâche de réception planifiée et une affectation sans la lier à une commande d'achat.",
     "orderlessPageTitle": "Tâche de réception sans commande",
     "orderlessPageHintAria": "À propos de la tâche de réception sans commande",
@@ -1128,6 +1135,10 @@
       "direct": {
         "title": "Réception directe de marchandises",
         "description": "Enregistrez une réception sans tâche de façon atomique, avec qualité, quarantaine et mouvement de stock."
+      },
+      "import": {
+        "title": "Réception import",
+        "description": "Enregistrez une réception d'import avec qualité, quarantaine et mouvement de stock dans un seul flux."
       },
       "tasks": {
         "title": "Gestion des tâches",

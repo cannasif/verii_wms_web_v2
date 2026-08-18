@@ -39,6 +39,13 @@
     "directSubtitle": "Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin.",
     "directPageTitle": "Mal kabul girişi",
     "directPageHintAria": "Mal kabul girişi hakkında",
+    "importSubtitle": "Tedarikçinin açık siparişlerini seçin; kabul deposu, miktar, raf ve lot/seri bilgisini tamamlayıp fiziksel kabulü tek akışta bitirin.",
+    "importPageTitle": "İthalat mal kabul girişi",
+    "importPageHintAria": "İthalat mal kabul girişi hakkında",
+    "importCustomer": "İthalat dosya seçimi",
+    "importSelectCustomer": "İthalat dosyası seçin...",
+    "importSearchCustomer": "İthalat dosya kod / ad ara…",
+    "importCustomerEmpty": "İthalat dosyası bulunamadı.",
     "orderlessSubtitle": "Sipariş bağlantısı olmadan planlı kabul emri ve görev oluşturun.",
     "orderlessPageTitle": "Siparişsiz mal kabul emri",
     "orderlessPageHintAria": "Siparişsiz mal kabul emri hakkında",
@@ -1175,6 +1182,10 @@
       "direct": {
         "title": "Yurt İçi Mal Kabul",
         "description": "Emirsiz kabulü kalite, karantina ve stok hareketiyle atomik kaydedin."
+      },
+      "import": {
+        "title": "İthalat Mal Kabul",
+        "description": "İthalat kabulünü kalite, karantina ve stok hareketiyle aynı akışta kaydedin."
       },
       "tasks": {
         "title": "Emir Yönetimi",

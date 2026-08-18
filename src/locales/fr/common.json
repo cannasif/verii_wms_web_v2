@@ -590,6 +590,7 @@
     "goodsReceiptHub": "Centre de processus",
     "goodsReceiptOrderless": "Réception sans commande",
     "goodsReceiptDirect": "Réception directe",
+    "goodsReceiptImport": "Réception import",
     "goodsReceiptTasks": "Gestion des ordres",
     "goodsReceiptLabels": "Étiquettes préalables",
     "goodsReceiptSettings": "Paramètres du processus de réception",
@@ -5861,6 +5862,7 @@
   },
   "operationNames": {
     "goodsReceiptDirect": "réception directe",
+    "goodsReceiptImport": "réception import",
     "steelReceiptDirect": "bon de livraison d'achat SAC",
     "steelReceiptPlacement": "placement en rayon SAC",
     "warehouseInboundDirect": "entrée d'entrepôt directe",

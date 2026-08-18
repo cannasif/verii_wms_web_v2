@@ -582,6 +582,20 @@ export function GoodsReceiptDirectPage(): ReactElement {
     </GoodsReceiptOpsPageShell>
   );
 }
+
+export function GoodsReceiptImportPage(): ReactElement {
+  const { t } = useModuleTranslation('goods-receipt-v2');
+  return (
+    <GoodsReceiptOpsPageShell
+      title={t('createFlow.importPageTitle')}
+      hint={t('createFlow.importSubtitle')}
+      hintAria={t('createFlow.importPageHintAria')}
+    >
+      <GoodsReceiptCreatePage direct embedded importReceipt />
+    </GoodsReceiptOpsPageShell>
+  );
+}
+
 function Stepper({ steps, current, ariaLabel }: { steps: Array<{label:string;icon:typeof FileText}>; current:number; ariaLabel:string }): ReactElement {
   return (
     <nav className="wms-ops-create-steps wms-ops-create-steps--four" aria-label={ariaLabel}>

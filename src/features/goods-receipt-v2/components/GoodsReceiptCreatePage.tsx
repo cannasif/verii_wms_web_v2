@@ -76,6 +76,7 @@ import { OperationDraftRestoreDialog } from "@/features/operation-drafts/Operati
 import { useOperationDraft } from "@/features/operation-drafts/useOperationDraft";
 import type { PagedResponse } from "@/types/api";
 import { goodsReceiptV2Api } from "../api/goods-receipt.api";
+import { importGoodsReceiptApi } from "../api/import-goods-receipt.api";
 import {
   appendDirectLineSearchToken,
   filterVisibleDirectOrderLines,
@@ -431,9 +432,11 @@ function moveReceiptLineTab(
 export function GoodsReceiptCreatePage({
   direct = false,
   embedded = false,
+  importReceipt = false,
 }: {
   direct?: boolean;
   embedded?: boolean;
+  importReceipt?: boolean;
 } = {}): ReactElement {
   const { t, moduleReady } = useModuleTranslation("goods-receipt-v2");
   const { skin } = useTheme();
@@ -768,7 +771,7 @@ export function GoodsReceiptCreatePage({
     setError(null);
   }, []);
   const operationDraft = useOperationDraft({
-    operationType: "goods-receipt-direct",
+    operationType: importReceipt ? "goods-receipt-import" : "goods-receipt-direct",
     userId,
     branchCode,
     payload: draftPayload,
@@ -1819,7 +1822,7 @@ export function GoodsReceiptCreatePage({
         assignedUserIds: direct ? null : assignees.map((user) => user.id),
       };
       const created = direct
-        ? await goodsReceiptV2Api.createDirect({
+        ? await (importReceipt ? importGoodsReceiptApi : goodsReceiptV2Api).createDirect({
           ...commonPayload,
           executionMode: labelStrategy === "SupplierLabel" ? "SupplierLabel" : "Manual",
           deviceId: null,
@@ -1890,7 +1893,9 @@ export function GoodsReceiptCreatePage({
       setSubmitOverlay(null);
       setResult(created);
       await operationDraft.clearDraft();
-      toast.success(`${t("created")}: ${receiptNo}`);
+      if (!importReceipt) {
+        toast.success(`${t("created")}: ${receiptNo}`);
+      }
     } catch (cause) {
       const message =
         cause instanceof Error
@@ -2029,7 +2034,11 @@ export function GoodsReceiptCreatePage({
     <section className="wms-ops-form space-y-5">
       <OperationDraftRestoreDialog
         open={operationDraft.restoreDialogOpen}
-        operationName={t('operationNames.goodsReceiptDirect')}
+        operationName={t(
+          importReceipt
+            ? "operationNames.goodsReceiptImport"
+            : "operationNames.goodsReceiptDirect",
+        )}
         updatedAt={operationDraft.pendingDraft?.updatedAt}
         onRestore={operationDraft.restoreDraft}
         onDiscard={operationDraft.discardDraft}
@@ -2118,7 +2127,7 @@ export function GoodsReceiptCreatePage({
             <div className="wms-ops-order-lookup-grid mb-5">
               <div className="wms-ops-order-lookup">
                 <label className="wms-ops-entry-label mb-1.5 block">
-                  {t("customer")} <span className="text-red-500">*</span>
+                  {t(importReceipt ? "createFlow.importCustomer" : "customer")} <span className="text-red-500">*</span>
                 </label>
                 <div className="wms-ops-order-lookup__row">
                   <div className="wms-ops-order-lookup__field min-w-0 flex-1">
@@ -2128,11 +2137,11 @@ export function GoodsReceiptCreatePage({
                       autoSearchMinLength={CUSTOMER_LOOKUP_MIN_LEN}
                       open={customerLookupOpen}
                       onOpenChange={setCustomerLookupOpen}
-                      title={t("selectCustomer")}
+                      title={t(importReceipt ? "createFlow.importSelectCustomer" : "selectCustomer")}
                       value={customerDisplay}
-                      placeholder={t("selectCustomer")}
-                      searchPlaceholder={t("searchCustomer")}
-                      emptyText={t("customerEmpty")}
+                      placeholder={t(importReceipt ? "createFlow.importSelectCustomer" : "selectCustomer")}
+                      searchPlaceholder={t(importReceipt ? "createFlow.importSearchCustomer" : "searchCustomer")}
+                      emptyText={t(importReceipt ? "createFlow.importCustomerEmpty" : "customerEmpty")}
                       triggerClassName={OPS_FIELD_CLASS}
                       queryKey={["gr-customers-lookup", branchCode]}
                       fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
@@ -2185,6 +2194,7 @@ export function GoodsReceiptCreatePage({
                 </div>
               </div>
 
+              {!importReceipt ? (
               <div className="wms-ops-order-lookup">
                 <div className="mb-1.5 flex items-center gap-1.5">
                   <span className="wms-ops-entry-label">
@@ -2244,6 +2254,7 @@ export function GoodsReceiptCreatePage({
                   </OpsActionButton>
                 </div>
               </div>
+              ) : null}
             </div>
 
             {direct && (
@@ -3146,6 +3157,7 @@ export function GoodsReceiptCreatePage({
                 isElectronicReceipt={isElectronicReceipt}
                 receiptLines={receiptLines}
                 qualityLines={qualityLines}
+                hideRoutingActions={importReceipt}
                 onNew={() => {
                   setResult(null);
                   setStep(0);

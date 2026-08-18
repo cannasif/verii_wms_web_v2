@@ -116,6 +116,7 @@ const routePreloaders: Array<[prefix: string, load: () => Promise<unknown>]> = [
   ['/warehouse/goods-receipts/labels', loadGoodsReceiptLabelsPage],
   ['/warehouse/goods-receipts/orderless', loadGoodsReceiptManualPage],
   ['/warehouse/goods-receipts/direct', loadGoodsReceiptManualPage],
+  ['/warehouse/goods-receipts/import', loadGoodsReceiptManualPage],
   ['/warehouse/goods-receipts/list', loadGoodsReceiptListPage],
   ['/warehouse/goods-receipts/new', loadGoodsReceiptCreatePage],
   ['/warehouse/goods-receipts/success-preview', loadGoodsReceiptCreatePage],

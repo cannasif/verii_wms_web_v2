@@ -665,6 +665,7 @@
     "goodsReceiptHub": "Süreç Merkezi",
     "goodsReceiptOrderless": "Siparişsiz Emir",
     "goodsReceiptDirect": "Yurt İçi Mal Kabul",
+    "goodsReceiptImport": "İthalat Mal Kabul",
     "goodsReceiptTasks": "Emir Yönetimi",
     "goodsReceiptLabels": "Ön Etiketler",
     "goodsReceiptSettings": "Mal Kabul Süreç Ayarları",
@@ -7615,6 +7616,7 @@
   },
   "operationNames": {
     "goodsReceiptDirect": "yurt içi mal kabul",
+    "goodsReceiptImport": "ithalat mal kabul",
     "steelReceiptDirect": "SAC alış irsaliyesi",
     "steelReceiptPlacement": "SAC raf yerleştirme",
     "warehouseInboundDirect": "doğrudan ambar giriş",

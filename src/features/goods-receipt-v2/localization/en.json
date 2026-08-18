@@ -39,6 +39,13 @@
     "directSubtitle": "Select the supplier's open orders, complete warehouse, quantity, shelf and lot/serial details, and finish physical receipt in one flow.",
     "directPageTitle": "Goods receipt entry",
     "directPageHintAria": "About goods receipt entry",
+    "importSubtitle": "Select the supplier's open orders, complete warehouse, quantity, shelf and lot/serial details, and finish physical receipt in one flow.",
+    "importPageTitle": "Import goods receipt entry",
+    "importPageHintAria": "About import goods receipt entry",
+    "importCustomer": "Import file selection",
+    "importSelectCustomer": "Select import file...",
+    "importSearchCustomer": "Search import file code / name…",
+    "importCustomerEmpty": "No import file found.",
     "orderlessSubtitle": "Create a planned receipt task and assignment without linking to a purchase order.",
     "orderlessPageTitle": "Orderless goods receipt task",
     "orderlessPageHintAria": "About orderless goods receipt task",
@@ -1175,6 +1182,10 @@
       "direct": {
         "title": "Direct Goods Receipt",
         "description": "Post a taskless receipt atomically with quality, quarantine and inventory movement."
+      },
+      "import": {
+        "title": "Import Goods Receipt",
+        "description": "Post an import receipt with quality, quarantine and inventory movement in one flow."
       },
       "tasks": {
         "title": "Task Management",

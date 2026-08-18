@@ -39,6 +39,13 @@
     "directSubtitle": "Seleziona gli ordini aperti del fornitore, completa i dettagli di magazzino, quantità, scaffale e lotto/seriale, e concludi il ricevimento fisico in un unico flusso.",
     "directPageTitle": "Inserimento ricevimento merci",
     "directPageHintAria": "Informazioni sull'inserimento del ricevimento merci",
+    "importSubtitle": "Seleziona gli ordini aperti del fornitore, completa i dettagli di magazzino, quantità, scaffale e lotto/seriale, e concludi il ricevimento fisico in un unico flusso.",
+    "importPageTitle": "Inserimento ricevimento importazione",
+    "importPageHintAria": "Informazioni sull'inserimento del ricevimento importazione",
+    "importCustomer": "Selezione file di importazione",
+    "importSelectCustomer": "Seleziona file di importazione...",
+    "importSearchCustomer": "Cerca codice / nome file di importazione…",
+    "importCustomerEmpty": "Nessun file di importazione trovato.",
     "orderlessSubtitle": "Crea un'attività di ricevimento pianificata e un'assegnazione senza collegarla a un ordine di acquisto.",
     "orderlessPageTitle": "Attività di ricevimento merci senza ordine",
     "orderlessPageHintAria": "Informazioni sull'attività di ricevimento merci senza ordine",
@@ -1128,6 +1135,10 @@
       "direct": {
         "title": "Ricevimento merci diretto",
         "description": "Registra un ricevimento senza attività in modo atomico con qualità, quarantena e movimento di magazzino."
+      },
+      "import": {
+        "title": "Ricevimento importazione",
+        "description": "Registra un ricevimento di importazione con qualità, quarantena e movimento di magazzino in un unico flusso."
       },
       "tasks": {
         "title": "Gestione attività",

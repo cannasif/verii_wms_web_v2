@@ -665,6 +665,7 @@
     "goodsReceiptHub": "Process Center",
     "goodsReceiptOrderless": "Orderless Receipt",
     "goodsReceiptDirect": "Direct Goods Receipt",
+    "goodsReceiptImport": "Import Goods Receipt",
     "goodsReceiptTasks": "Order Management",
     "goodsReceiptLabels": "Pre-Labels",
     "goodsReceiptSettings": "Goods Receipt Process Settings",
@@ -7582,6 +7583,7 @@
   },
   "operationNames": {
     "goodsReceiptDirect": "direct goods receipt",
+    "goodsReceiptImport": "import goods receipt",
     "steelReceiptDirect": "SAC purchase waybill",
     "steelReceiptPlacement": "SAC shelf placement",
     "warehouseInboundDirect": "direct warehouse inbound",

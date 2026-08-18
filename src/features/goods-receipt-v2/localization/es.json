@@ -39,6 +39,13 @@
     "directSubtitle": "Seleccione los pedidos abiertos del proveedor, complete los datos de almacén, cantidad, estantería y lote/serie, y finalice la recepción física en un solo flujo.",
     "directPageTitle": "Entrada de recepción de mercancía",
     "directPageHintAria": "Acerca de la entrada de recepción de mercancía",
+    "importSubtitle": "Seleccione los pedidos abiertos del proveedor, complete los datos de almacén, cantidad, estantería y lote/serie, y finalice la recepción física en un solo flujo.",
+    "importPageTitle": "Entrada de recepción de importación",
+    "importPageHintAria": "Acerca de la entrada de recepción de importación",
+    "importCustomer": "Selección de expediente de importación",
+    "importSelectCustomer": "Seleccionar expediente de importación...",
+    "importSearchCustomer": "Buscar código / nombre de expediente de importación…",
+    "importCustomerEmpty": "No se encontró ningún expediente de importación.",
     "orderlessSubtitle": "Cree una tarea de recepción planificada y una asignación sin vincularla a un pedido de compra.",
     "orderlessPageTitle": "Tarea de recepción de mercancía sin pedido",
     "orderlessPageHintAria": "Acerca de la tarea de recepción de mercancía sin pedido",
@@ -1128,6 +1135,10 @@
       "direct": {
         "title": "Recepción directa de mercancía",
         "description": "Registre una recepción sin tarea de forma atómica junto con la calidad, la cuarentena y el movimiento de inventario."
+      },
+      "import": {
+        "title": "Recepción de importación",
+        "description": "Registre una recepción de importación con calidad, cuarentena y movimiento de inventario en un solo flujo."
       },
       "tasks": {
         "title": "Gestión de tareas",

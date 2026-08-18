@@ -78,6 +78,7 @@ const GoodsReceiptTasksPage = lazy(() => loadGoodsReceiptAssignedTasksPage().the
 const GoodsReceiptCreatePage = lazy(() => loadGoodsReceiptCreatePage().then((m) => ({ default: m.GoodsReceiptCreatePage })));
 const GoodsReceiptSuccessPreviewPage = lazy(() => loadGoodsReceiptCreatePage().then((m) => ({ default: m.GoodsReceiptSuccessPreviewPage })));
 const GoodsReceiptDirectPage = lazy(() => loadGoodsReceiptManualPage().then((m) => ({ default: m.GoodsReceiptDirectPage })));
+const GoodsReceiptImportPage = lazy(() => loadGoodsReceiptManualPage().then((m) => ({ default: m.GoodsReceiptImportPage })));
 const GoodsReceiptOrderlessPage = lazy(() => loadGoodsReceiptManualPage().then((m) => ({ default: m.GoodsReceiptOrderlessPage })));
 const GoodsReceiptHubPage = lazy(() => loadGoodsReceiptHubPage().then((m) => ({ default: m.GoodsReceiptHubPage })));
 const GoodsReceiptLabelsPage = lazy(() => loadGoodsReceiptLabelsPage().then((m) => ({ default: m.GoodsReceiptLabelsPage })));
@@ -306,6 +307,7 @@ export function App(): ReactElement {
           <Route path="warehouse/goods-receipts/new" element={<GoodsReceiptCreatePage />} />
           <Route path="warehouse/goods-receipts/orderless" element={<GoodsReceiptOrderlessPage />} />
           <Route path="warehouse/goods-receipts/direct" element={<GoodsReceiptDirectPage />} />
+          <Route path="warehouse/goods-receipts/import" element={<GoodsReceiptImportPage />} />
           <Route path="warehouse/goods-receipts/success-preview" element={<GoodsReceiptSuccessPreviewPage />} />
           <Route path="warehouse/goods-receipts/list" element={<GoodsReceiptListPage />} />
           <Route path="warehouse/incoming-invoices" element={<IncomingInvoiceArchivePage />} />

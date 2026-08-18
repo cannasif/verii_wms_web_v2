@@ -16,6 +16,7 @@ export function GoodsReceiptHubPage() {
         { key: 'ordered', code: 'GR.ORD', href: '/warehouse/goods-receipts/new', icon: ClipboardList, title: t('hub.cards.ordered.title'), description: t('hub.cards.ordered.description') },
         { key: 'orderless', code: 'GR.OLS', href: '/warehouse/goods-receipts/orderless', icon: PackagePlus, title: t('hub.cards.orderless.title'), description: t('hub.cards.orderless.description') },
         { key: 'direct', code: 'GR.DIR', href: '/warehouse/goods-receipts/direct', icon: PackageCheck, title: t('hub.cards.direct.title'), description: t('hub.cards.direct.description') },
+        { key: 'import', code: 'GR.IMP', href: '/warehouse/goods-receipts/import', icon: PackageCheck, title: t('hub.cards.import.title'), description: t('hub.cards.import.description') },
       ],
     },
     {

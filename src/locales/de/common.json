@@ -629,6 +629,7 @@
     "goodsReceiptHub": "Prozesszentrum",
     "goodsReceiptOrderless": "Wareneingang ohne Auftrag",
     "goodsReceiptDirect": "Direkter Wareneingang",
+    "goodsReceiptImport": "Import-Wareneingang",
     "goodsReceiptTasks": "Auftragsverwaltung",
     "goodsReceiptLabels": "Vor-Etiketten",
     "goodsReceiptSettings": "Wareneingangs-Prozesseinstellungen",
@@ -7172,6 +7173,7 @@
   },
   "operationNames": {
     "goodsReceiptDirect": "direkter Wareneingang",
+    "goodsReceiptImport": "import-wareneingang",
     "steelReceiptDirect": "SAC-Einkaufslieferschein",
     "steelReceiptPlacement": "SAC-Regaleinlagerung",
     "warehouseInboundDirect": "direkter Lagerzugang",

@@ -535,6 +535,7 @@
     "goodsReceiptHub": "مركز العمليات",
     "goodsReceiptOrderless": "استلام بدون طلب",
     "goodsReceiptDirect": "استلام مباشر",
+    "goodsReceiptImport": "استلام واردات",
     "goodsReceiptTasks": "إدارة الأوامر",
     "goodsReceiptLabels": "ملصقات مسبقة",
     "goodsReceiptSettings": "إعدادات عملية استلام البضائع",
@@ -5861,6 +5862,7 @@
   },
   "operationNames": {
     "goodsReceiptDirect": "استلام بضائع مباشر",
+    "goodsReceiptImport": "استلام واردات",
     "steelReceiptDirect": "إذن تسليم شراء SAC",
     "steelReceiptPlacement": "وضع SAC على الرف",
     "warehouseInboundDirect": "إدخال مستودع مباشر",

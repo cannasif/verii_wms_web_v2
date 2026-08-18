@@ -31199,6 +31199,10 @@ html.dark .wms-ops-form .wms-ops-putaway-suggestions__card {
   align-items: stretch;
 }
 
+.wms-ops-form .wms-ops-order-lookup-grid:has(> :only-child) {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
 @media (max-width: 799px) {
   .wms-ops-form .wms-ops-order-lookup-grid {
     grid-template-columns: minmax(0, 1fr) !important;

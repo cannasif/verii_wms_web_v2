@@ -39,6 +39,13 @@
     "directSubtitle": "Wählen Sie die offenen Bestellungen des Lieferanten aus, vervollständigen Sie Lager-, Mengen-, Regal- und Los-/Seriendetails und schließen Sie den physischen Wareneingang in einem Arbeitsablauf ab.",
     "directPageTitle": "Wareneingangserfassung",
     "directPageHintAria": "Über die Wareneingangserfassung",
+    "importSubtitle": "Wählen Sie die offenen Bestellungen des Lieferanten aus, vervollständigen Sie Lager-, Mengen-, Regal- und Los-/Seriendetails und schließen Sie den physischen Wareneingang in einem Arbeitsablauf ab.",
+    "importPageTitle": "Import-Wareneingangserfassung",
+    "importPageHintAria": "Über die Import-Wareneingangserfassung",
+    "importCustomer": "Importdatei-Auswahl",
+    "importSelectCustomer": "Importdatei auswählen...",
+    "importSearchCustomer": "Importdatei-Code / -Name suchen…",
+    "importCustomerEmpty": "Keine Importdatei gefunden.",
     "orderlessSubtitle": "Erstellen Sie einen geplanten Wareneingangsauftrag und eine Zuweisung ohne Verknüpfung zu einer Bestellung.",
     "orderlessPageTitle": "Wareneingangsauftrag ohne Bestellung",
     "orderlessPageHintAria": "Über den Wareneingangsauftrag ohne Bestellung",
@@ -1128,6 +1135,10 @@
       "direct": {
         "title": "Direkter Wareneingang",
         "description": "Buchen Sie einen auftragslosen Wareneingang atomar mit Qualität, Quarantäne und Bestandsbewegung."
+      },
+      "import": {
+        "title": "Import-Wareneingang",
+        "description": "Buchen Sie einen Import-Wareneingang mit Qualität, Quarantäne und Bestandsbewegung in einem Ablauf."
       },
       "tasks": {
         "title": "Auftragsverwaltung",
