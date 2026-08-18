@@ -421,6 +421,7 @@ interface NonSerialBulkPickDialog {
     row: ProductionTransferPickingRow;
     quantity: string;
     idempotencyKey: string;
+    selected: boolean;
   }>;
 }
 
@@ -431,20 +432,58 @@ function isPickAboveThresholdConfirmError(message: string): boolean {
   return message.includes('onay eşiğini');
 }
 
+async function scanPickWithThresholdRetry(
+  transferId: number,
+  taskLineId: number,
+  barcode: string,
+  options: {
+    quantity: number;
+    sourceLocationId?: number;
+    idempotencyKey: string;
+  },
+): Promise<ProductionTransferScanPickResult> {
+  try {
+    return await productionTransferApi.scanPick(transferId, taskLineId, barcode, {
+      quantity: options.quantity,
+      sourceLocationId: options.sourceLocationId,
+      idempotencyKey: options.idempotencyKey,
+      confirmAboveThreshold: false,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    if (!isPickAboveThresholdConfirmError(message)) throw error;
+    return productionTransferApi.scanPick(transferId, taskLineId, barcode, {
+      quantity: options.quantity,
+      sourceLocationId: options.sourceLocationId,
+      idempotencyKey: options.idempotencyKey,
+      confirmAboveThreshold: true,
+    });
+  }
+}
+
 function applyScanPickDelta(
   table: ProductionTransferPickingTable,
   execution: ProductionTransferExecution,
   result: ProductionTransferScanPickResult,
 ): { table: ProductionTransferPickingTable; execution: ProductionTransferExecution } {
-  const rowKey = (row: ProductionTransferPickingRow) => pickingRowSelectionKey(row);
-  const updatedRow = result.row;
-  const resultRowKey = rowKey(updatedRow);
-  const hasRow = table.rows.some((row) => rowKey(row) === resultRowKey);
-  const rows = hasRow
-    ? table.rows.map((row) => (rowKey(row) === resultRowKey ? updatedRow : row))
-    : table.rows.map((row) => (row.taskLineId === updatedRow.taskLineId && !row.serialNo?.trim()
-      ? updatedRow
-      : row));
+  const rows = result.rows?.length ? result.rows : (() => {
+    const rowKey = (row: ProductionTransferPickingRow) => pickingRowSelectionKey(row);
+    const updatedRow = result.row;
+    const resultRowKey = rowKey(updatedRow);
+    const hasRow = table.rows.some((row) => rowKey(row) === resultRowKey);
+    return hasRow
+      ? table.rows.map((row) => (rowKey(row) === resultRowKey ? updatedRow : row))
+      : table.rows.flatMap((row) => {
+          if (row.taskLineId !== updatedRow.taskLineId || row.serialNo?.trim()) return [row];
+          if (updatedRow.processedQuantity > 0 && updatedRow.remainingQuantity > 0) {
+            return [
+              { ...updatedRow, requestedQuantity: updatedRow.processedQuantity, remainingQuantity: 0, processedQuantity: updatedRow.processedQuantity, canPick: false },
+              { ...updatedRow, requestedQuantity: updatedRow.remainingQuantity, remainingQuantity: updatedRow.remainingQuantity, processedQuantity: 0, canPick: true },
+            ];
+          }
+          return [updatedRow];
+        });
+  })();
   return {
     table: {
       ...table,
@@ -557,6 +596,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   const [nonSerialUnpickTargetLocation, setNonSerialUnpickTargetLocation] = useState('');
   const [nonSerialUnpickTargetLabel, setNonSerialUnpickTargetLabel] = useState('');
   const [nonSerialUnpickQuantity, setNonSerialUnpickQuantity] = useState('');
+  const [completedUnpickConfirmOpen, setCompletedUnpickConfirmOpen] = useState(false);
   const [sourceWarehouseReturnSetting, setSourceWarehouseReturnSetting] = useState<WarehouseTransferReturnSetting>();
   const completedLocationLabelsRef = useRef<Record<string, string>>({});
   const [highlightedLineNo, setHighlightedLineNo] = useState<number>();
@@ -566,7 +606,8 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   const blockingDialogOpen = pickDialogOpen
     || serialBulkPickDialogOpen
     || Boolean(nonSerialBulkPickDialog)
-    || Boolean(nonSerialUnpickDialog);
+    || Boolean(nonSerialUnpickDialog)
+    || completedUnpickConfirmOpen;
   const historicalCollectedLabel = t('picking.historicalCollected', {
     defaultValue: 'Önceki görevden devralındı',
   });
@@ -862,6 +903,14 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     return row;
   }, [completedRows, completedSelectedKeys]);
 
+  const singleNonSerialUnpickRow = useMemo(() => {
+    if (singleSelectedNonSerialRow) return singleSelectedNonSerialRow;
+    if (completedSelectedKeys.size > 0) return undefined;
+    if (completedRowsReadyToUnpick.length !== 1) return undefined;
+    const row = completedRowsReadyToUnpick[0];
+    return isSerialRow(row) ? undefined : row;
+  }, [completedRowsReadyToUnpick, completedSelectedKeys.size, singleSelectedNonSerialRow]);
+
   const canExecuteCompletedUnpick = Boolean(
     singleSelectedNonSerialRow?.processedQuantity
     || completedRowsReadyToUnpick.length > 0,
@@ -925,20 +974,16 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
 
   const handleCompletedUnpickClick = () => {
     if (busy || !canExecuteCompletedUnpick) return;
-    // Rafsız kaynak: raf seçim dialogunu atla, backend sanal rafı doldurur.
-    if (isSourceRackless) {
-      void confirmCompletedUnpick();
+    if (singleNonSerialUnpickRow) {
+      openNonSerialUnpickDialog(singleNonSerialUnpickRow);
       return;
     }
-    if (singleSelectedNonSerialRow) {
-      openNonSerialUnpickDialog(singleSelectedNonSerialRow);
-      return;
-    }
-    void confirmCompletedUnpick();
+    setCompletedUnpickConfirmOpen(true);
   };
 
   const confirmCompletedUnpick = async () => {
     if (busy || completedRowsReadyToUnpick.length === 0) return;
+    setCompletedUnpickConfirmOpen(false);
     setBusy(true);
     const processedKeys = new Set<string>();
     try {
@@ -971,10 +1016,15 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       });
       setCompletedSelectedKeys(new Set());
       setTab('all');
-      toast.success(`${processedKeys.size} satır seçilen rafa bırakıldı.`);
+      toast.success(t('picking.unpick.successBulk', {
+        defaultValue: '{{count}} satır seçilen rafa bırakıldı.',
+        count: processedKeys.size,
+      }));
     } catch (error) {
       if (table) await load();
-      toast.error(error instanceof Error ? error.message : 'Rafa bırakma başarısız.');
+      toast.error(error instanceof Error ? error.message : t('picking.unpick.failed', {
+        defaultValue: 'Rafa bırakma başarısız.',
+      }));
     } finally {
       setBusy(false);
     }
@@ -984,12 +1034,14 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     if (!nonSerialUnpickDialog || busy) return;
     const targetLocationId = isSourceRackless ? undefined : Number(nonSerialUnpickTargetLocation);
     if (!isSourceRackless && (!Number.isFinite(targetLocationId) || (targetLocationId ?? 0) <= 0)) {
-      toast.error('Raf seçin.');
+      toast.error(t('picking.unpick.selectShelfError', { defaultValue: 'Raf seçin.' }));
       return;
     }
     const quantity = parsePositiveIntegerInput(nonSerialUnpickQuantity);
     if (quantity === null || quantity <= 0 || quantity > Math.floor(nonSerialUnpickDialog.processedQuantity)) {
-      toast.error('Geçerli bir geri alma miktarı girin.');
+      toast.error(t('picking.unpick.invalidQuantity', {
+        defaultValue: 'Geçerli bir geri alma miktarı girin.',
+      }));
       return;
     }
     setBusy(true);
@@ -1020,9 +1072,13 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       });
       setCompletedSelectedKeys(new Set());
       setTab('all');
-      toast.success('Toplanan stok seçilen rafa bırakıldı.');
+      toast.success(t('picking.unpick.successSingle', {
+        defaultValue: 'Toplanan stok seçilen rafa bırakıldı.',
+      }));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Rafa bırakma başarısız.');
+      toast.error(error instanceof Error ? error.message : t('picking.unpick.failed', {
+        defaultValue: 'Rafa bırakma başarısız.',
+      }));
     } finally {
       setBusy(false);
     }
@@ -1172,10 +1228,34 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     } : current);
   };
 
+  const toggleNonSerialBulkRowSelection = (taskLineId: number, selected: boolean) => {
+    setNonSerialBulkPickDialog((current) => current ? {
+      ...current,
+      rows: current.rows.map((item) => item.row.taskLineId === taskLineId
+        ? { ...item, selected }
+        : item),
+    } : current);
+  };
+
+  const toggleNonSerialBulkSelectAll = (selected: boolean) => {
+    setNonSerialBulkPickDialog((current) => current ? {
+      ...current,
+      rows: current.rows.map((item) => ({ ...item, selected })),
+    } : current);
+  };
+
   const confirmNonSerialBulkPick = async () => {
     if (!nonSerialBulkPickDialog || busy) return;
 
-    const plannedRows = nonSerialBulkPickDialog.rows.map((item) => ({
+    const selectedRows = nonSerialBulkPickDialog.rows.filter((item) => item.selected);
+    if (selectedRows.length === 0) {
+      toast.error(t('picking.multiShelf.selectShelf', {
+        defaultValue: 'En az bir raf seçin.',
+      }));
+      return;
+    }
+
+    const plannedRows = selectedRows.map((item) => ({
       ...item,
       parsedQuantity: parsePositiveIntegerInput(item.quantity),
     }));
@@ -1185,7 +1265,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       || item.parsedQuantity > Math.floor(item.row.remainingQuantity));
     if (invalidRow) {
       toast.error(t('picking.multiShelf.invalidQuantity', {
-        defaultValue: 'Her raf için kalan miktarı aşmayan geçerli bir tam sayı girin.',
+        defaultValue: 'Seçilen her raf için kalan miktarı aşmayan geçerli bir tam sayı girin.',
       }));
       return;
     }
@@ -1196,7 +1276,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     let currentExecution = execution;
     try {
       for (const item of plannedRows) {
-        const result = await productionTransferApi.scanPick(
+        const result = await scanPickWithThresholdRetry(
           transferId,
           item.row.taskLineId,
           nonSerialBulkPickDialog.barcode,
@@ -1204,7 +1284,6 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
             quantity: item.parsedQuantity!,
             sourceLocationId: item.row.sourceLocationId,
             idempotencyKey: item.idempotencyKey,
-            confirmAboveThreshold: true,
           },
         );
         completedCount += 1;
@@ -1236,9 +1315,12 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
       } else {
         await load();
       }
+      const processedTaskLineIds = new Set(
+        plannedRows.slice(0, completedCount).map((item) => item.row.taskLineId),
+      );
       setNonSerialBulkPickDialog((current) => current ? {
         ...current,
-        rows: current.rows.slice(completedCount),
+        rows: current.rows.filter((item) => !processedTaskLineIds.has(item.row.taskLineId)),
       } : current);
       const detail = error instanceof Error ? error.message : t('picking.multiShelf.failed', {
         defaultValue: 'Raflardan toplama tamamlanamadı.',
@@ -1280,6 +1362,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
             row: item.row,
             quantity: String(item.quantity),
             idempotencyKey: crypto.randomUUID(),
+            selected: false,
           })),
         });
         setBarcode('');
@@ -1680,7 +1763,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                 if (section.type === 'flat') {
                   return (
                     <PickingRow
-                      key={`flat:${section.row.taskLineId}:${section.row.sourceLocationId ?? 'x'}:${section.row.serialNo ?? ''}:${section.row.displaySplit ?? ''}`}
+                      key={`flat:${pickingRowSelectionKey(section.row)}:${section.row.sourceLocationId ?? 'x'}`}
                       row={section.row}
                       locked={table.isLocked}
                       showRouteColumns={showRouteColumns}
@@ -1883,7 +1966,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
           }}
           title={t('picking.multiShelf.title', { defaultValue: 'Çok raflı toplama' })}
           description={t('picking.multiShelf.description', {
-            defaultValue: '{{stockCode}} stokunun bulunduğu raflar tek işlem planında gösteriliyor.',
+            defaultValue: '{{stockCode}} stokunun bulunduğu raflar tek işlem planında gösteriliyor. İstemediğiniz rafların işaretini kaldırarak tek raftan da toplayabilirsiniz.',
             stockCode: nonSerialBulkPickDialog.stockCode,
           })}
           className="!max-w-3xl"
@@ -1911,7 +1994,10 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                   {t('picking.multiShelf.shelfCount', { defaultValue: 'Kaynak raf' })}
                 </div>
                 <div className="mt-2 text-2xl font-black tabular-nums">
-                  {nonSerialBulkPickDialog.rows.length}
+                  {nonSerialBulkPickDialog.rows.filter((item) => item.selected).length}
+                  <span className="ms-1 text-sm font-semibold text-[var(--wms-app-text-muted)]">
+                    / {nonSerialBulkPickDialog.rows.length}
+                  </span>
                 </div>
               </div>
               <div className="rounded-xl border border-[var(--wms-brand-primary)]/30 bg-[var(--wms-brand-soft)] p-3">
@@ -1920,7 +2006,9 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                 </div>
                 <div className="mt-2 text-2xl font-black tabular-nums text-[var(--wms-brand-primary)]">
                   {formatProjectNumber(nonSerialBulkPickDialog.rows.reduce(
-                    (total, item) => total + (parsePositiveIntegerInput(item.quantity) ?? 0),
+                    (total, item) => item.selected
+                      ? total + (parsePositiveIntegerInput(item.quantity) ?? 0)
+                      : total,
                     0,
                   ))}
                 </div>
@@ -1931,6 +2019,17 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               <table className="w-full min-w-[640px] text-sm">
                 <thead className="bg-black/5 text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
                   <tr>
+                    <th className="w-12 p-3 text-center">
+                      <OpsSkinCheckbox
+                        checked={nonSerialBulkPickDialog.rows.length > 0
+                          && nonSerialBulkPickDialog.rows.every((item) => item.selected)}
+                        indeterminate={nonSerialBulkPickDialog.rows.some((item) => item.selected)
+                          && !nonSerialBulkPickDialog.rows.every((item) => item.selected)}
+                        disabled={busy}
+                        onCheckedChange={toggleNonSerialBulkSelectAll}
+                        aria-label={t('picking.multiShelf.selectAll', { defaultValue: 'Tüm rafları seç' })}
+                      />
+                    </th>
                     <th className="p-3 text-right">#</th>
                     <th className="p-3 text-left">
                       {t('picking.multiShelf.sourceShelf', { defaultValue: 'Kaynak raf' })}
@@ -1945,7 +2044,22 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                 </thead>
                 <tbody>
                   {nonSerialBulkPickDialog.rows.map((item, index) => (
-                    <tr key={item.row.taskLineId} className="border-t border-[var(--wms-app-border)]">
+                    <tr
+                      key={item.row.taskLineId}
+                      className={cn(
+                        'border-t border-[var(--wms-app-border)]',
+                        item.selected && 'bg-[var(--wms-brand-soft)]',
+                      )}
+                    >
+                      <td className="p-3 text-center">
+                        <OpsSkinCheckbox
+                          checked={item.selected}
+                          disabled={busy}
+                          onCheckedChange={(checked) =>
+                            toggleNonSerialBulkRowSelection(item.row.taskLineId, checked)}
+                          aria-label={`${item.row.sourceLocationCode || index + 1} rafını seç`}
+                        />
+                      </td>
                       <td className="p-3 text-right font-bold tabular-nums">{index + 1}</td>
                       <td className="p-3">
                         <div className="flex items-center gap-2 font-bold">
@@ -1964,7 +2078,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
                           min={1}
                           max={Math.floor(item.row.remainingQuantity)}
                           value={item.quantity}
-                          disabled={busy}
+                          disabled={busy || !item.selected}
                           aria-label={`${item.row.sourceLocationCode || index + 1} rafından toplanacak miktar`}
                           onChange={(event) => updateNonSerialBulkQuantity(item.row.taskLineId, event.target.value)}
                         />
@@ -1977,7 +2091,7 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
 
             <div className="mt-4 rounded-xl border border-sky-500/25 bg-sky-500/10 p-3 text-sm text-[var(--wms-app-text)]">
               {t('picking.multiShelf.notice', {
-                defaultValue: 'Onayladığınızda her raf ayrı ayrı stok ve hareket kontrolünden geçer; başarılı satırlar üretim bekleme rafına alınır.',
+                defaultValue: 'Onayladığınızda seçilen her raf ayrı ayrı stok ve hareket kontrolünden geçer; başarılı satırlar üretim bekleme rafına alınır.',
               })}
             </div>
             <div className="mt-5 flex flex-col-reverse justify-end gap-2 sm:flex-row">
@@ -1989,10 +2103,15 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               >
                 {t('picking.multiShelf.cancel', { defaultValue: 'İptal' })}
               </button>
-              <OpsActionButton type="submit" variant="primary" loading={busy}>
+              <OpsActionButton
+                type="submit"
+                variant="primary"
+                loading={busy}
+                disabled={nonSerialBulkPickDialog.rows.every((item) => !item.selected)}
+              >
                 {t('picking.multiShelf.confirm', {
                   defaultValue: '{{shelfCount}} raftan toplamayı onayla',
-                  shelfCount: nonSerialBulkPickDialog.rows.length,
+                  shelfCount: nonSerialBulkPickDialog.rows.filter((item) => item.selected).length,
                 })}
               </OpsActionButton>
             </div>
@@ -2259,8 +2378,10 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
         <ResponsiveDialog
           variant="lookup"
           onClose={() => setNonSerialUnpickDialog(null)}
-          title="Rafa bırak"
-          description="Toplanan stok bekleme rafından seçtiğiniz rafa geri yerleştirilir ve satır Tümü sekmesine döner."
+          title={t('picking.unpick.title', { defaultValue: 'Rafa bırak' })}
+          description={t('picking.unpick.description', {
+            defaultValue: 'Toplanan stok bekleme rafından seçtiğiniz rafa geri yerleştirilir ve satır Tümü sekmesine döner.',
+          })}
         >
           <form
             onSubmit={(event) => {
@@ -2271,16 +2392,22 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
             <div className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] p-4 text-sm">
               <div className="grid gap-2 sm:grid-cols-2">
                 <div>
-                  <span className="text-xs text-[var(--wms-app-text-muted)]">Stok</span>
+                  <span className="text-xs text-[var(--wms-app-text-muted)]">
+                    {t('picking.unpick.stock', { defaultValue: 'Stok' })}
+                  </span>
                   <strong className="block">{nonSerialUnpickDialog.stockCode}</strong>
                 </div>
                 <div>
-                  <span className="text-xs text-[var(--wms-app-text-muted)]">Toplanan</span>
+                  <span className="text-xs text-[var(--wms-app-text-muted)]">
+                    {t('picking.unpick.collected', { defaultValue: 'Toplanan' })}
+                  </span>
                   <strong className="block">{formatProjectNumber(nonSerialUnpickDialog.processedQuantity)}</strong>
                 </div>
               </div>
             </div>
-            <label className="mt-4 block text-xs font-bold">Geri alınacak miktar</label>
+            <label className="mt-4 block text-xs font-bold">
+              {t('picking.unpick.quantity', { defaultValue: 'Geri alınacak miktar' })}
+            </label>
             <input
               className="input mt-1 w-full"
               inputMode="numeric"
@@ -2292,45 +2419,120 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
               onFocus={(event) => event.currentTarget.select()}
               autoFocus
             />
-            <label className="mt-4 block text-xs font-bold">Raf</label>
-            <PagedAppDropdown<LocationOption>
-              queryKey={[
-                'production-pick-nonserial-unpick-location',
-                execution.sourceWarehouseId,
-                nonSerialUnpickDialog.taskLineId,
-              ]}
-              fetchPage={fetchCompletedLocationPage}
-              toOption={toCompletedLocationOption}
-              enabled={execution.sourceWarehouseId > 0}
-              dependencies={[execution.sourceWarehouseId, nonSerialUnpickDialog.taskLineId]}
-              value={nonSerialUnpickTargetLocation}
-              onValueChange={(value) => {
-                setNonSerialUnpickTargetLocation(value);
-                setNonSerialUnpickTargetLabel(completedLocationLabelsRef.current[value] ?? '');
-              }}
-              selectedOption={nonSerialUnpickTargetLocation ? {
-                value: nonSerialUnpickTargetLocation,
-                label: nonSerialUnpickTargetLabel || nonSerialUnpickTargetLocation,
-              } : undefined}
-              searchable
-              placeholder="Raf seçin"
-              portalContainer={null}
-              contentClassName="z-[5100]"
-              className="mt-1 min-w-full"
-            />
+            {!isSourceRackless ? (
+              <>
+                <label className="mt-4 block text-xs font-bold">
+                  {t('picking.unpick.shelf', { defaultValue: 'Raf' })}
+                </label>
+                <PagedAppDropdown<LocationOption>
+                  queryKey={[
+                    'production-pick-nonserial-unpick-location',
+                    execution.sourceWarehouseId,
+                    nonSerialUnpickDialog.taskLineId,
+                  ]}
+                  fetchPage={fetchCompletedLocationPage}
+                  toOption={toCompletedLocationOption}
+                  enabled={execution.sourceWarehouseId > 0}
+                  dependencies={[execution.sourceWarehouseId, nonSerialUnpickDialog.taskLineId]}
+                  value={nonSerialUnpickTargetLocation}
+                  onValueChange={(value) => {
+                    setNonSerialUnpickTargetLocation(value);
+                    setNonSerialUnpickTargetLabel(completedLocationLabelsRef.current[value] ?? '');
+                  }}
+                  selectedOption={nonSerialUnpickTargetLocation ? {
+                    value: nonSerialUnpickTargetLocation,
+                    label: nonSerialUnpickTargetLabel || nonSerialUnpickTargetLocation,
+                  } : undefined}
+                  searchable
+                  placeholder={t('picking.unpick.selectShelf', { defaultValue: 'Raf seçin' })}
+                  portalContainer={null}
+                  contentClassName="z-[5100]"
+                  className="mt-1 min-w-full"
+                />
+              </>
+            ) : null}
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
                 className="rounded-lg border px-4 py-2 text-sm font-semibold"
                 onClick={() => setNonSerialUnpickDialog(null)}
               >
-                İptal
+                {t('picking.unpick.cancel', { defaultValue: 'İptal' })}
               </button>
-              <OpsActionButton type="submit" variant="primary" loading={busy}>Onayla</OpsActionButton>
+              <OpsActionButton type="submit" variant="primary" loading={busy}>
+                {t('picking.unpick.confirm', { defaultValue: 'Onayla' })}
+              </OpsActionButton>
             </div>
           </form>
         </ResponsiveDialog>
       )}
+
+      {completedUnpickConfirmOpen ? (
+        <ResponsiveDialog
+          onClose={() => setCompletedUnpickConfirmOpen(false)}
+          title={t('picking.unpick.confirmTitle', { defaultValue: 'Rafa bırakmayı onayla' })}
+          description={isSourceRackless
+            ? t('picking.unpick.confirmDescriptionRackless', {
+              defaultValue: '{{count}} satır bekleme rafından geri yerleştirilecek.',
+              count: completedRowsReadyToUnpick.length,
+            })
+            : t('picking.unpick.confirmDescription', {
+              defaultValue: '{{count}} satır bekleme rafından seçilen raflara bırakılacak.',
+              count: completedRowsReadyToUnpick.length,
+            })}
+        >
+          <div className="overflow-x-auto rounded-xl border border-[var(--wms-app-border)]">
+            <table className="w-full min-w-[420px] text-sm">
+              <thead className="bg-black/5 text-xs uppercase text-[var(--wms-app-text-muted)] dark:bg-white/5">
+                <tr>
+                  <th className="p-3 text-left">{t('picking.unpick.stock', { defaultValue: 'Stok' })}</th>
+                  <th className="p-3 text-left">{t('picking.unpick.serial', { defaultValue: 'Seri' })}</th>
+                  <th className="p-3 text-right">{t('picking.unpick.quantity', { defaultValue: 'Miktar' })}</th>
+                  {!isSourceRackless ? (
+                    <th className="p-3 text-left">{t('picking.unpick.shelf', { defaultValue: 'Raf' })}</th>
+                  ) : null}
+                </tr>
+              </thead>
+              <tbody>
+                {completedRowsReadyToUnpick.map((row) => {
+                  const key = pickingRowSelectionKey(row);
+                  const targetLabel = completedLineTargetLabels[key]
+                    || completedLocationLabelsRef.current[completedLineTargets[key] ?? '']
+                    || completedLineTargets[key]
+                    || '—';
+                  return (
+                    <tr key={key} className="border-t border-[var(--wms-app-border)]">
+                      <td className="p-3 font-semibold">{row.stockCode}</td>
+                      <td className="p-3">{row.serialNo?.trim() || '—'}</td>
+                      <td className="p-3 text-right">{formatProjectNumber(row.processedQuantity)}</td>
+                      {!isSourceRackless ? (
+                        <td className="p-3">{targetLabel}</td>
+                      ) : null}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-lg border px-4 py-2 text-sm font-semibold"
+              onClick={() => setCompletedUnpickConfirmOpen(false)}
+            >
+              {t('picking.unpick.cancel', { defaultValue: 'İptal' })}
+            </button>
+            <OpsActionButton
+              variant="primary"
+              loading={busy}
+              disabled={completedRowsReadyToUnpick.length === 0}
+              onClick={() => void confirmCompletedUnpick()}
+            >
+              {t('picking.unpick.confirm', { defaultValue: 'Onayla' })}
+            </OpsActionButton>
+          </div>
+        </ResponsiveDialog>
+      ) : null}
 
       {completedBulkPlacementOpen && !isSourceRackless ? (
         <ResponsiveDialog
@@ -2906,7 +3108,7 @@ function SerialStockGroup({
           : undefined;
         return (
         <PickingRow
-          key={`serial:${row.taskLineId}:${row.serialNo ?? ''}:${row.displaySplit ?? ''}`}
+          key={`serial:${pickingRowSelectionKey(row)}:${row.sourceLocationId ?? 'x'}`}
           row={row}
           locked={locked}
           showRouteColumns={showRouteColumns}

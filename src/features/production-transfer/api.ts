@@ -205,6 +205,7 @@ export interface ProductionTransferScanPickExecutionLineDelta {
 
 export interface ProductionTransferScanPickResult {
   row: ProductionTransferPickingRow;
+  rows: ProductionTransferPickingRow[];
   summary: ProductionTransferScanPickSummaryDelta;
   executionLine: ProductionTransferScanPickExecutionLineDelta;
   lineId: number;
