@@ -19,18 +19,6 @@ export function foldTurkishSearch(value: string): string {
     .replace(/ç/g, 'c');
 }
 
-/**
- * API aramasında kullanıcının yazdığı metni korur.
- *
- * Metni istemcide tek bir büyük harf biçimine zorlamak "sabit" aramasını
- * "SABIT" yaparak "SABİT" kaydından farklılaştırabilir. ASCII-Türkçe eşleme
- * API'nin güvenli LIKE pattern politikasında yapılır; istemci kullanıcının
- * karakterlerini korur ve yalnızca dış boşlukları temizler.
- */
-export function toTurkishApiSearch(value: string): string {
-  return value.trim();
-}
-
 /** Enter ile rozet ekler; Türkçe katlamaya göre yinelenenleri atlar. */
 export function appendFoldedSearchToken(tokens: string[], raw: string): string[] {
   const normalized = foldTurkishSearch(raw);

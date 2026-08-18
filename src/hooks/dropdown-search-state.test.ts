@@ -17,4 +17,12 @@ describe('dropdown search input state', () => {
     expect(isDropdownSearchSettling(input, query)).toBe(true);
     expect(isDropdownSearchSettling(input, input)).toBe(false);
   });
+
+  it('uses trimming only for the threshold and preserves the raw API term', () => {
+    const state = resolveDropdownSearchInputState('  İşlemci  ', 2);
+
+    expect(state.normalizedTerm).toBe('İşlemci');
+    expect(state.activeTerm).toBe('  İşlemci  ');
+    expect(state.isSearchMode).toBe(true);
+  });
 });

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'vitest';
-import { appendFoldedSearchToken, foldTurkishSearch, toTurkishApiSearch } from './turkish-search';
+import { appendFoldedSearchToken, foldTurkishSearch } from './turkish-search';
 
 describe('foldTurkishSearch', () => {
   it('folds DİGİ and DIGI to the same key', () => {
@@ -24,28 +24,6 @@ describe('foldTurkishSearch', () => {
 
   it('keeps LIKE control characters literal in local matching', () => {
     assert.equal(foldTurkishSearch('100%_[]^\\'), '100%_[]^\\');
-  });
-});
-
-describe('toTurkishApiSearch', () => {
-  it('preserves Turkish and English I variants for server-side collation', () => {
-    assert.equal(toTurkishApiSearch('ADMİN'), 'ADMİN');
-    assert.equal(toTurkishApiSearch('admin'), 'admin');
-    assert.equal(toTurkishApiSearch('Admin'), 'Admin');
-    assert.equal(toTurkishApiSearch('ADMIN'), 'ADMIN');
-  });
-
-  it('does not turn dotted Turkish text into a different word', () => {
-    assert.equal(toTurkishApiSearch('SABİT'), 'SABİT');
-    assert.equal(toTurkishApiSearch('sabit'), 'sabit');
-    assert.equal(toTurkishApiSearch('  sabit  '), 'sabit');
-  });
-
-  it('preserves all remaining Turkish characters', () => {
-    assert.equal(toTurkishApiSearch('Erdoğan'), 'Erdoğan');
-    assert.equal(toTurkishApiSearch('işlem'), 'işlem');
-    assert.equal(toTurkishApiSearch('  Çağrı ALIŞVERİŞ  '), 'Çağrı ALIŞVERİŞ');
-    assert.equal(toTurkishApiSearch('  100%_[]^\\  '), '100%_[]^\\');
   });
 });
 

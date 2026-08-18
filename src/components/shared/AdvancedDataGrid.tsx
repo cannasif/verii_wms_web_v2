@@ -79,7 +79,7 @@ import { AppDateInput } from './AppInput';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 import { localizeLegacyUiText } from '@/lib/legacy-ui-localization';
 import { normalizeGridPage } from '@/lib/paged';
-import { appendFoldedSearchToken, foldTurkishSearch, toTurkishApiSearch } from '@/lib/turkish-search';
+import { appendFoldedSearchToken, foldTurkishSearch } from '@/lib/turkish-search';
 import { OpsActionButton } from './OpsActionButton';
 import { OpsListPageShell } from './OpsListPageShell';
 import { OpsListSearchField } from './OpsListSearchField';
@@ -756,7 +756,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
       return;
     }
     const timer = window.setTimeout(() => {
-      setSearch(searchInput.trim());
+      setSearch(searchInput);
       setPage(1);
     }, 350);
     return () => window.clearTimeout(timer);
@@ -833,19 +833,16 @@ export function AdvancedDataGrid<T extends { id: number }>({
     });
   }, [preferenceColumns, searchableColumns]);
   const request = useMemo<GridRequest>(
-    () => {
-      const apiSearch = search ? toTurkishApiSearch(search) : '';
-      return {
+    () => ({
         pageNumber: page,
         pageSize,
-        search: apiSearch || null,
-        searchFields: apiSearch && effectiveSearchFields.length > 0 ? effectiveSearchFields : undefined,
+        search: search || null,
+        searchFields: search && effectiveSearchFields.length > 0 ? effectiveSearchFields : undefined,
         sortBy,
         sortDirection,
         filterLogic,
         filters,
-      };
-    },
+      }),
     [page, pageSize, search, effectiveSearchFields, sortBy, sortDirection, filterLogic, filters],
   );
   const query = useQuery({

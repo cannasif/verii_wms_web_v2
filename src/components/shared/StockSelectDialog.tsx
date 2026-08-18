@@ -63,7 +63,7 @@ export function StockSelectDialog({
       setViewMode("list");
       return;
     }
-    const timer = window.setTimeout(() => setDebouncedSearch(searchQuery.trim()), SEARCH_DEBOUNCE_MS);
+    const timer = window.setTimeout(() => setDebouncedSearch(searchQuery), SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [open, searchQuery]);
 

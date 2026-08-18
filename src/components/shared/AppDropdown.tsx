@@ -148,7 +148,7 @@ export function AppDropdown<TValue extends string = string>({
 
   useEffect(() => {
     if (!remoteSearch || !open) return;
-    const timer = window.setTimeout(() => onSearchChange(search.trim()), SEARCH_DEBOUNCE_MS);
+    const timer = window.setTimeout(() => onSearchChange(search), SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [onSearchChange, open, remoteSearch, search]);
 

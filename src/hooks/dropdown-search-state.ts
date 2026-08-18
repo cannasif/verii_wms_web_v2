@@ -18,7 +18,9 @@ export function resolveDropdownSearchInputState(
 
   return {
     normalizedTerm,
-    activeTerm: isSearchMode ? normalizedTerm : '',
+    // Eşik kararı kırpılmış uzunlukla verilir; API'ye ise kullanıcının ham
+    // metni gönderilir. Karakter/boşluk normalizasyonu sunucunun sorumluluğudur.
+    activeTerm: isSearchMode ? searchTerm : '',
     isBrowseMode,
     isSearchMode,
     isThresholdMode,

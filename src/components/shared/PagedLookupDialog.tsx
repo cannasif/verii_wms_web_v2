@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { toTurkishApiSearch } from '@/lib/turkish-search';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
 import { useStickyPopoverSide } from '@/hooks/useStickyPopoverSide';
 import { OpsActionButton } from './OpsActionButton';
@@ -153,7 +152,7 @@ export function PagedLookupDialog<T>({
   const isCombobox = triggerMode === 'combobox';
   const minLen = autoSearchMinLength ?? 1;
 
-  const apiSearch = toTurkishApiSearch(search);
+  const apiSearch = search;
 
   const query = useInfiniteQuery({
     queryKey: [...queryKey, apiSearch],
@@ -183,10 +182,11 @@ export function PagedLookupDialog<T>({
 
   const trimmedDraft = comboboxDraft.trim();
   const isSameAsSelected = Boolean(value) && trimmedDraft === (value ?? '').trim();
-  const effectiveDraft = editing && !isSameAsSelected ? trimmedDraft : '';
-  const isThresholdMode = effectiveDraft.length > 0 && effectiveDraft.length < minLen;
-  const activeComboboxSearch = effectiveDraft.length >= minLen ? comboboxSearch : '';
-  const apiComboboxSearch = toTurkishApiSearch(activeComboboxSearch);
+  const effectiveDraft = editing && !isSameAsSelected ? comboboxDraft : '';
+  const effectiveDraftLength = effectiveDraft.trim().length;
+  const isThresholdMode = effectiveDraftLength > 0 && effectiveDraftLength < minLen;
+  const activeComboboxSearch = effectiveDraftLength >= minLen ? comboboxSearch : '';
+  const apiComboboxSearch = activeComboboxSearch;
 
   const comboboxQuery = useInfiniteQuery({
     queryKey: [...queryKey, 'combobox', apiComboboxSearch],
@@ -252,7 +252,7 @@ export function PagedLookupDialog<T>({
     }
 
     const timer = window.setTimeout(() => {
-      setSearch(trimmed);
+      setSearch(searchInput);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => {
@@ -394,7 +394,7 @@ export function PagedLookupDialog<T>({
     if (event.key !== 'Enter') return;
     event.preventDefault();
     event.stopPropagation();
-    setSearch(searchInput.trim());
+    setSearch(searchInput);
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
@@ -813,7 +813,7 @@ export function PagedLookupDialog<T>({
                   type="button"
                   variant="secondary"
                   className="wms-ops-lookup-search-btn h-10 shrink-0"
-                  onClick={() => setSearch(searchInput.trim())}
+                  onClick={() => setSearch(searchInput)}
                   disabled={isLookupFetching}
                 >
                   {isLookupFetching ? (
@@ -828,7 +828,7 @@ export function PagedLookupDialog<T>({
                   type="button"
                   variant="secondary"
                   className="h-10 shrink-0 gap-1.5 px-4"
-                  onClick={() => setSearch(searchInput.trim())}
+                  onClick={() => setSearch(searchInput)}
                   disabled={isLookupFetching}
                 >
                   {isLookupFetching ? (

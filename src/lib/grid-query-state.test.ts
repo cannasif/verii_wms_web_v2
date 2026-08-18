@@ -34,6 +34,11 @@ describe('grid query result scope', () => {
       .toBe(getGridResultScopeKey(request()));
   });
 
+  it('treats raw search text as part of the request scope', () => {
+    expect(getGridResultScopeKey(request({ search: ' İşlemci ' })))
+      .not.toBe(getGridResultScopeKey(request({ search: 'İşlemci' })));
+  });
+
   it('does not retain rows when the list refresh key changes', () => {
     expect(canRetainGridPlaceholder(request(), request(), 'InProgress:1', 'Passed:2')).toBe(false);
   });

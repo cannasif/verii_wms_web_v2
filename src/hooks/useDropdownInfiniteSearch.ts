@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { keepPreviousData, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import type { PagedFilter } from '@/types/api';
-import { toTurkishApiSearch } from '@/lib/turkish-search';
 import {
   isDropdownSearchSettling,
   resolveDropdownSearchInputState,
@@ -65,9 +64,7 @@ export function useDropdownInfiniteSearch<TItem>({
     inputSearchTerm ?? searchTerm,
     minSearchLength,
   );
-  const activeSearch = querySearchState.isSearchMode
-    ? toTurkishApiSearch(querySearchState.activeTerm)
-    : '';
+  const activeSearch = querySearchState.isSearchMode ? querySearchState.activeTerm : '';
   const isSearchSettling = isDropdownSearchSettling(inputSearchState, querySearchState);
   const stableKey = Array.isArray(queryKey) ? queryKey : [queryKey];
 

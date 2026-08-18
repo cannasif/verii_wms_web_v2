@@ -12,7 +12,7 @@ function normalizeFields(fields: readonly string[] | undefined): string[] {
 export function getGridResultScopeKey(request: GridRequest): string {
   return JSON.stringify({
     pageSize: request.pageSize,
-    search: request.search?.trim() ?? '',
+    search: request.search ?? '',
     searchFields: normalizeFields(request.searchFields),
     sortBy: request.sortBy ?? null,
     sortDirection: request.sortDirection ?? 'asc',
