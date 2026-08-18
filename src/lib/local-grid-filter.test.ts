@@ -27,6 +27,13 @@ describe('matchesGridSearch', () => {
     assert.equal(matchesGridSearch(previewRows[0], '866', SEARCHABLE_KEYS), true);
     assert.equal(matchesGridSearch(previewRows[0], '960', SEARCHABLE_KEYS), true);
   });
+
+  it('matches ASCII input against mixed Turkish characters across selected fields', () => {
+    const row = { id: 4, customerName: 'Çağrı ŞİMŞEK', description: 'ALIŞVERİŞ görüşmesi' };
+    assert.equal(matchesGridSearch(row, 'cagri alisveris', ['customerName', 'description']), true);
+    assert.equal(matchesGridSearch(row, 'cagri bulunmayan', ['customerName', 'description']), false);
+    assert.equal(matchesGridSearch(row, 'alisveris', ['customerName']), false);
+  });
 });
 
 describe('filterLocalGridPage', () => {

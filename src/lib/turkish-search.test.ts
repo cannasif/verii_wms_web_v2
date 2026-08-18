@@ -14,6 +14,16 @@ describe('foldTurkishSearch', () => {
     assert.equal(foldTurkishSearch('İŞĞÜÖÇ'), 'isguoc');
     assert.equal(foldTurkishSearch('işgüöç'), 'isguoc');
   });
+
+  it('folds words containing dotted and dotless i together', () => {
+    assert.equal(foldTurkishSearch('ALIŞVERİŞ'), 'alisveris');
+    assert.equal(foldTurkishSearch('alisveris'), 'alisveris');
+    assert.equal(foldTurkishSearch('Çağrı ŞİMŞEK görüş'), 'cagri simsek gorus');
+  });
+
+  it('keeps LIKE control characters literal in local matching', () => {
+    assert.equal(foldTurkishSearch('100%_[]^\\'), '100%_[]^\\');
+  });
 });
 
 describe('toTurkishApiSearch', () => {
@@ -33,6 +43,8 @@ describe('toTurkishApiSearch', () => {
   it('preserves all remaining Turkish characters', () => {
     assert.equal(toTurkishApiSearch('Erdoğan'), 'Erdoğan');
     assert.equal(toTurkishApiSearch('işlem'), 'işlem');
+    assert.equal(toTurkishApiSearch('  Çağrı ALIŞVERİŞ  '), 'Çağrı ALIŞVERİŞ');
+    assert.equal(toTurkishApiSearch('  100%_[]^\\  '), '100%_[]^\\');
   });
 });
 

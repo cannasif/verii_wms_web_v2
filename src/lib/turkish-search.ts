@@ -22,10 +22,10 @@ export function foldTurkishSearch(value: string): string {
 /**
  * API aramasında kullanıcının yazdığı metni korur.
  *
- * Türkçe i/İ ile ı/I aynı harf değildir. Metni istemcide tek bir büyük harf
- * biçimine zorlamak "sabit" aramasını "SABIT" yaparak "SABİT" kaydını
- * kaçırıyordu. Kültür ve collation kuralları API/veritabanı sorumluluğudur;
- * istemci yalnızca dış boşlukları temizler.
+ * Metni istemcide tek bir büyük harf biçimine zorlamak "sabit" aramasını
+ * "SABIT" yaparak "SABİT" kaydından farklılaştırabilir. ASCII-Türkçe eşleme
+ * API'nin güvenli LIKE pattern politikasında yapılır; istemci kullanıcının
+ * karakterlerini korur ve yalnızca dış boşlukları temizler.
  */
 export function toTurkishApiSearch(value: string): string {
   return value.trim();
