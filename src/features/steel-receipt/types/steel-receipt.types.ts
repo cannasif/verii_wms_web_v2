@@ -42,6 +42,11 @@ export interface SteelPendingPlacementSource {
   sourceFileName?:string;
 }
 export type SteelReceiptConversionMode='Task'|'Direct';
+export type SteelReceiptTradeType='Domestic'|'Foreign';
+export interface NetsisImportOpenFile {
+  fileNumber:string;customerCode:string;customerName?:string;
+  deliveryCustomerCode?:string;deliveryCustomerName?:string;
+}
 export interface ConvertResult {
   goodsReceiptId:number;documentNo:string;taskId?:number;taskNo?:string;
   executionId?:number;stockMovementOperationId?:number;generatedLabelIds?:number[];
