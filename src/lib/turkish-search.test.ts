@@ -19,6 +19,7 @@ describe('foldTurkishSearch', () => {
     assert.equal(foldTurkishSearch('ALIŞVERİŞ'), 'alisveris');
     assert.equal(foldTurkishSearch('alisveris'), 'alisveris');
     assert.equal(foldTurkishSearch('Çağrı ŞİMŞEK görüş'), 'cagri simsek gorus');
+    assert.equal(foldTurkishSearch('kâr sükûnet'), 'kar sukunet');
   });
 
   it('keeps LIKE control characters literal in local matching', () => {
