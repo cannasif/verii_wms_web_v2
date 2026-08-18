@@ -1,5 +1,5 @@
 import { steelReceiptApi } from '../api/steel-receipt.api';
-import type { SteelLineRow, SteelReceiptSource } from '../types/steel-receipt.types';
+import type { SteelLineRow, SteelReceiptSource, SteelReceiptTradeType } from '../types/steel-receipt.types';
 
 export interface SteelReceiptReceiptDraft {
   importReferenceNo: string;
@@ -9,6 +9,8 @@ export interface SteelReceiptReceiptDraft {
   isElectronic: boolean;
   receiptNo: string;
   documentDate: string;
+  tradeType?: SteelReceiptTradeType;
+  importFileNumber?: string;
 }
 
 export function hasSteelReceiptReceiptDraft(draft: SteelReceiptReceiptDraft): boolean {
@@ -17,7 +19,16 @@ export function hasSteelReceiptReceiptDraft(draft: SteelReceiptReceiptDraft): bo
     || Boolean(draft.note.trim())
     || Boolean(draft.receiptNo.trim())
     || Boolean(draft.reference.trim())
+    || draft.tradeType === 'Foreign'
+    || Boolean(draft.importFileNumber?.trim())
   );
+}
+
+export function isSteelReceiptTradeSelectionValid(
+  tradeType: SteelReceiptTradeType,
+  importFileNumber: string,
+): boolean {
+  return tradeType === 'Domestic' || Boolean(importFileNumber.trim());
 }
 
 export type LoadReceiptSourceOptions = {
