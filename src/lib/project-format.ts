@@ -42,27 +42,131 @@ export function formatProjectNumber(
   }).format(value);
 }
 
-/** Accepts TR/EN decimal entry (`1,5` / `1.5` / `1.234,56`) and returns a finite number or NaN. */
+/** Accepts TR/EN decimal entry (`1,5` / `1.5` / `1.000` / `1.234,56`) and returns a finite number or NaN. */
 export function parseLocalizedNumber(
   value: string,
   override?: Partial<ProjectSettings>,
 ): number {
-  const compact = value.trim().replace(/\s/g, "");
+  const compact = value.trim().replace(/\s/g, "").replace(/\u00a0/g, "");
   if (!compact) return Number.NaN;
-  const comma = compact.includes(",");
-  const dot = compact.includes(".");
-  const normalized =
-    comma && dot
-      ? compact.lastIndexOf(",") > compact.lastIndexOf(".")
-        ? compact.replace(/\./g, "").replace(",", ".")
-        : compact.replace(/,/g, "")
-      : comma
-        ? compact.replace(",", ".")
-        : compact;
-  const parsed = Number(normalized);
-  if (!Number.isFinite(parsed)) return Number.NaN;
-  void settings(override);
-  return parsed;
+  const s = settings(override);
+  const parts = new Intl.NumberFormat(s.numberLocale).formatToParts(12345.6);
+  const group = parts.find((part) => part.type === "group")?.value ?? ".";
+  const decimal = parts.find((part) => part.type === "decimal")?.value ?? ",";
+  const escapedGroup = group.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedDecimal = decimal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const thousandPattern = new RegExp(`^-?\\d{1,3}(?:${escapedGroup}\\d{3})+$`);
+  let work = compact;
+  if (group !== decimal && (work.includes(decimal) || thousandPattern.test(work))) {
+    work = work.split(group).join("");
+  }
+  if (decimal !== "." && work.includes(decimal)) {
+    const last = work.lastIndexOf(decimal);
+    work = `${work.slice(0, last).replace(new RegExp(escapedDecimal, "g"), "")}.${work.slice(last + 1)}`;
+  }
+  const parsed = Number(work);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+export function isPieceUnit(unitCode?: string | null): boolean {
+  const normalized = (unitCode ?? "").trim().toLocaleUpperCase("tr-TR");
+  return (
+    normalized === "AD" ||
+    normalized === "ADET" ||
+    normalized === "ADETİ" ||
+    normalized === "PCS" ||
+    normalized === "PC" ||
+    normalized === "EA"
+  );
+}
+
+export function formatProjectQuantity(
+  value: number,
+  unitCode?: string | null,
+  override?: Partial<ProjectSettings>,
+): string {
+  if (!Number.isFinite(value)) return "";
+  if (isPieceUnit(unitCode)) {
+    return formatProjectNumber(Math.round(value), {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }, override);
+  }
+  const places = settings(override).decimalPlaces;
+  return formatProjectNumber(value, {
+    minimumFractionDigits: places,
+    maximumFractionDigits: places,
+  }, override);
+}
+
+function localeNumberSymbols(override?: Partial<ProjectSettings>) {
+  const s = settings(override);
+  const parts = new Intl.NumberFormat(s.numberLocale).formatToParts(12345.6);
+  return {
+    group: parts.find((part) => part.type === "group")?.value ?? ".",
+    decimal: parts.find((part) => part.type === "decimal")?.value ?? ",",
+    places: s.decimalPlaces,
+  };
+}
+
+/** Live-mask a quantity field: digits only, locale grouping, optional decimals by unit. */
+export function maskProjectQuantityInput(
+  raw: string,
+  unitCode?: string | null,
+  override?: Partial<ProjectSettings>,
+): string {
+  const piece = isPieceUnit(unitCode || "ADET");
+  const { decimal, places } = localeNumberSymbols(override);
+  const altDecimal = decimal === "," ? "." : ",";
+  const trailingDecimal = !piece && (raw.endsWith(decimal) || raw.endsWith(altDecimal));
+  let intSource = raw;
+  let fracSource = "";
+  if (!piece) {
+    const lastDec = Math.max(raw.lastIndexOf(decimal), raw.lastIndexOf(altDecimal));
+    if (lastDec >= 0) {
+      intSource = raw.slice(0, lastDec);
+      fracSource = raw.slice(lastDec + 1);
+    }
+  }
+  const intDigits = intSource.replace(/\D/g, "");
+  if (piece) {
+    if (!intDigits) return "";
+    return formatProjectNumber(Number(intDigits), {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }, override);
+  }
+  const fracDigits = fracSource.replace(/\D/g, "").slice(0, Math.max(0, places));
+  if (!intDigits && !fracDigits && !trailingDecimal) return "";
+  const intFormatted = formatProjectNumber(Number(intDigits || "0"), {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }, override);
+  if (!fracDigits && !trailingDecimal) return intFormatted;
+  return `${intFormatted}${decimal}${fracDigits}`;
+}
+
+function caretFromDigitCount(formatted: string, digitsBefore: number): number {
+  if (digitsBefore <= 0) return 0;
+  let seen = 0;
+  for (let index = 0; index < formatted.length; index += 1) {
+    if (/\d/.test(formatted.charAt(index))) {
+      seen += 1;
+      if (seen >= digitsBefore) return index + 1;
+    }
+  }
+  return formatted.length;
+}
+
+export function nextQuantityCaret(
+  previous: string,
+  caret: number,
+  next: string,
+): number {
+  const digitsBefore = previous.slice(0, Math.max(0, caret)).replace(/\D/g, "").length;
+  const endsWithSep = /[.,]$/.test(previous) && /[.,]$/.test(next);
+  if (endsWithSep) return next.length;
+  return caretFromDigitCount(next, digitsBefore);
 }
 function dateParts(value: DateInput, override?: Partial<ProjectSettings>) {
   const date = parsed(value);
