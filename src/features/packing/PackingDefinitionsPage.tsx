@@ -68,7 +68,7 @@ export function PackingDefinitionsPage() {
     </div>
   );
   const materialColumns: GridColumn<MaterialRow>[] = [
-    ...systemColumns<MaterialRow>(),
+    ...systemColumns<MaterialRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: "code", label: "Kod", render: (r) => r.code },
     { key: "name", label: "Ad", render: (r) => r.name },
     { key: "type", label: "Tip", render: (r) => r.type },
@@ -106,7 +106,7 @@ export function PackingDefinitionsPage() {
     },
   ];
   const stationColumns: GridColumn<StationRow>[] = [
-    ...systemColumns<StationRow>(),
+    ...systemColumns<StationRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: "code", label: "Kod", render: (r) => r.code },
     { key: "name", label: "Ad", render: (r) => r.name },
     { key: "warehouseId", label: "Depo", render: (r) => r.warehouseId },
@@ -134,7 +134,7 @@ export function PackingDefinitionsPage() {
     },
   ];
   const specificationColumns: GridColumn<SpecificationRow>[] = [
-    ...systemColumns<SpecificationRow>(),
+    ...systemColumns<SpecificationRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     {
       key: "packagingMaterialCode",
       label: "Ambalaj Kodu",

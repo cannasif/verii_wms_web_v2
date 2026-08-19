@@ -14,6 +14,8 @@ export function getGridResultScopeKey(request: GridRequest): string {
     pageSize: request.pageSize,
     search: request.search ?? '',
     searchFields: normalizeFields(request.searchFields),
+    actorUserIds: [...new Set(request.actorUserIds ?? [])].sort((a, b) => a - b),
+    actorIncludeSystem: Boolean(request.actorIncludeSystem),
     sortBy: request.sortBy ?? null,
     sortDirection: request.sortDirection ?? 'asc',
     filterLogic: request.filterLogic,

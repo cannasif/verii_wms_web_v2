@@ -169,7 +169,7 @@ export function QualityRulesPage() {
     () => {
       void moduleReady;
       return [
-      ...systemColumns<QualityRule>(),
+      ...systemColumns<QualityRule>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       {
         key: "scopeType",
         label: t("rules.columns.scope"),

@@ -11,6 +11,7 @@ import {
 import { systemColumns } from '@/components/shared/GridSystemColumns';
 import { OpsStatusBadge, inferOpsStatusTone } from '@/components/shared/OpsStatusBadge';
 import { formatProjectNumber } from '@/lib/project-format';
+import { UNLIMITED_GRID_SEARCH_FIELDS } from '@/lib/grid-preferences';
 import { steelReceiptApi } from '../api/steel-receipt.api';
 import type { SteelLineRow } from '../types/steel-receipt.types';
 
@@ -64,7 +65,7 @@ export function SteelReceiptReportsPage(): ReactElement {
   const statusLabel = useCallback((value: string) => t(`${R}.statusLabels.${value}`, { defaultValue: value }), [t]);
 
   const columns = useMemo<GridColumn<SteelLineRow>[]>(() => [
-    ...systemColumns<SteelLineRow>(),
+    ...systemColumns<SteelLineRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'dCode', label: t(`${G}.dCode`), sortable: true, filterable: true, render: row => <span className="font-mono font-black text-cyan-600">{row.dCode}</span> },
     { key: 'supplierSerialNo', label: t(`${G}.supplierSerialNo`), sortable: true, filterable: true, render: row => row.supplierSerialNo },
     { key: 'secondarySerialNo', label: t(`${G}.secondarySerialNo`), sortable: true, filterable: true, render: row => row.secondarySerialNo || '—' },
@@ -113,7 +114,7 @@ export function SteelReceiptReportsPage(): ReactElement {
 
     {summary.isError && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-600">{t(`${R}.summaryError`)}</div>}
 
-    <AdvancedDataGrid key={`${view}-${gridLanguage}`} pageKey={`steel-reports-${view}`} title={t(`${R}.views.${view}.title`)} description={t(`${R}.views.${view}.description`)} columns={columns} fetchPage={fetchPage}/>
+    <AdvancedDataGrid key={`${view}-${gridLanguage}`} pageKey={`steel-reports-${view}`} title={t(`${R}.views.${view}.title`)} description={t(`${R}.views.${view}.description`)} columns={columns} fetchPage={fetchPage} maxSearchFields={UNLIMITED_GRID_SEARCH_FIELDS}/>
   </section>;
 }
 

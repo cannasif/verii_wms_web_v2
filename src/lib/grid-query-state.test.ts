@@ -29,6 +29,13 @@ describe('grid query result scope', () => {
     expect(canRetainGridPlaceholder(request(), request(override))).toBe(false);
   });
 
+  it('does not retain rows when actor directory ids change', () => {
+    expect(canRetainGridPlaceholder(
+      request({ actorUserIds: [8] }),
+      request({ actorUserIds: [9] }),
+    )).toBe(false);
+  });
+
   it('normalizes search-field order for an equivalent scope', () => {
     expect(getGridResultScopeKey(request({ searchFields: ['name', 'code'] })))
       .toBe(getGridResultScopeKey(request()));

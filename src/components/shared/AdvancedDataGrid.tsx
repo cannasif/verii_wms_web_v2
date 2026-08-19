@@ -100,6 +100,8 @@ import {
   nextRefreshAvailableAt,
 } from '@/lib/grid-refresh-cooldown';
 import { withRequestAbortSignal } from '@/lib/request-utils';
+import { useUserDisplayNameDirectoryState } from '@/hooks/useUserDisplayNameDirectory';
+import { findUsersMatchingActorSearch } from '@/lib/user-display-names';
 import {
   Tooltip,
   TooltipContent,
@@ -108,7 +110,7 @@ import {
 } from '@/components/ui/tooltip';
 
 export interface GridFilter { column: string; operator: string; value: string }
-export interface GridRequest { pageNumber?: number; page?: number; pageSize: number; search: string | null; searchFields?: string[]; sortBy?: string | null; sortDirection?: 'asc' | 'desc'; filterLogic: 'and' | 'or'; filters: GridFilter[] }
+export interface GridRequest { pageNumber?: number; page?: number; pageSize: number; search: string | null; searchFields?: string[]; actorUserIds?: number[]; actorIncludeSystem?: boolean; sortBy?: string | null; sortDirection?: 'asc' | 'desc'; filterLogic: 'and' | 'or'; filters: GridFilter[] }
 /** Normalized page shape. API may return rows as `data` (PagedResponse) or `items` — use normalizeGridPage. */
 export interface GridPage<T> { items: T[]; data?: T[]; pageNumber: number; page?: number; pageSize: number; totalCount: number; totalPages?: number; hasPreviousPage?: boolean; hasNextPage?: boolean }
 export { normalizeGridPage };
@@ -179,6 +181,8 @@ interface Props<T extends { id: number }> {
   renderExpandedRow?: (row: T) => ReactNode;
   /** false ise sütun sırası/görünürlüğü localStorage'a yazılmaz ve kod tanımı kullanılır. */
   persistPreferences?: boolean;
+  /** Bu grid için seçilebilir arama alanı üst sınırı. Varsayılan 12'dir. */
+  maxSearchFields?: number;
   /** Öncelikli satır gibi belirli kayıtlar için sol tutamaçla sıra değiştirme. */
   rowReorder?: {
     canDragRow: (row: T) => boolean;
@@ -202,6 +206,7 @@ const DEFAULT_COLUMN_WIDTH = 160;
 const DEFAULT_ID_COLUMN_WIDTH = 88;
 const DEFAULT_ACTIONS_COLUMN_WIDTH = 120;
 const LOCKED_COLUMN_KEYS = new Set(['id']);
+const ACTOR_SEARCH_COLUMN_KEYS = new Set(['createdBy', 'updatedBy']);
 const EXCLUDED_COLUMN_PREF_KEYS = new Set(['actions', 'expand']);
 const gridScrollPositions = new Map<string, number>();
 
@@ -601,10 +606,15 @@ export function AdvancedDataGrid<T extends { id: number }>({
   expandedRowId = null,
   renderExpandedRow,
   persistPreferences = true,
+  maxSearchFields = MAX_GRID_SEARCH_FIELDS,
   rowReorder,
 }: Props<T>) {
   const { t, i18n } = useTranslation();
   const { pathname } = useLocation();
+  const hasActorSearchColumns = sourceColumns.some(
+    (column) => ACTOR_SEARCH_COLUMN_KEYS.has(column.key) && isGridColumnSearchable(column),
+  );
+  const actorDirectory = useUserDisplayNameDirectoryState(hasActorSearchColumns);
   const enumLanguage = i18n.resolvedLanguage ?? i18n.language;
   const localizedTitle = typeof title === 'string' ? localizeLegacyUiText(title, enumLanguage) : title;
   const localizedDescription = description ? localizeLegacyUiText(description, enumLanguage) : undefined;
@@ -654,8 +664,8 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const storageKey = getGridPreferenceKey(pageKey, userId);
   const defaultPreferences = useMemo(() => getDefaultGridPreferences(preferenceColumns), [preferenceColumns]);
   const initialPreferences = useMemo(
-    () => persistPreferences ? loadGridPreferences(pageKey, userId, preferenceColumns) : defaultPreferences,
-    [defaultPreferences, pageKey, persistPreferences, preferenceColumns, userId],
+    () => persistPreferences ? loadGridPreferences(pageKey, userId, preferenceColumns, maxSearchFields) : defaultPreferences,
+    [defaultPreferences, maxSearchFields, pageKey, persistPreferences, preferenceColumns, userId],
   );
   const [loadedKey, setLoadedKey] = useState(storageKey);
   const [visible, setVisible] = useState<string[]>(initialPreferences.visible);
@@ -710,7 +720,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
   useEffect(() => {
     if (loadedKey === storageKey) return;
     const preferences = persistPreferences
-      ? loadGridPreferences(pageKey, userId, preferenceColumns)
+      ? loadGridPreferences(pageKey, userId, preferenceColumns, maxSearchFields)
       : getDefaultGridPreferences(preferenceColumns);
     setVisible(preferences.visible);
     setOrder(preferences.order);
@@ -721,7 +731,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
     setSortDirection(preferences.sortDirection);
     setPage(1);
     setLoadedKey(storageKey);
-  }, [loadedKey, pageKey, persistPreferences, preferenceColumns, storageKey, userId]);
+  }, [loadedKey, maxSearchFields, pageKey, persistPreferences, preferenceColumns, storageKey, userId]);
 
   useEffect(() => {
     if (!persistPreferences) {
@@ -820,8 +830,9 @@ export function AdvancedDataGrid<T extends { id: number }>({
     return resolveGridSearchFields(
       searchFields,
       searchableColumns.map((column) => column.key),
+      maxSearchFields,
     );
-  }, [searchFields, searchableColumns]);
+  }, [maxSearchFields, searchFields, searchableColumns]);
 
   useEffect(() => {
     const validKeys = new Set(searchableColumns.map((column) => column.key));
@@ -832,19 +843,34 @@ export function AdvancedDataGrid<T extends { id: number }>({
       return getDefaultGridPreferences(preferenceColumns).searchFields;
     });
   }, [preferenceColumns, searchableColumns]);
-  const request = useMemo<GridRequest>(
-    () => ({
-        pageNumber: page,
-        pageSize,
-        search: search || null,
-        searchFields: search && effectiveSearchFields.length > 0 ? effectiveSearchFields : undefined,
-        sortBy,
-        sortDirection,
-        filterLogic,
-        filters,
-      }),
-    [page, pageSize, search, effectiveSearchFields, sortBy, sortDirection, filterLogic, filters],
-  );
+  const request = useMemo<GridRequest>(() => {
+    const actorSearchSelected = Boolean(
+      search
+      && effectiveSearchFields.some((field) => ACTOR_SEARCH_COLUMN_KEYS.has(field)),
+    );
+    const actorMatch = actorSearchSelected
+      ? findUsersMatchingActorSearch(search, actorDirectory.users, {
+          systemActor: t('dataGrid.systemActor'),
+          userNumber: (id) => t('dataGrid.userNumber', { number: id }),
+        })
+      : { userIds: [] as number[], includeSystem: false };
+    return {
+      pageNumber: page,
+      pageSize,
+      search: search || null,
+      searchFields: search && effectiveSearchFields.length > 0 ? effectiveSearchFields : undefined,
+      ...(actorSearchSelected && (actorMatch.userIds.length > 0 || actorMatch.includeSystem)
+        ? {
+            actorUserIds: actorMatch.userIds,
+            actorIncludeSystem: actorMatch.includeSystem,
+          }
+        : {}),
+      sortBy,
+      sortDirection,
+      filterLogic,
+      filters,
+    };
+  }, [actorDirectory.users, page, pageSize, search, effectiveSearchFields, sortBy, sortDirection, filterLogic, filters, t]);
   const query = useQuery({
     queryKey: ['advanced-grid', pageKey, refreshKey, request],
     queryFn: async ({ signal }) => normalizeGridPage<T>(
@@ -968,7 +994,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
       if (!current.includes(key)) {
         const selectedCount = current.filter((item) =>
           searchableColumns.some((column) => column.key === item)).length;
-        return selectedCount >= MAX_GRID_SEARCH_FIELDS ? current : [...current, key];
+        return selectedCount >= maxSearchFields ? current : [...current, key];
       }
       return effectiveSearchFields.length > 1 ? current.filter((item) => item !== key) : current;
     });
@@ -1364,7 +1390,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
                         : filteredSearchableColumns.map((column) => {
                           const checked = effectiveSearchFields.includes(column.key);
                           const locked = checked && effectiveSearchFields.length === 1;
-                          const limitReached = !checked && effectiveSearchFields.length >= MAX_GRID_SEARCH_FIELDS;
+                          const limitReached = !checked && effectiveSearchFields.length >= maxSearchFields;
                           return (
                             <label
                               key={column.key}

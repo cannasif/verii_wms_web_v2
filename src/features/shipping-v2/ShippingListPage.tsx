@@ -32,7 +32,7 @@ export function ShippingListPage() {
   }, [t]);
 
   const columns = useMemo<GridColumn<ShipmentGridRow>[]>(() => [
-    ...systemColumns<ShipmentGridRow>(),
+    ...systemColumns<ShipmentGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'documentNo', label: tGrid('dataGrid.shippingRecords.documentNo'), sortable: true, filterable: true, render: (row) => row.documentNo },
     { key: 'documentDate', label: tGrid('dataGrid.shippingRecords.documentDate'), sortable: true, filterable: true, render: (row) => formatProjectDate(row.documentDate) },
     { key: 'customerCode', label: tGrid('dataGrid.shippingRecords.customerCode'), sortable: true, filterable: true, render: (row) => row.customerCode },

@@ -107,7 +107,7 @@ export function QualityDecisionCodesPage() {
   const columns = useMemo<GridColumn<QualityDecisionCode>[]>(() => {
     void moduleReady;
     return [
-      ...systemColumns<QualityDecisionCode>(),
+      ...systemColumns<QualityDecisionCode>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       { key: "code", label: t("decisionCodes.columns.code"), render: (row) => row.code, defaultSearch: true },
       { key: "name", label: t("decisionCodes.columns.name"), render: (row) => row.name, defaultSearch: true },
       {

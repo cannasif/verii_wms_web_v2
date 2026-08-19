@@ -21,6 +21,7 @@ export interface GridPreferences {
 
 const GRID_PREFERENCE_VERSION = 2;
 export const MAX_GRID_SEARCH_FIELDS = 12;
+export const UNLIMITED_GRID_SEARCH_FIELDS = Number.POSITIVE_INFINITY;
 const PAGE_SIZE_OPTIONS = [10, 20, 25, 50, 100] as const;
 const MIN_COLUMN_WIDTH = 80;
 const MAX_COLUMN_WIDTH = 800;
@@ -33,11 +34,12 @@ const MAX_COLUMN_WIDTH = 800;
 export function resolveGridSearchFields(
   selectedFields: readonly string[],
   searchableFields: readonly string[],
+  maxSearchFields: number = MAX_GRID_SEARCH_FIELDS,
 ): string[] {
   const allowed = new Set(searchableFields);
   const selected = selectedFields
     .filter((field, index) => allowed.has(field) && selectedFields.indexOf(field) === index)
-    .slice(0, MAX_GRID_SEARCH_FIELDS);
+    .slice(0, maxSearchFields);
 
   return selected.length > 0
     ? selected
@@ -105,7 +107,11 @@ function mergeColumnOrder(storedOrder: string[], canonicalOrder: string[]): stri
   return merged;
 }
 
-function normalizePreferences(value: unknown, columns: GridPreferenceColumn[]): GridPreferences {
+function normalizePreferences(
+  value: unknown,
+  columns: GridPreferenceColumn[],
+  maxSearchFields: number = MAX_GRID_SEARCH_FIELDS,
+): GridPreferences {
   const defaults = createDefaults(columns);
   if (!value || typeof value !== 'object') return defaults;
 
@@ -130,7 +136,7 @@ function normalizePreferences(value: unknown, columns: GridPreferenceColumn[]): 
     ? uniqueValidKeys(
       [...storedSearchFields, ...defaults.searchFields.filter((key) => !storedSearchFields.includes(key))],
       searchableKeys,
-    ).slice(0, MAX_GRID_SEARCH_FIELDS)
+    ).slice(0, maxSearchFields)
     : defaults.searchFields;
   const searchFields = mergedSearchFields.length > 0 ? mergedSearchFields : defaults.searchFields;
   const sortBy = typeof parsed.sortBy === 'string' && sortableKeys.includes(parsed.sortBy) ? parsed.sortBy : null;
@@ -166,15 +172,20 @@ function loadLegacyPreferences(pageKey: string, columns: GridPreferenceColumn[])
   }
 }
 
-export function loadGridPreferences(pageKey: string, userId: number | undefined, columns: GridPreferenceColumn[]): GridPreferences {
+export function loadGridPreferences(
+  pageKey: string,
+  userId: number | undefined,
+  columns: GridPreferenceColumn[],
+  maxSearchFields: number = MAX_GRID_SEARCH_FIELDS,
+): GridPreferences {
   try {
     const raw = localStorage.getItem(getGridPreferenceKey(pageKey, userId));
-    if (raw) return normalizePreferences(JSON.parse(raw), columns);
+    if (raw) return normalizePreferences(JSON.parse(raw), columns, maxSearchFields);
 
     const versionOneKey = `wms-grid:v1:${userId ?? 'anonymous'}:${pageKey}`;
     const versionOne = localStorage.getItem(versionOneKey);
     return versionOne
-      ? normalizePreferences(JSON.parse(versionOne), columns)
+      ? normalizePreferences(JSON.parse(versionOne), columns, maxSearchFields)
       : loadLegacyPreferences(pageKey, columns);
   } catch {
     return createDefaults(columns);

@@ -36,7 +36,7 @@ export function ELogoConnectionsPage(): ReactElement {
   const columns = useMemo<GridColumn<ELogoConnectionRow>[]>(() => {
     void moduleReady;
     return [
-      ...systemColumns<ELogoConnectionRow>(),
+      ...systemColumns<ELogoConnectionRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       { key: 'displayName', label: t('connections.columns.name'), sortable: true, filterable: true, render: (row) => <div><strong>{row.displayName}</strong><p className="text-xs text-slate-500">{row.key}</p></div> },
       { key: 'vkn', label: t('connections.columns.vkn'), sortable: true, filterable: true, render: (row) => row.vkn },
       { key: 'username', label: t('connections.columns.username'), sortable: true, filterable: true, render: (row) => row.username },

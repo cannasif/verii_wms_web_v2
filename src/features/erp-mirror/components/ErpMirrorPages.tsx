@@ -16,6 +16,7 @@ import {
 import { useTheme } from '@/components/theme-provider';
 import { formatProjectDateTime } from '@/lib/project-format';
 import { normalizeGridPage } from '@/lib/paged';
+import { UNLIMITED_GRID_SEARCH_FIELDS } from '@/lib/grid-preferences';
 import { cn } from '@/lib/utils';
 import { getErpMirrorPage, syncErpMirror } from '../api/erp-mirror.api';
 import {
@@ -184,6 +185,7 @@ function MirrorPage<T extends AuditableGridRow>({
   fetchPage,
   refreshKey,
   iconOnlyView = false,
+  maxSearchFields,
 }: {
   pageKey: string;
   gridPageKey?: string;
@@ -196,13 +198,14 @@ function MirrorPage<T extends AuditableGridRow>({
   fetchPage?: (request: GridRequest) => Promise<GridPage<T>>;
   refreshKey?: string | number;
   iconOnlyView?: boolean;
+  maxSearchFields?: number;
 }) {
   const { t, i18n } = useTranslation('common');
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [detail, setDetail] = useState<T | null>(null);
   const titleText = typeof title === 'string' ? title : '';
   const columns = useMemo<GridColumn<T>[]>(() => [
-    ...systemColumns<T>(),
+    ...systemColumns<T>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     ...dataColumns,
     {
       key: 'actions',
@@ -259,6 +262,7 @@ function MirrorPage<T extends AuditableGridRow>({
         toolbarAction={resolvedToolbarAction}
         toolbarEndExtra={toolbarEndExtra}
         refreshKey={refreshKey}
+        maxSearchFields={maxSearchFields}
       />
       {detail && (
         <Dialog open onOpenChange={open => { if (!open) setDetail(null); }}>
@@ -445,6 +449,7 @@ export function CustomerMirrorPage() {
         onView={viewCustomer}
         toolbarAction={toolbarAction}
         iconOnlyView
+        maxSearchFields={UNLIMITED_GRID_SEARCH_FIELDS}
       />
       <CustomerMirrorDetailDialog
         customer={selectedCustomer}

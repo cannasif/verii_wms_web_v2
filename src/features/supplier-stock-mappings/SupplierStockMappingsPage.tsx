@@ -47,7 +47,7 @@ export function SupplierStockMappingsPage(): ReactElement {
   }, [branchCode, t]);
 
   const columns = useMemo<GridColumn<SupplierStockMappingRow>[]>(() => [
-    ...systemColumns<SupplierStockMappingRow>(),
+    ...systemColumns<SupplierStockMappingRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     {
       key: 'supplierCode',
       label: t(`${NS}.columns.supplier`),

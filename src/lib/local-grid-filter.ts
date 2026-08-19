@@ -1,8 +1,17 @@
 import type { GridFilter, GridPage, GridRequest } from '@/components/shared/AdvancedDataGrid';
+import i18n from '@/lib/i18n';
 import { foldTurkishSearch } from '@/lib/turkish-search';
+import { getUserDisplayName } from '@/lib/user-display-names';
+
+const ACTOR_SEARCH_KEYS = new Set(['createdBy', 'updatedBy']);
 
 export const gridText = (value: unknown): string =>
   value == null ? '' : Array.isArray(value) ? value.join(', ') : String(value);
+
+export type GridSearchActorOptions = {
+  actorUserIds?: number[];
+  actorIncludeSystem?: boolean;
+};
 
 export function splitLocalGridSearchTerms(search: string): string[] {
   const seen = new Set<string>();
@@ -18,10 +27,55 @@ export function splitLocalGridSearchTerms(search: string): string[] {
   return terms;
 }
 
+function parseActorUserId(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const id = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(id) ? id : null;
+}
+
+function actorFieldSearchText(row: Record<string, unknown>, key: string): string {
+  const rowName = gridText(row[`${key}Name`]);
+  const id = parseActorUserId(row[key]);
+  if (id == null) {
+    return [rowName, i18n.t('dataGrid.systemActor'), 'Sistem', 'System'].filter(Boolean).join(' ');
+  }
+  return [
+    rowName,
+    getUserDisplayName(id) ?? '',
+    String(id),
+    i18n.t('dataGrid.userNumber', { number: id }),
+  ].filter(Boolean).join(' ');
+}
+
+function fieldSearchText(row: Record<string, unknown>, key: string): string {
+  return ACTOR_SEARCH_KEYS.has(key) ? actorFieldSearchText(row, key) : gridText(row[key]);
+}
+
+function rowMatchesResolvedActors(
+  row: Record<string, unknown>,
+  keys: string[],
+  actor?: GridSearchActorOptions,
+): boolean {
+  const ids = actor?.actorUserIds ?? [];
+  const includeSystem = Boolean(actor?.actorIncludeSystem);
+  if (ids.length === 0 && !includeSystem) return false;
+  if (!keys.some((key) => ACTOR_SEARCH_KEYS.has(key))) return false;
+  for (const key of keys) {
+    if (!ACTOR_SEARCH_KEYS.has(key)) continue;
+    const id = parseActorUserId(row[key]);
+    if (id == null) {
+      if (includeSystem) return true;
+      continue;
+    }
+    if (ids.includes(id)) return true;
+  }
+  return false;
+}
+
 function buildSearchHaystack(row: Record<string, unknown>, keys: string[]): string {
   return foldTurkishSearch(
     keys
-      .map((key) => gridText(row[key]))
+      .map((key) => fieldSearchText(row, key))
       .filter((value) => value.length > 0)
       .join(' '),
   );
@@ -32,9 +86,11 @@ export const matchesGridSearch = (
   row: Record<string, unknown>,
   search: string,
   keys: string[],
+  actor?: GridSearchActorOptions,
 ): boolean => {
   const terms = splitLocalGridSearchTerms(search);
   if (terms.length === 0 || keys.length === 0) return true;
+  if (rowMatchesResolvedActors(row, keys, actor)) return true;
   const haystack = buildSearchHaystack(row, keys);
   return terms.every((term) => haystack.includes(foldTurkishSearch(term)));
 };
@@ -93,7 +149,10 @@ export function filterLocalGridPage<T extends { id: number }>(
   const search = request.search?.trim();
   if (search) {
     const keys = request.searchFields?.length ? request.searchFields : searchableKeys;
-    rows = rows.filter((row) => matchesGridSearch(row as Record<string, unknown>, search, keys));
+    rows = rows.filter((row) => matchesGridSearch(row as Record<string, unknown>, search, keys, {
+      actorUserIds: request.actorUserIds,
+      actorIncludeSystem: request.actorIncludeSystem,
+    }));
   }
   if (request.filters.length) {
     rows = rows.filter((row) => (request.filterLogic === 'or'

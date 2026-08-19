@@ -29,7 +29,7 @@ export function WarehouseOutboundListPage() {
   }, [t]);
 
   const columns = useMemo<GridColumn<ShipmentGridRow>[]>(() => [
-    ...systemColumns<ShipmentGridRow>(),
+    ...systemColumns<ShipmentGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'documentNo', label: t('list.columns.documentNo'), sortable: true, filterable: true, render: (row) => row.documentNo },
     { key: 'documentDate', label: t('list.columns.documentDate'), sortable: true, filterable: true, render: (row) => formatProjectDate(row.documentDate) },
     { key: 'customerCode', label: t('list.columns.customerCode'), sortable: true, filterable: true, render: (row) => row.customerCode },

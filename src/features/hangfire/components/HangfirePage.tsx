@@ -48,7 +48,7 @@ export function HangfirePage() {
     source === 'ManualTrigger' ? t(`${H}.triggerSource.manual`) : t(`${H}.triggerSource.hangfire`);
 
   const executionColumns = useMemo<GridColumn<HangfireExecutionRow>[]>(() => [
-    ...systemColumns<HangfireExecutionRow>(),
+    ...systemColumns<HangfireExecutionRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'jobKey', label: t(`${G}.jobKey`), render: row => <span className="font-semibold">{row.jobKey}</span> },
     { key: 'status', label: t(`${G}.status`), render: row => <OpsStatusBadge tone={inferOpsStatusTone(row.status)}>{localizeEnumValue(row.status)}</OpsStatusBadge> },
     { key: 'triggerSource', label: t(`${G}.triggerSource`), render: row => triggerLabel(row.triggerSource) },

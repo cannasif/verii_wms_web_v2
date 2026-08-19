@@ -32,7 +32,7 @@ export function VehicleCheckInListPage(){
       filters: [...statusFilters,...request.filters],
     }),[statusFilters]);
   const columns=useMemo<GridColumn<VehicleCheckInRow>[]>(()=>[
-    ...systemColumns<VehicleCheckInRow>(),
+    ...systemColumns<VehicleCheckInRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     {key:'plateNo',label:t(`${G}.plateNo`),render:r=><span className="font-mono font-bold text-cyan-500">{r.plateNo}</span>},
     {key:'trailerPlateNo',label:t(`${G}.trailerPlateNo`),render:r=>r.trailerPlateNo||'—'},
     {key:'checkedInAtUtc',label:t(`${G}.checkedInAtUtc`),render:r=>formatProjectDateTime(r.checkedInAtUtc)},

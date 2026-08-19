@@ -123,7 +123,7 @@ export function WarehouseInboundTasksPage({
   };
   const columns = useMemo<GridColumn<WarehouseInboundTaskGridRow>[]>(
     () => [
-      ...systemColumns<WarehouseInboundTaskGridRow>(),
+      ...systemColumns<WarehouseInboundTaskGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       {
         key: "taskNo",
         label: tGrid("dataGrid.warehouseInboundTasks.taskNo"),

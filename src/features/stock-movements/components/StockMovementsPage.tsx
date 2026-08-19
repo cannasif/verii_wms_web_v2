@@ -74,7 +74,7 @@ export function StockMovementsPage() {
   const reverse = async () => { if (!reverseTarget || reverseReason.trim().length < 3) { toast.error(t(`${P}.toast.reverseReasonRequired`)); return; } setSaving(true); try { await stockMovementsApi.reverse(reverseTarget.id, crypto.randomUUID(), reverseReason.trim()); toast.success(t(`${P}.toast.reverseSuccess`)); setReverseTarget(null); setReverseReason(''); await queryClient.invalidateQueries({ queryKey: ['advanced-grid', 'stock-movements'] }); } catch (error) { toast.error(error instanceof Error ? error.message : t(`${P}.toast.reverseFailed`)); } finally { setSaving(false); } };
 
   const columns = useMemo<GridColumn<StockMovementGridRow>[]>(() => [
-    ...systemColumns<StockMovementGridRow>(),
+    ...systemColumns<StockMovementGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'operationCode', label: t(`${G}.operationCode`), render: r => <code className="text-xs">{r.operationCode}</code> },
     { key: 'operationType', label: t(`${G}.operationType`), render: r => <span className="font-semibold">{typeLabel(r.operationType)}</span> },
     { key: 'status', label: t(`${G}.status`), render: r => <span className={`rounded-full px-2 py-1 text-xs font-semibold ${r.status === 'Reversed' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>{movementStatusLabel(r.status === 'Reversed' ? 'Reversed' : 'Posted')}</span> },

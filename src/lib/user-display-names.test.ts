@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'vitest';
-import { buildUserDisplayNameMap, formatUserDisplayName } from './user-display-names';
+import { buildUserDisplayNameMap, findUsersMatchingActorSearch, formatUserDisplayName } from './user-display-names';
 
 describe('user-display-names', () => {
   it('prefers first + last name over username', () => {
@@ -34,5 +34,33 @@ describe('user-display-names', () => {
     ]);
     assert.equal(map.get(8), 'Ali Veli');
     assert.equal(map.get(9), 'sistemci');
+  });
+
+  it('resolves visible actor labels to user ids', () => {
+    const users = [
+      { id: 8, firstName: 'Mutahhar', lastName: 'Yılmaz', username: 'mutahhar' },
+      { id: 9, firstName: 'Ali', lastName: 'Veli', username: 'ali' },
+    ];
+    const labels = {
+      systemActor: 'Sistem',
+      userNumber: (id: number) => `Kullanıcı #${id}`,
+    };
+
+    assert.deepEqual(
+      findUsersMatchingActorSearch('mutahhar yilmaz', users, labels),
+      { userIds: [8], includeSystem: false },
+    );
+    assert.deepEqual(
+      findUsersMatchingActorSearch('ali', users, labels),
+      { userIds: [9], includeSystem: false },
+    );
+    assert.deepEqual(
+      findUsersMatchingActorSearch('Sistem', users, labels),
+      { userIds: [], includeSystem: true },
+    );
+    assert.deepEqual(
+      findUsersMatchingActorSearch('Kullanıcı #8', users, labels),
+      { userIds: [8], includeSystem: false },
+    );
   });
 });

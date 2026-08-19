@@ -384,6 +384,9 @@ const SEARCHABLE_KEYS = [
   'status',
   'externalReferenceNo',
   'productionOrderNo',
+  'id',
+  'createdBy',
+  'updatedBy',
 ];
 
 function warehouseFlowLabel(sourceCode: unknown, targetCode: unknown): string {
@@ -603,7 +606,7 @@ export function ProductionWorkOrderTransferTabPanel({
   };
 
   const columns = useMemo<GridColumn<ProductionWorkOrderTransferGridRow>[]>(() => [
-    ...systemColumns<ProductionWorkOrderTransferGridRow>()
+    ...systemColumns<ProductionWorkOrderTransferGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] })
       .filter((column) => column.key === 'id')
       .map((column) => (
         tab === 'Completed'
@@ -770,7 +773,7 @@ export function ProductionWorkOrderTransferTabPanel({
       filterable: true,
       render: (row) => formatProjectNumber(row.remainingQuantity),
     },
-    ...systemColumns<ProductionWorkOrderTransferGridRow>().filter((column) => column.key !== 'id'),
+    ...systemColumns<ProductionWorkOrderTransferGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }).filter((column) => column.key !== 'id'),
     {
       key: 'actions',
       label: tc(`${G}.actions`),

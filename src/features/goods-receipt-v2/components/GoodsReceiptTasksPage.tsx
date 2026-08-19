@@ -164,7 +164,7 @@ export function GoodsReceiptTasksPage({
   };
   const columns = useMemo<GridColumn<GoodsReceiptTaskGridRow>[]>(
     () => [
-      ...systemColumns<GoodsReceiptTaskGridRow>(),
+      ...systemColumns<GoodsReceiptTaskGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       {
         key: "taskNo",
         label: tGrid("dataGrid.goodsReceiptTasks.taskNo"),

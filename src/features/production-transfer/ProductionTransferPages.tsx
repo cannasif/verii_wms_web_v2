@@ -343,6 +343,8 @@ export function ProductionTransferPolicyPage(){
   </section>;
 }
 
+type LocationLabel = { value: string; label: string } | undefined;
+
 function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
   const[warehouseValue,setWarehouseValue]=useState<string|null>(null);
   const[returnLocationValue,setReturnLocationValue]=useState<string|null>(null);
@@ -350,10 +352,22 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
   const[pickingStagingLocationValue,setPickingStagingLocationValue]=useState<string|null>(null);
   const[autoPickThreshold,setAutoPickThreshold]=useState('');
   const[busy,setBusy]=useState(false);
+  const[returnLocationOption,setReturnLocationOption]=useState<LocationLabel>();
+  const[productionLocationOption,setProductionLocationOption]=useState<LocationLabel>();
+  const[pickingStagingLocationOption,setPickingStagingLocationOption]=useState<LocationLabel>();
   const warehouseId=Number(warehouseValue||0);
+
+  const resolveLocationOption = async (id: number | undefined | null): Promise<LocationLabel> => {
+    if (!id) return undefined;
+    try {
+      const loc = await productionTransferApi.locationById(id);
+      return { value: String(loc.id), label: `${loc.code} · ${loc.name}` };
+    } catch { return undefined; }
+  };
+
   useEffect(()=>{
-    if(!warehouseId){setReturnLocationValue(null);setProductionLocationValue(null);setPickingStagingLocationValue(null);setAutoPickThreshold('');return;}
-    void productionTransferApi.returnSetting(warehouseId).then(x=>{
+    if(!warehouseId){setReturnLocationValue(null);setProductionLocationValue(null);setPickingStagingLocationValue(null);setAutoPickThreshold('');setReturnLocationOption(undefined);setProductionLocationOption(undefined);setPickingStagingLocationOption(undefined);return;}
+    void productionTransferApi.returnSetting(warehouseId).then(async x=>{
       setReturnLocationValue(x.defaultProductionTransferReturnLocationId?String(x.defaultProductionTransferReturnLocationId):null);
       setProductionLocationValue(x.defaultProductionTransferLocationId?String(x.defaultProductionTransferLocationId):null);
       setPickingStagingLocationValue(x.productionPickingStagingLocationId?String(x.productionPickingStagingLocationId):null);
@@ -362,6 +376,14 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
           ? String(Math.floor(x.autoPickWithoutConfirmMaxQuantity))
           : '',
       );
+      const [retOpt, prodOpt, stagOpt] = await Promise.all([
+        resolveLocationOption(x.defaultProductionTransferReturnLocationId),
+        resolveLocationOption(x.defaultProductionTransferLocationId),
+        resolveLocationOption(x.productionPickingStagingLocationId),
+      ]);
+      setReturnLocationOption(retOpt);
+      setProductionLocationOption(prodOpt);
+      setPickingStagingLocationOption(stagOpt);
     }).catch((e:Error)=>toast.error(e.message));
   },[warehouseId]);
   const save=async()=>{
@@ -414,7 +436,7 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
         hint="Depo görevlisinin üretim için topladığı ürünler, teslim alınana veya iade edilene kadar bu bekleme rafında tutulur."
       >
         <div className="wms-ops-field-shell">
-          <PagedAppDropdown<LocationOption> queryKey={['production-picking-staging-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={pickingStagingLocationValue} onValueChange={setPickingStagingLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
+          <PagedAppDropdown<LocationOption> queryKey={['production-picking-staging-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} selectedOption={pickingStagingLocationOption} value={pickingStagingLocationValue} onValueChange={setPickingStagingLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
         </div>
       </PolicyField>
       <PolicyField
@@ -422,7 +444,7 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
         hint="Üretime teslim edilen ürünlerin hedef rafı satırda belirtilmemişse bu raf otomatik kullanılır."
       >
         <div className="wms-ops-field-shell">
-          <PagedAppDropdown<LocationOption> queryKey={['production-default-target-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={productionLocationValue} onValueChange={setProductionLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
+          <PagedAppDropdown<LocationOption> queryKey={['production-default-target-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} selectedOption={productionLocationOption} value={productionLocationValue} onValueChange={setProductionLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
         </div>
       </PolicyField>
       <PolicyField
@@ -430,7 +452,7 @@ function TransferReturnLocationPanel({branchCode}:{branchCode:string}){
         hint="İptal iade görevinde satır hedefi ürünün toplandığı raftır. Bu alan depo varsayılanıdır; görevdeki öneriyi değiştirmez ve normal DAT ayarını etkilemez."
       >
         <div className="wms-ops-field-shell">
-          <PagedAppDropdown<LocationOption> queryKey={['production-return-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
+          <PagedAppDropdown<LocationOption> queryKey={['production-return-location',warehouseId]} fetchPage={r=>warehouseTransferApi.locations(r,warehouseId)} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`})} enabled={warehouseId>0} dependencies={[warehouseId]} selectedOption={returnLocationOption} value={returnLocationValue} onValueChange={setReturnLocationValue} placeholder="Raf seçin" searchable className={OPS_SELECT_TRIGGER_CLASS}/>
         </div>
       </PolicyField>
       <OpsActionButton

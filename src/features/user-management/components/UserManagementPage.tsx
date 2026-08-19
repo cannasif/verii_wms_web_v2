@@ -188,7 +188,7 @@ export function UserManagementPage() {
   const columns = useMemo<GridColumn<UserRow>[]>(() => {
     if (!moduleReady) return [];
     return [
-    ...systemColumns<UserRow>(),
+    ...systemColumns<UserRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'username', label: t('grid.columns.username'), searchable: true, defaultSearch: true, render: (row) => <span className="font-semibold">{row.username}</span> },
     { key: 'firstName', label: t('grid.columns.firstName'), searchable: true, render: (row) => row.firstName || '-' },
     { key: 'lastName', label: t('grid.columns.lastName'), searchable: true, render: (row) => row.lastName || '-' },

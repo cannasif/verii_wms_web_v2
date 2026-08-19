@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_GRID_SEARCH_FIELDS, resolveGridSearchFields } from './grid-preferences';
+import { MAX_GRID_SEARCH_FIELDS, UNLIMITED_GRID_SEARCH_FIELDS, resolveGridSearchFields } from './grid-preferences';
 
 describe('resolveGridSearchFields', () => {
   it('keeps explicitly selected searchable fields even when column visibility changes', () => {
@@ -17,5 +17,10 @@ describe('resolveGridSearchFields', () => {
 
     const fields = Array.from({ length: MAX_GRID_SEARCH_FIELDS + 3 }, (_, index) => `field${index}`);
     expect(resolveGridSearchFields(fields, fields)).toEqual(fields.slice(0, MAX_GRID_SEARCH_FIELDS));
+  });
+
+  it('keeps every selected field when the page lifts the shared limit', () => {
+    const fields = Array.from({ length: MAX_GRID_SEARCH_FIELDS + 3 }, (_, index) => `field${index}`);
+    expect(resolveGridSearchFields(fields, fields, UNLIMITED_GRID_SEARCH_FIELDS)).toEqual(fields);
   });
 });

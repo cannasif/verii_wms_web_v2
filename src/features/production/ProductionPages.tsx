@@ -388,7 +388,7 @@ export function ProductionListPage(): ReactElement {
     finally { setLoadingId(null); }
   }, [t]);
   const columns = useMemo<GridColumn<ProductionPlanGridRow>[]>(() => moduleReady ? [
-    ...systemColumns<ProductionPlanGridRow>(),
+    ...systemColumns<ProductionPlanGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'documentNo', label: t('list.columns.documentNo'), sortable: true, filterable: true, render: (row) => <span className="font-mono font-bold">{row.documentNo}</span> },
     { key: 'documentDate', label: t('list.columns.documentDate'), sortable: true, filterable: true, render: (row) => formatProjectDate(row.documentDate) },
     { key: 'planType', label: t('list.columns.planType'), sortable: true, filterable: true, render: (row) => t(`enum.planType.${row.planType}`) },

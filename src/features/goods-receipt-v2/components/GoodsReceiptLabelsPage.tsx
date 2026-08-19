@@ -55,7 +55,7 @@ export function GoodsReceiptLabelsPage(): ReactElement {
   }, []);
   const columns = useMemo<GridColumn<GoodsReceiptLabelBatchRow>[]>(
     () => [
-      ...systemColumns<GoodsReceiptLabelBatchRow>(),
+      ...systemColumns<GoodsReceiptLabelBatchRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       {
         key: "batchNo",
         label: tGrid(`${G}.batchNo`),

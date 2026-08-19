@@ -4,12 +4,13 @@ import {
   buildUserDisplayNameMap,
   fetchUserDisplayNameDirectory,
   setUserDisplayNameDirectory,
+  type UserDisplayNameSource,
 } from '@/lib/user-display-names';
 
 export const USER_DISPLAY_NAME_DIRECTORY_KEY = ['users', 'display-name-directory'] as const;
+const EMPTY_USERS: readonly UserDisplayNameSource[] = [];
 
-/** Grid audit kolonları ve detay satırları için kullanıcı id → ad soyad dizinini yükler. */
-export function useUserDisplayNameDirectory(): Map<number, string> {
+function useUserDisplayNameDirectoryQuery(enabled: boolean) {
   const query = useQuery({
     queryKey: USER_DISPLAY_NAME_DIRECTORY_KEY,
     queryFn: async ({ signal }) => {
@@ -20,13 +21,9 @@ export function useUserDisplayNameDirectory(): Map<number, string> {
         return [];
       }
     },
+    enabled,
     staleTime: 5 * 60 * 1000,
   });
-
-  const map = useMemo(
-    () => (query.data ? buildUserDisplayNameMap(query.data) : new Map<number, string>()),
-    [query.data],
-  );
 
   useEffect(() => {
     if (query.data) {
@@ -34,5 +31,23 @@ export function useUserDisplayNameDirectory(): Map<number, string> {
     }
   }, [query.data]);
 
-  return map;
+  return query;
+}
+
+export function useUserDisplayNameDirectoryState(enabled = true): {
+  names: Map<number, string>;
+  users: readonly UserDisplayNameSource[];
+} {
+  const query = useUserDisplayNameDirectoryQuery(enabled);
+  const names = useMemo(
+    () => (query.data ? buildUserDisplayNameMap(query.data) : new Map<number, string>()),
+    [query.data],
+  );
+
+  return { names, users: query.data ?? EMPTY_USERS };
+}
+
+/** Grid audit kolonları ve detay satırları için kullanıcı id → ad soyad dizinini yükler. */
+export function useUserDisplayNameDirectory(enabled = true): Map<number, string> {
+  return useUserDisplayNameDirectoryState(enabled).names;
 }

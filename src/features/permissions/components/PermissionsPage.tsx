@@ -45,7 +45,7 @@ export function PermissionsPage() {
   const columns = useMemo<GridColumn<PermissionRow>[]>(() => {
     if (!moduleReady) return [];
     return [
-    ...systemColumns<PermissionRow>(),
+    ...systemColumns<PermissionRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'code', label: t('grid.columns.code'), render: row => <code className="text-xs font-semibold">{row.code}</code> },
     { key: 'name', label: t('grid.columns.name'), render: row => row.name },
     { key: 'description', label: t('grid.columns.description'), render: row => row.description || '-' },

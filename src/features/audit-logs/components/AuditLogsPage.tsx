@@ -34,9 +34,9 @@ export function AuditLogsPage() {
   const columns = useMemo<GridColumn<AuditLogRow>[]>(() => {
     if (!moduleReady) return [];
     return [
-    { key: 'id', label: t('columns.id'), hideable: false, render: (row) => <span className="font-mono text-xs font-semibold">#{row.id}</span> },
-    { key: 'createdBy', label: t('columns.createdBy'), sortable: false, filterable: false, render: (row) => performedByLabel(row) },
-    { key: 'updatedBy', label: t('columns.updatedBy'), sortable: false, filterable: false, render: () => '-' },
+    { key: 'id', label: t('columns.id'), hideable: false, searchable: true, render: (row) => <span className="font-mono text-xs font-semibold">#{row.id}</span> },
+    { key: 'createdBy', label: t('columns.createdBy'), sortable: false, filterable: false, searchable: true, render: (row) => performedByLabel(row) },
+    { key: 'updatedBy', label: t('columns.updatedBy'), sortable: false, filterable: false, searchable: true, render: () => '-' },
     { key: 'updatedDate', label: t('columns.updatedDate'), sortable: false, filterable: false, render: () => '-' },
     { key: 'createdDate', label: t('columns.createdDate'), render: (row) => formatProjectDateTime(row.createdDate) },
     { key: 'actionType', label: t('columns.actionType'), render: (row) => <span className="font-semibold">{row.actionType}</span> },

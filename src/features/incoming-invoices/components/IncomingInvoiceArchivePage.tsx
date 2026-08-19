@@ -44,7 +44,7 @@ export function IncomingInvoiceArchivePage(): ReactElement {
   const columns = useMemo<GridColumn<IncomingInvoiceGridRow>[]>(() => {
     void moduleReady;
     return [
-      ...systemColumns<IncomingInvoiceGridRow>(),
+      ...systemColumns<IncomingInvoiceGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       {
         key: 'invoiceNo', label: t('columns.invoiceNo'), sortable: true, filterable: true,
         render: (row) => <div><strong className="font-mono">{row.invoiceNo}</strong><p className="max-w-52 truncate text-xs text-slate-500">{row.captureSource === 'Ocr' ? 'OCR ön inceleme' : row.uuid}</p></div>,

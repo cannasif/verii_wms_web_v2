@@ -101,7 +101,7 @@ export function PermissionGroupsPage() {
   };
 
   const columns = useMemo<GridColumn<PermissionGroupRow>[]>(() => [
-    ...systemColumns<PermissionGroupRow>(),
+    ...systemColumns<PermissionGroupRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     {
       key: 'name',
       label: t(`${P}.columns.name`),

@@ -1,3 +1,5 @@
+import { foldTurkishSearch } from '@/lib/turkish-search';
+
 export type UserDisplayNameSource = {
   id: number;
   username?: string | null;
@@ -8,7 +10,10 @@ export type UserDisplayNameSource = {
 type Envelope<T> = { success: boolean; data: T; message?: string };
 type UserPage = { items?: UserDisplayNameSource[] | null };
 
+const MAX_ACTOR_SEARCH_USER_IDS = 50;
+
 let directory = new Map<number, string>();
+let directorySources: UserDisplayNameSource[] = [];
 
 export function formatUserDisplayName(user: UserDisplayNameSource): string {
   const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
@@ -25,13 +30,49 @@ export function buildUserDisplayNameMap(users: readonly UserDisplayNameSource[])
 }
 
 export function setUserDisplayNameDirectory(users: readonly UserDisplayNameSource[]): Map<number, string> {
-  directory = buildUserDisplayNameMap(users);
+  directorySources = users.filter((user) => user?.id != null);
+  directory = buildUserDisplayNameMap(directorySources);
   return directory;
 }
 
 export function getUserDisplayName(userId?: number | null): string | undefined {
   if (userId == null) return undefined;
   return directory.get(userId);
+}
+
+export function getUserDisplayNameDirectorySources(): readonly UserDisplayNameSource[] {
+  return directorySources;
+}
+
+export function findUsersMatchingActorSearch(
+  search: string,
+  users: readonly UserDisplayNameSource[],
+  labels: { systemActor: string; userNumber: (id: number) => string },
+): { userIds: number[]; includeSystem: boolean } {
+  const tokens = search
+    .split(/\s+/g)
+    .map((token) => foldTurkishSearch(token))
+    .filter(Boolean);
+  if (tokens.length === 0) return { userIds: [], includeSystem: false };
+
+  const matchesAllTokens = (haystacks: string[]) => {
+    const folded = haystacks.map((value) => foldTurkishSearch(value)).filter(Boolean);
+    return tokens.every((token) => folded.some((value) => value.includes(token)));
+  };
+
+  const includeSystem = matchesAllTokens([labels.systemActor, 'Sistem', 'System']);
+  const userIds = users
+    .filter((user) => matchesAllTokens([
+      formatUserDisplayName(user),
+      user.username ?? '',
+      String(user.id),
+      labels.userNumber(user.id),
+    ]))
+    .map((user) => user.id)
+    .filter((id, index, all) => all.indexOf(id) === index)
+    .slice(0, MAX_ACTOR_SEARCH_USER_IDS);
+
+  return { userIds, includeSystem };
 }
 
 function readUserPageItems(data: UserPage | UserDisplayNameSource[] | null | undefined): UserDisplayNameSource[] {

@@ -83,7 +83,7 @@ export function SteelReceiptPlansPage(){
   const gridLanguage=i18n.resolvedLanguage??i18n.language;
   const [plan,setPlan]=useState<SteelPlanRow|null>(null);
   const columns=useMemo<GridColumn<SteelPlanRow>[]>(()=>[
-    ...systemColumns<SteelPlanRow>(),
+    ...systemColumns<SteelPlanRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     {key:'importReferenceNo',label:t(`${G}.importReferenceNo`),render:r=>(
       <button
         type="button"

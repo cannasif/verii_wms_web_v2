@@ -162,7 +162,7 @@ export function LocationDefinitionsPage() {
   const columns = useMemo<GridColumn<LocationRow>[]>(() => {
     if (!moduleReady) return [];
     return [
-      ...systemColumns<LocationRow>(),
+      ...systemColumns<LocationRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'branchCode', label: t('columns.branch'), render: (row) => row.branchCode },
     { key: 'warehouseCode', label: t('columns.warehouseCode'), render: (row) => row.warehouseCode },
     { key: 'warehouseName', label: t('columns.warehouseName'), render: (row) => row.warehouseName },

@@ -516,6 +516,10 @@ export const productionTransferApi = {
       targetLocationId: targetLocationId && targetLocationId > 0 ? targetLocationId : 0,
     })),
 
+  // — Lokasyon —
+  locationById: async (id: number): Promise<{ id: number; code: string; name: string }> =>
+    unwrap(await api.get<Envelope<{ id: number; code: string; name: string }>>(`/api/locations/${id}`)),
+
   // — Depo raf ayarları —
   defaultTargetLocation: async (warehouseId: number, branchCode: string): Promise<DefaultProductionTargetLocation> =>
     unwrap(await api.get<Envelope<DefaultProductionTargetLocation>>(`/api/production-transfers/warehouses/${warehouseId}/default-target-location`, { params: { branchCode } })),

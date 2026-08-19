@@ -85,7 +85,7 @@ export function WarehouseTransferListPage({
   }, [beginProductionCancel, variant]);
 
   const columns = useMemo<GridColumn<WarehouseTransferGridRow>[]>(() => [
-    ...systemColumns<WarehouseTransferGridRow>({ searchable: ['createdBy', 'updatedBy'], defaultSearch: ['createdBy', 'updatedBy'] }),
+    ...systemColumns<WarehouseTransferGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'], defaultSearch: ['createdBy', 'updatedBy'] }),
     { key: 'documentNo', label: t(`${G}.documentNo`), sortable: true, filterable: true, searchable: true, defaultSearch: true, render: (row) => <span className="font-mono font-semibold">{row.documentNo}</span> },
     { key: 'documentDate', label: t(`${G}.documentDate`), sortable: true, filterable: true, searchable: false, render: (row) => formatProjectDate(row.documentDate) },
     { key: 'sourceWarehouseCode', label: t(`${G}.sourceWarehouseCode`), sortable: true, filterable: true, searchable: true, defaultSearch: true, render: (row) => row.sourceWarehouseCode },

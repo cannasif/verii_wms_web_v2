@@ -98,7 +98,7 @@ export function WarehouseInboundListPage(): ReactElement {
   );
   const columns = useMemo<GridColumn<WarehouseInboundGridRow>[]>(
     () => [
-      ...systemColumns<WarehouseInboundGridRow>(),
+      ...systemColumns<WarehouseInboundGridRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       {
         key: "documentNo",
         label: "Belge No",

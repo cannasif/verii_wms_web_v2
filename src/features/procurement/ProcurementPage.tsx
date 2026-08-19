@@ -1037,7 +1037,9 @@ export function ProcurementPage({
         );
 
       return [
-      ...systemColumns<ProcurementGridRow>(),
+      ...systemColumns<ProcurementGridRow>({
+        searchable: ["id", "createdBy", "updatedBy"],
+      }),
       {
         key: "documentNo",
         label: "Belge No",

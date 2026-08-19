@@ -83,7 +83,7 @@ export function PackingWorkbenchPage() {
     () => {
       if (!moduleReady) return [];
       return [
-      ...systemColumns<SessionRow>(),
+      ...systemColumns<SessionRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
       {
         key: "packingNo",
         label: t("columns.packingNo"),

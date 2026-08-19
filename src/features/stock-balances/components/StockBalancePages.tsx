@@ -12,6 +12,7 @@ import { localizeEnumValue } from '@/lib/enum-localization';
 import { stockBalancesApi } from '../api/stock-balances.api';
 import type { LocationBalanceRow, ReconciliationSummary, SerialBalanceRow, SerialMovementHistoryRow, StockBalanceDrillDown, WarehouseBalanceRow } from '../types/stock-balance.types';
 import { formatProjectDateTime, formatProjectNumber } from '@/lib/project-format';
+import { UNLIMITED_GRID_SEARCH_FIELDS } from '@/lib/grid-preferences';
 import { useAuthStore } from '@/stores/auth-store';
 import { WarehouseOpeningImportDialog } from '@/features/locations/components/WarehouseOpeningImportDialog';
 
@@ -60,7 +61,7 @@ export function LocationBalancesPage() {
   };
 
   const columns = useMemo<GridColumn<LocationBalanceRow>[]>(() => [
-    ...systemColumns<LocationBalanceRow>(),
+    ...systemColumns<LocationBalanceRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'warehouseCode', label: t(`${L}.warehouseCode`), render: r => r.warehouseCode },
     { key: 'warehouseName', label: t(`${L}.warehouseName`), render: r => r.warehouseName },
     { key: 'locationCode', label: t(`${L}.locationCode`), render: r => r.locationCode },
@@ -94,6 +95,7 @@ export function LocationBalancesPage() {
         description={t(`${L}.description`)}
         columns={columns}
         fetchPage={stockBalancesApi.getLocations}
+        maxSearchFields={UNLIMITED_GRID_SEARCH_FIELDS}
         toolbarActions={[
           ...(allowOpeningImport ? [{ label: t(`${L}.openingImportAction`), icon: <FileSpreadsheet className="size-4"/>, run: async () => setImportOpen(true) }] : []),
           ...(allow ? [{ label: working ? t(`${L}.reconciling`) : t(`${L}.reconcile`), run: reconcile }] : []),
@@ -127,7 +129,7 @@ export function WarehouseBalancesPage() {
   }, [t]);
 
   const columns = useMemo<GridColumn<WarehouseBalanceRow>[]>(() => [
-    ...systemColumns<WarehouseBalanceRow>(),
+    ...systemColumns<WarehouseBalanceRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'warehouseCode', label: t(`${W}.warehouseCode`), render: r => r.warehouseCode },
     { key: 'warehouseName', label: t(`${W}.warehouseName`), render: r => r.warehouseName },
     { key: 'stockCode', label: t(`${W}.stockCode`), render: r => r.stockCode },
@@ -156,6 +158,7 @@ export function WarehouseBalancesPage() {
         description={t(`${W}.description`)}
         columns={columns}
         fetchPage={stockBalancesApi.getWarehouses}
+        maxSearchFields={UNLIMITED_GRID_SEARCH_FIELDS}
       />
       {(detail || loading) && (
         <Dialog open onOpenChange={v => { if (!v) setDetail(null); }}>
@@ -225,7 +228,7 @@ export function SerialBalancesPage() {
   }, [selected]);
 
   const columns = useMemo<GridColumn<SerialBalanceRow>[]>(() => [
-    ...systemColumns<SerialBalanceRow>(),
+    ...systemColumns<SerialBalanceRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'serialNo', label: t(`${S}.serialNo`), hideable: false, render: r => <span className="font-mono font-bold text-cyan-600">{r.serialNo}</span> },
     { key: 'stockCode', label: t(`${S}.stockCode`), render: r => r.stockCode },
     { key: 'stockName', label: t(`${S}.stockName`), render: r => r.stockName },
@@ -249,7 +252,7 @@ export function SerialBalancesPage() {
   ], [t, gridLanguage]);
 
   const historyColumns = useMemo<GridColumn<SerialMovementHistoryRow>[]>(() => [
-    ...systemColumns<SerialMovementHistoryRow>(),
+    ...systemColumns<SerialMovementHistoryRow>({ searchable: ['id', 'createdBy', 'updatedBy'] }),
     { key: 'occurredAt', label: t(`${H}.occurredAt`), hideable: false, render: r => date(r.occurredAt) },
     { key: 'operationType', label: t(`${H}.operationType`), render: r => movementTypeLabel(r.operationType, t) },
     { key: 'operationStatus', label: t(`${H}.operationStatus`), render: r => localizeEnumValue(r.operationStatus) },
@@ -272,6 +275,7 @@ export function SerialBalancesPage() {
         description={t(`${S}.description`)}
         columns={columns}
         fetchPage={stockBalancesApi.getSerials}
+        maxSearchFields={UNLIMITED_GRID_SEARCH_FIELDS}
       />
       {selected && (
         <Dialog open onOpenChange={open => { if (!open) setSelected(null); }}>

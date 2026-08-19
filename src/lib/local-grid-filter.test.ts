@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'vitest';
+import { afterEach, describe, it } from 'vitest';
 import type { GridRequest } from '@/components/shared/AdvancedDataGrid';
 import { filterLocalGridPage, matchesGridSearch } from './local-grid-filter';
+import { setUserDisplayNameDirectory } from './user-display-names';
 
 const SEARCHABLE_KEYS = ['netsisOrderNo', 'supplierSerialNo', 'stockCode'];
 
@@ -9,6 +10,10 @@ const previewRows = [
   { id: 2, netsisOrderNo: 'SIP-866', supplierSerialNo: 'LVH-960', stockCode: '150-02-101-009-3954' },
   { id: 3, netsisOrderNo: 'SIP-100', supplierSerialNo: 'LVH-961', stockCode: '150-02-101-009-4015' },
 ];
+
+afterEach(() => {
+  setUserDisplayNameDirectory([]);
+});
 
 describe('matchesGridSearch', () => {
   it('matches each token across different columns (AND)', () => {
@@ -33,6 +38,29 @@ describe('matchesGridSearch', () => {
     assert.equal(matchesGridSearch(row, 'cagri alisveris', ['customerName', 'description']), true);
     assert.equal(matchesGridSearch(row, 'cagri bulunmayan', ['customerName', 'description']), false);
     assert.equal(matchesGridSearch(row, 'alisveris', ['customerName']), false);
+  });
+
+  it('matches visible actor names, not only numeric user ids', () => {
+    setUserDisplayNameDirectory([
+      { id: 8, firstName: 'Mutahhar', lastName: 'Yılmaz', username: 'mutahhar' },
+    ]);
+    const row = { id: 1, createdBy: 8, documentNo: 'TR-001' };
+    assert.equal(matchesGridSearch(row, 'mutahhar yilmaz', ['createdBy']), true);
+    assert.equal(matchesGridSearch(row, 'ali', ['createdBy']), false);
+    assert.equal(matchesGridSearch(row, '8', ['createdBy']), true);
+  });
+
+  it('matches resolved actor ids from the grid request', () => {
+    const row = { id: 1, createdBy: 8, documentNo: 'TR-001' };
+    assert.equal(matchesGridSearch(row, 'mutahhar', ['createdBy']), false);
+    assert.equal(
+      matchesGridSearch(row, 'mutahhar', ['createdBy'], { actorUserIds: [8] }),
+      true,
+    );
+    assert.equal(
+      matchesGridSearch({ id: 2, createdBy: null }, 'Sistem', ['createdBy'], { actorIncludeSystem: true }),
+      true,
+    );
   });
 });
 
@@ -66,5 +94,24 @@ describe('filterLocalGridPage', () => {
     assert.equal(page.totalCount, 2);
     assert.equal(page.items.length, 1);
     assert.equal(page.pageNumber, 2);
+  });
+
+  it('filters actor columns by resolved user ids', () => {
+    const page = filterLocalGridPage(
+      [
+        { id: 1, createdBy: 8, documentNo: 'TR-001' },
+        { id: 2, createdBy: 9, documentNo: 'TR-002' },
+      ],
+      {
+        ...baseRequest,
+        search: 'mutahhar',
+        searchFields: ['createdBy'],
+        actorUserIds: [8],
+      },
+      ['documentNo', 'createdBy'],
+      { paginate: false },
+    );
+    assert.equal(page.totalCount, 1);
+    assert.equal(page.items[0]?.id, 1);
   });
 });
