@@ -30,7 +30,8 @@ const CHECKBOX_CELL = cn(TABLE_CELL, 'text-center');
 interface Props {
   transferId: number;
   documentNo: string;
-  onBoardChange?: (board: ProductionTaskBoard) => void;
+  board: ProductionTaskBoard;
+  onBoardChange: (board: ProductionTaskBoard) => void;
 }
 
 function locationOptionLabel(code?: string, name?: string): string {
@@ -54,10 +55,9 @@ function buildDefaultTargetsFromLines(lines: ProductionTaskLine[]) {
   return { targets, labels };
 }
 
-export function ProductionTransferReturnSection({ transferId, documentNo, onBoardChange }: Props) {
+export function ProductionTransferReturnSection({ transferId, documentNo, board, onBoardChange }: Props) {
   const navigate = useNavigate();
   const currentUserId = useAuthStore((state) => state.user?.id);
-  const [board, setBoard] = useState<ProductionTaskBoard>();
   const [loadError, setLoadError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [lineTargets, setLineTargets] = useState<Record<number, string>>({});
@@ -68,18 +68,15 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   const [bulkTargetLabel, setBulkTargetLabel] = useState('');
   const locationLabelsRef = useRef<Record<string, string>>({});
 
-  const load = useCallback(async () => {
+  const reloadBoard = useCallback(async () => {
     try {
       const nextBoard = await productionTransferApi.taskBoard(transferId);
-      setBoard(nextBoard);
+      onBoardChange(nextBoard);
       setLoadError(undefined);
-      onBoardChange?.(nextBoard);
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'İade görevi yüklenemedi.');
     }
   }, [onBoardChange, transferId]);
-
-  useEffect(() => { void load(); }, [load]);
 
   const returnTask = useMemo(() => {
     if (!board || !currentUserId) return undefined;
@@ -115,16 +112,13 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   const runBoardAction = useCallback(async (action: () => Promise<ProductionTaskBoard>) => {
     setBusy(true);
     try {
-      const nextBoard = await action();
-      setBoard(nextBoard);
-      onBoardChange?.(nextBoard);
-      await load();
+      onBoardChange(await action());
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'İşlem başarısız.');
     } finally {
       setBusy(false);
     }
-  }, [load, onBoardChange]);
+  }, [onBoardChange]);
 
   const {
     checkingTaskId,
@@ -250,8 +244,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
   };
 
   const handleReturnCompleted = (nextBoard: ProductionTaskBoard) => {
-    setBoard(nextBoard);
-    onBoardChange?.(nextBoard);
+    onBoardChange(nextBoard);
     toast.success('İptal iadesi tamamlandı.');
     navigate(PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL);
   };
@@ -275,8 +268,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
       }
       if (!nextBoard) return;
 
-      setBoard(nextBoard);
-      onBoardChange?.(nextBoard);
+      onBoardChange(nextBoard);
       setLineTargets((current) => {
         const next = { ...current };
         for (const taskLineId of processedLineIds) delete next[taskLineId];
@@ -297,7 +289,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
 
       toast.success(`${processedLineIds.size} satır seçilen rafa bırakıldı.`);
     } catch (error) {
-      await load();
+      await reloadBoard();
       toast.error(error instanceof Error ? error.message : 'Rafa bırakma başarısız.');
     } finally {
       setBusy(false);
@@ -325,7 +317,7 @@ export function ProductionTransferReturnSection({ transferId, documentNo, onBoar
     return (
       <section className="wms-ops-form-card p-5">
         <p className="font-bold text-red-500">{loadError}</p>
-        <button type="button" className="mt-3 text-sm font-bold text-[var(--wms-brand-primary)]" onClick={() => void load()}>
+        <button type="button" className="mt-3 text-sm font-bold text-[var(--wms-brand-primary)]" onClick={() => void reloadBoard()}>
           Tekrar dene
         </button>
       </section>

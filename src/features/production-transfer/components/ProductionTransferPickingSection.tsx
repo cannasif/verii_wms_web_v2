@@ -44,6 +44,7 @@ import {
   countProductionTransferPickingRows,
   filterProductionTransferPickingRows,
   isProductionTransferPickingRowCompleted,
+  isProductionTransferPickingRowPending,
   type ProductionTransferPickTab as PickTab,
 } from '../production-transfer-picking-view';
 
@@ -69,7 +70,7 @@ type PickingTableStockListItem = {
 function buildPickingTableStockList(rows: ProductionTransferPickingRow[]): PickingTableStockListItem[] {
   const byStockId = new Map<number, PickingTableStockListItem>();
   for (const row of rows) {
-    if (byStockId.has(row.stockId)) continue;
+    if (!isProductionTransferPickingRowPending(row) || byStockId.has(row.stockId)) continue;
     byStockId.set(row.stockId, {
       stockId: row.stockId,
       stockCode: row.stockCode,
@@ -2908,7 +2909,7 @@ function SerialStockGroup({
   toCompletedLocationOption?: (item: LocationOption) => { value: string; label: string };
   fetchCompletedLocationPage?: CompletedShelfProps['fetchLocationPage'];
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(pickTab === 'completed');
   const totals = useMemo(() => ({
     requested: rows.reduce((sum, row) => sum + row.requestedQuantity, 0),
     remaining: rows.reduce((sum, row) => sum + row.remainingQuantity, 0),
@@ -2926,6 +2927,10 @@ function SerialStockGroup({
     if (tones.length === 0) return null;
     return tones.every((item) => item === 'shortage') ? 'shortage' : 'stocked';
   }, [locked, rows, showShelfLocationCodes]);
+
+  useEffect(() => {
+    if (pickTab === 'completed') setExpanded(true);
+  }, [pickTab, rows.length]);
 
   useEffect(() => {
     if (highlightedLineNo && rows.some((row) => row.lineNo === highlightedLineNo)) {
@@ -2988,7 +2993,7 @@ function SerialStockGroup({
         <td className={cn(TABLE_CELL, 'text-right font-semibold')}>{formatProjectNumber(totals.remaining)}</td>
         <td className={cn(TABLE_CELL, 'text-right font-semibold text-emerald-600')}>{formatProjectNumber(totals.processed)}</td>
       </tr>
-      {expanded && rows.map((row) => {
+      {expanded && rows.map((row, rowIndex) => {
         const rowKey = pickingRowSelectionKey(row);
         const completedShelf = showCompletedShelfColumn
           && onCompletedTargetChange
@@ -3010,7 +3015,7 @@ function SerialStockGroup({
           : undefined;
         return (
         <PickingRow
-          key={`serial:${pickingRowSelectionKey(row)}:${row.sourceLocationId ?? 'x'}`}
+          key={`serial:${pickingRowSelectionKey(row)}:${rowIndex}:${row.sourceLocationId ?? 'x'}`}
           row={row}
           locked={locked}
           showRouteColumns={showRouteColumns}

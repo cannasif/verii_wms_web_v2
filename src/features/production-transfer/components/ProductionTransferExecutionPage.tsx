@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2, PackageCheck, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePermissionAccess } from '@/features/access-control/hooks/usePermissionAccess';
 import { useModuleTranslation } from '@/hooks/useModuleTranslation';
-import { productionTransferApi, type ProductionTransferExecution } from '../api';
+import { productionTransferApi, type ProductionTaskBoard, type ProductionTransferExecution } from '../api';
 import { ProductionTransferPickingSection } from './ProductionTransferPickingSection';
 import { ProductionTransferReturnSection } from './ProductionTransferReturnSection';
 import { ErpPostingPanel, ErpPostingTriggerButton } from './ProductionTransferErpPostingControls';
@@ -25,10 +25,13 @@ export function ProductionTransferExecutionPage({
 } = {}) {
   const { t } = useModuleTranslation('production-transfer');
   const id = Number(useParams().id);
+  const navigate = useNavigate();
   const currentUserId = useAuthStore((state) => state.user?.id);
   const { can } = usePermissionAccess();
   const [execution, setExecution] = useState<ProductionTransferExecution>();
+  const [board, setBoard] = useState<ProductionTaskBoard>();
   const [hasActiveReturnTask, setHasActiveReturnTask] = useState(false);
+  const [returnJustCompleted, setReturnJustCompleted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [erpBusy, setErpBusy] = useState(false);
   const [loadError, setLoadError] = useState<string>();
@@ -46,10 +49,8 @@ export function ProductionTransferExecutionPage({
         productionTransferApi.taskBoard(id),
       ]);
       setExecution(result);
-      setHasActiveReturnTask(board.tasks.some((task) =>
-        task.taskType === 'CancellationReturn'
-        && task.assignments.some((assignment) => assignment.userId === currentUserId)
-        && !['Completed', 'Cancelled'].includes(task.status)));
+      setBoard(board);
+      setHasActiveReturnTask(hasAssignedOpenCancellationReturn(board, currentUserId));
       setCanResumePicking(
         result.workflowStatus === 'AwaitingHandover'
         && board.tasks.some((task) =>
@@ -64,6 +65,20 @@ export function ProductionTransferExecutionPage({
   }, [currentUserId, id]);
 
   useEffect(() => { void load(); }, [load, refreshToken]);
+
+  const handleReturnBoardChange = useCallback((nextBoard: ProductionTaskBoard) => {
+    setBoard(nextBoard);
+    const stillActive = hasAssignedOpenCancellationReturn(nextBoard, currentUserId);
+    if (!stillActive && hasCompletedCancellationReturn(nextBoard)) {
+      setReturnJustCompleted(true);
+      setHasActiveReturnTask(false);
+      onStateChange?.();
+      navigate(PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL);
+      return;
+    }
+    setHasActiveReturnTask(stillActive);
+    onStateChange?.();
+  }, [currentUserId, navigate, onStateChange]);
 
   const hasShortage = (execution?.shortageQuantity ?? 0) > 0;
   const canConfirmRequester = !execution?.requestedByUserId
@@ -123,13 +138,14 @@ export function ProductionTransferExecutionPage({
   };
 
   if (loadError) return <section className="wms-ops-form-card p-5"><p className="font-bold text-red-500">{loadError}</p><button className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[var(--wms-brand-primary)]" onClick={() => void load()}><RefreshCw className="size-4" />Tekrar dene</button></section>;
-  if (!execution) return <div className="flex min-h-56 items-center justify-center"><Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" /></div>;
+  if (!execution || !board) return <div className="flex min-h-56 items-center justify-center"><Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" /></div>;
 
   const pickingStage = execution.workflowStatus === 'Planned' || execution.workflowStatus === 'Picking';
   const handoverStage = execution.workflowStatus === 'AwaitingHandover';
   const completed = execution.workflowStatus === 'Completed' || execution.workflowStatus === 'CompletedWithShortage';
-  const showReturnSection = hasActiveReturnTask;
-  const showPickingSection = pickingStage && !showReturnSection;
+  const hideTransferWorkflow = hasActiveReturnTask || returnJustCompleted;
+  const showReturnSection = hasActiveReturnTask && !returnJustCompleted;
+  const showPickingSection = pickingStage && !hideTransferWorkflow;
   const showErpControls = execution.erpPostingPolicy !== 'Disabled';
   const canRetryErp = productionTransferCanRetryErp(
     execution.erpIntegrationStatus,
@@ -150,7 +166,7 @@ export function ProductionTransferExecutionPage({
       <Link to={PRODUCTION_WORK_ORDERS_MY_ASSIGNMENTS_URL} className="mb-4 inline-flex items-center gap-1 text-xs font-bold text-[var(--wms-brand-primary)]">
         <ArrowLeft className="size-4" />Benim İşlerim'e dön
       </Link>
-      {!showReturnSection ? (
+      {!hideTransferWorkflow ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <Step active={pickingStage} done={!pickingStage} number="01" title="Barkodlu toplama" text="Kalemleri tablodan takip edin, barkodla toplayın veya rotayı güncelleyin." />
           <Step active={handoverStage} done={completed} number="02" title="Fiziksel teslim onayı" text="Talep sahibi malzemeyi alınca tam veya eksik teslimi onaylasın." />
@@ -162,13 +178,8 @@ export function ProductionTransferExecutionPage({
       <ProductionTransferReturnSection
         transferId={id}
         documentNo={execution.documentNo}
-        onBoardChange={(board) => {
-          setHasActiveReturnTask(board.tasks.some((task) =>
-            task.taskType === 'CancellationReturn'
-            && task.assignments.some((assignment) => assignment.userId === currentUserId)
-            && !['Completed', 'Cancelled'].includes(task.status)));
-          onStateChange?.();
-        }}
+        board={board}
+        onBoardChange={handleReturnBoardChange}
       />
     )}
 
@@ -183,7 +194,13 @@ export function ProductionTransferExecutionPage({
       />
     )}
 
-    {handoverStage && !showReturnSection && <section className="wms-ops-form-card p-5">
+    {returnJustCompleted && (
+      <div className="flex min-h-56 items-center justify-center">
+        <Loader2 className="size-7 animate-spin text-[var(--wms-brand-primary)]" />
+      </div>
+    )}
+
+    {handoverStage && !hideTransferWorkflow && <section className="wms-ops-form-card p-5">
       {canResumePicking ? (
         <button
           type="button"
@@ -202,7 +219,7 @@ export function ProductionTransferExecutionPage({
       <div className="mt-5 flex justify-end"><OpsActionButton variant="primary" loading={busy} disabled={!canConfirmRequester || (hasShortage && (!shortageConfirmed || shortageReason.trim().length < 5))} onClick={() => confirmHandover()}><CheckCircle2 className="size-4" />Transferi onayla</OpsActionButton></div>
     </section>}
 
-    {completed && <section className="wms-ops-form-card border-emerald-500/40 p-5">
+    {completed && !hideTransferWorkflow && <section className="wms-ops-form-card border-emerald-500/40 p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <CheckCircle2 className="mt-1 size-7 text-emerald-500" />
@@ -228,6 +245,22 @@ export function ProductionTransferExecutionPage({
       )}
     </section>}
   </section>;
+}
+
+function hasAssignedOpenCancellationReturn(
+  board: ProductionTaskBoard,
+  currentUserId: number | undefined,
+): boolean {
+  if (!currentUserId) return false;
+  return board.tasks.some((task) =>
+    task.taskType === 'CancellationReturn'
+    && task.assignments.some((assignment) => assignment.userId === currentUserId)
+    && !['Completed', 'Cancelled'].includes(task.status));
+}
+
+function hasCompletedCancellationReturn(board: ProductionTaskBoard): boolean {
+  return board.tasks.some((task) =>
+    task.taskType === 'CancellationReturn' && task.status === 'Completed');
 }
 
 function Step({ active, done, number, title, text }: { active: boolean; done: boolean; number: string; title: string; text: string }) { return <div className={cn('rounded-xl border p-4', active ? 'border-[var(--wms-brand-primary)] bg-[color-mix(in_oklab,var(--wms-brand-primary)_8%,transparent)]' : 'border-[var(--wms-app-border)]', done && 'border-emerald-500/40')}><div className="flex items-center gap-3"><span className={cn('grid size-9 place-items-center rounded-full text-xs font-black', done ? 'bg-emerald-500 text-white' : 'bg-[var(--wms-brand-primary)] text-[var(--wms-brand-on-primary)]')}>{done ? <CheckCircle2 className="size-5" /> : number}</span><span><strong className="block">{title}</strong><span className="text-xs text-[var(--wms-app-text-muted)]">{text}</span></span></div></div>; }
