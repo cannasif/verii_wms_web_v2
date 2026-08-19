@@ -299,6 +299,7 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
   const displayName = user?.name || user?.email || t('common.user');
   const displayInitial = displayName.charAt(0).toUpperCase();
   const navbarBranchCodeTrimmed = branch?.code?.trim();
+  const displayBranchName = branch?.name || t('roles.admin');
   const navbarBranchCodePrefix =
     navbarBranchCodeTrimmed && navbarBranchCodeTrimmed.toLowerCase() !== '0'
       ? `${navbarBranchCodeTrimmed} • `
@@ -668,7 +669,7 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
                 data-testid="navbar-profile-menu"
                 className="group relative z-10 flex min-h-11 min-w-11 touch-manipulation items-center justify-end gap-3 rounded-xl px-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--wms-brand-ring)]"
               >
-                <div className="hidden text-right lg:block">
+                <div className="hidden w-[190px] text-center lg:block">
                   <p
                     className={cn(
                       'max-w-[190px] truncate text-sm font-semibold text-slate-700 dark:text-slate-100',
@@ -680,11 +681,12 @@ export function Navbar({ navItems = [] }: NavbarProps): ReactElement {
                   </p>
                   <p
                     className={cn(
-                      'text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400',
+                      'wms-navbar-user__branch-clamp text-[10px] font-medium uppercase tracking-[0.14em] text-slate-400',
                       isPremium ? 'wms-premium-navbar-user__branch' : 'font-mono',
                     )}
+                    title={displayBranchName}
                   >
-                    {branch?.name || t('roles.admin')}
+                    {displayBranchName}
                   </p>
                 </div>
                 <div

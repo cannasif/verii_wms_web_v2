@@ -46,7 +46,17 @@ export interface AppInputProps extends ComponentPropsWithoutRef<'input'> {
 }
 
 export const AppInput = forwardRef<HTMLInputElement, AppInputProps>(function AppInput(
-  { className, leadingIcon, trailingContent, invalid, disabled, tone = 'ops', ...props },
+  {
+    className,
+    leadingIcon,
+    trailingContent,
+    invalid,
+    disabled,
+    tone = 'ops',
+    onFocus,
+    onPointerDown,
+    ...props
+  },
   ref,
 ): ReactElement {
   const opsTone = tone === 'ops';
@@ -107,6 +117,14 @@ export const AppInput = forwardRef<HTMLInputElement, AppInputProps>(function App
           className,
         )}
         {...props}
+        onPointerDown={(event) => {
+          markEditableInputPointerDown(event);
+          onPointerDown?.(event);
+        }}
+        onFocus={(event) => {
+          onFocus?.(event);
+          selectInputContentsOnFocus(event);
+        }}
       />
       {trailingContent ? <span className="app-input-shell__trailing">{trailingContent}</span> : null}
     </span>

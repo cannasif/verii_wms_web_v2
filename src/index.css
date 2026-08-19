@@ -3465,6 +3465,11 @@ html.skin-premium .wms-ops-action-btn__spinner-core {
   box-shadow: inset 2px 0 0 var(--wms-ops-accent);
 }
 
+.wms-ops-lookup-popover [role='listbox'],
+.wms-ops-list-select-content [role='listbox'] {
+  -webkit-overflow-scrolling: touch;
+}
+
 .wms-ops-user-select__avatar {
   display: inline-flex;
   align-items: center;
@@ -21294,6 +21299,17 @@ html.skin-premium .wms-premium-navbar-user__branch {
   text-transform: none;
   color: color-mix(in oklab, var(--wms-brand-primary) 68%, hsl(var(--foreground)));
   text-shadow: 0 0 12px color-mix(in oklab, var(--wms-brand-primary) 28%, transparent);
+}
+
+.wms-navbar-user__branch-clamp {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.08;
+  max-height: calc(2 * 1.08em);
+  word-break: break-word;
 }
 
 /* Premium: ikon ? geni?leyen glow search */

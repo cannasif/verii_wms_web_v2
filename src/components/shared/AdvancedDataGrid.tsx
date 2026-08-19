@@ -138,6 +138,11 @@ export interface GridToolbarAction {
   run: () => Promise<void>;
   icon?: ReactNode;
   tooltip?: string;
+  variant?: 'primary' | 'secondary';
+  disabled?: boolean;
+  className?: string;
+  /** false ise tıklanınca mal-kabul spinner'ı çıkmaz (sekme geçişi gibi anlık aksiyonlar). */
+  showBusy?: boolean;
 }
 interface Props<T extends { id: number }> {
   pageKey: string;
@@ -325,8 +330,27 @@ function toContextText(value: unknown, language: string): string | null {
       ? localizeEnumValue(value, language)
       : localizeLegacyUiText(value, language);
   }
-  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+  if (typeof value === 'number' || typeof value === 'bigint') {
     return String(value);
+  }
+  return null;
+}
+
+function reactNodeToText(value: unknown): string | null {
+  if (value == null || typeof value === 'boolean') return null;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'bigint') {
+    const text = String(value).trim();
+    return text === '' ? null : text;
+  }
+  if (Array.isArray(value)) {
+    const parts = value
+      .map(reactNodeToText)
+      .filter((part): part is string => part != null);
+    const joined = parts.join(' ').replace(/\s+/g, ' ').trim();
+    return joined === '' ? null : joined;
+  }
+  if (isValidElement(value)) {
+    return reactNodeToText((value.props as { children?: ReactNode }).children);
   }
   return null;
 }
@@ -336,10 +360,15 @@ function getContextValue<T>(column: GridColumn<T>, row: T, language: string): st
   if (explicit !== undefined) return toContextText(explicit, language);
 
   const rendered = renderGridCell(column, row, language);
-  const renderedText = toContextText(rendered, language);
+  const renderedText = toContextText(rendered, language) ?? reactNodeToText(rendered);
   if (renderedText != null) return renderedText;
 
   return toContextText((row as Record<string, unknown>)[column.key], language);
+}
+
+function isRedundantCellContextValue(label: string, value: string | null): boolean {
+  if (value == null) return false;
+  return value.trim().localeCompare(label.trim(), undefined, { sensitivity: 'accent' }) === 0;
 }
 
 async function copyText(value: string): Promise<void> {
@@ -931,13 +960,14 @@ export function AdvancedDataGrid<T extends { id: number }>({
   const changeSort = (key: string) => { if (sortBy === key) setSortDirection((value) => value === 'asc' ? 'desc' : 'asc'); else { setSortBy(key); setSortDirection('asc'); } setPage(1); };
   const resolvedToolbarActions = toolbarActions ?? (toolbarAction ? [toolbarAction] : []);
   const runAction = async (action: GridToolbarAction, index: number) => {
-    setRunningActionIndex(index);
+    const showBusy = action.showBusy !== false;
+    if (showBusy) setRunningActionIndex(index);
     try {
       await action.run();
     } catch {
       // Toasts / error UX are owned by the action runner when provided.
     } finally {
-      setRunningActionIndex(null);
+      if (showBusy) setRunningActionIndex(null);
     }
     try {
       await query.refetch();
@@ -1254,17 +1284,13 @@ export function AdvancedDataGrid<T extends { id: number }>({
               const button = (
                 <OpsActionButton
                   type="button"
-                  title={action.tooltip}
+                  variant={action.variant ?? 'primary'}
+                  className={action.className}
+                  loading={action.showBusy !== false && isRunning}
+                  disabled={Boolean(action.disabled) || runningActionIndex !== null}
                   onClick={() => void runAction(action, index)}
-                  disabled={runningActionIndex !== null}
                 >
-                  {action.icon ? (
-                    <span className={cn('inline-flex', isRunning && 'animate-spin')} aria-hidden>
-                      {action.icon}
-                    </span>
-                  ) : (
-                    <Plus className={cn('size-3.5', isRunning && 'animate-spin')} aria-hidden />
-                  )}
+                  {action.icon ?? <Plus className="size-3.5" aria-hidden />}
                   {action.label}
                 </OpsActionButton>
               );
@@ -1868,14 +1894,9 @@ export function AdvancedDataGrid<T extends { id: number }>({
                         </tr>
                       )}
                       {expandedRowId === row.id && renderExpandedRow ? (
-                        <tr className="border-b border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-soft)_55%,transparent)]">
-                          <td colSpan={Math.max(activeColumns.length, 1)} className="px-4 py-4">
-                            <div
-                              className="w-[100cqw] max-w-[100cqw]"
-                              style={{ transform: 'translateX(var(--wms-grid-scroll-x, 0px))' }}
-                            >
-                              {renderExpandedRow(row)}
-                            </div>
+                        <tr className="border-b border-[var(--wms-app-border)] bg-[color-mix(in_oklab,var(--wms-brand-soft)_40%,transparent)]">
+                          <td colSpan={Math.max(activeColumns.length, 1)} className="p-0">
+                            {renderExpandedRow(row)}
                           </td>
                         </tr>
                       ) : null}
@@ -1922,7 +1943,7 @@ export function AdvancedDataGrid<T extends { id: number }>({
               </div>
             ))}
             {expandedRowId === row.id && renderExpandedRow ? (
-              <div className="border-t border-[var(--wms-app-border)] px-3 py-4">
+              <div className="border-t border-[var(--wms-app-border)]">
                 {renderExpandedRow(row)}
               </div>
             ) : null}
@@ -1993,9 +2014,11 @@ export function AdvancedDataGrid<T extends { id: number }>({
             <div className="rounded-xl bg-[var(--wms-app-panel-muted)] px-3 py-2.5">
               <span className="block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[var(--wms-app-text-muted)]">{t('dataGrid.selectedCell')}</span>
               <strong className="mt-1 block truncate">{cellContext.column.label}</strong>
-              <p className="mt-1 max-h-24 overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-[var(--wms-app-text-muted)]">
-                {cellContext.value ?? t('dataGrid.emptyCell')}
-              </p>
+              {!isRedundantCellContextValue(cellContext.column.label, cellContext.value) && (
+                <p className="mt-1 max-h-24 overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-[var(--wms-app-text-muted)]">
+                  {cellContext.value ?? t('dataGrid.emptyCell')}
+                </p>
+              )}
             </div>
             {cellContext.value != null && !cellContext.column.contextCopyDisabled && (
               <button type="button" role="menuitem" onClick={() => void copyCellValue()} className="mt-2 inline-flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-medium hover:bg-[var(--wms-brand-soft)]">

@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
+import { useDropdownOverlayScroll } from '@/hooks/useDropdownOverlayScroll';
 import { useStickyPopoverSide } from '@/hooks/useStickyPopoverSide';
 import { OpsActionButton } from './OpsActionButton';
 import { OpsFieldShell } from './OpsFieldShell';
@@ -61,7 +62,11 @@ interface PagedLookupDialogProps<T> {
   triggerMode?: 'button' | 'combobox';
   autoSearchMinLength?: number;
   triggerClassName?: string;
-  /** `null`: popover portalsız, tetikleyicinin yanında render edilir. Dialog içinde kullanırken gerekir. */
+  /**
+   * `null`: popover `document.body`'ye, dialog üstü z-index ile portallanır.
+   * Workspace kökü dialog'un arkasında kaldığı için dialog içinde `null` verilmelidir.
+   * Dialog gövdesine portallamak overflow/transform yüzünden listeyi keser.
+   */
   popoverPortalContainer?: HTMLElement | null;
   /** Dokunmatik cihazda çift tık mümkün olmadığı için tek dokunuş lookup dialog'unu açar. */
   openDialogOnTouchTap?: boolean;
@@ -402,6 +407,12 @@ export function PagedLookupDialog<T>({
     if (event.defaultPrevented) return;
     if (disabled || open) return;
 
+    if (event.key === 'Tab') {
+      setComboboxOpen(false);
+      setEditing(false);
+      return;
+    }
+
     if (event.key === 'Escape') {
       event.preventDefault();
       setComboboxOpen(false);
@@ -473,10 +484,23 @@ export function PagedLookupDialog<T>({
     preferredSide: 'bottom',
     estimatedHeight: 280,
   });
-  // Dialog içinde popover, workspace portal kökünde kalırsa dialog'un arkasında görünür;
-  // bu durumda dialog gövdesine portallanır.
+  useDropdownOverlayScroll(dropdownListRef, comboboxPopoverOpen);
+
+  useEffect(() => {
+    if (!comboboxPopoverOpen) return;
+    const list = dropdownListRef.current;
+    if (!list || !comboboxQuery.hasNextPage || comboboxQuery.isFetchingNextPage) return;
+    if (list.scrollHeight <= list.clientHeight + 1) fetchComboboxNext();
+  }, [
+    comboboxItems.length,
+    comboboxPopoverOpen,
+    comboboxQuery.hasNextPage,
+    comboboxQuery.isFetchingNextPage,
+  ]);
+  // Dialog içinde workspace kökü arkada kalır. Body + yüksek z-index, overflow kesmesini
+  // ve dialog transform'unun fixed konumunu bozmasını da önler.
   const portalContainer = skipPopoverPortal
-    ? ((anchorRef.current?.closest('[data-slot="dialog-content"]') as HTMLElement | null) ?? undefined)
+    ? (typeof document !== 'undefined' ? document.body : undefined)
     : (popoverPortalContainer ?? getWorkspacePortalRoot() ?? undefined);
   const displayValue = editing ? comboboxDraft : (value ?? '');
   const comboboxFetching = comboboxQuery.isFetching && !comboboxQuery.isFetchingNextPage;
@@ -653,7 +677,8 @@ export function PagedLookupDialog<T>({
           onOpenAutoFocus={(event) => event.preventDefault()}
           onCloseAutoFocus={(event) => event.preventDefault()}
           className={cn(
-            'wms-floating-surface wms-ops-lookup-popover wms-ops-list-select-content z-[2000] overflow-hidden outline-none',
+            'wms-floating-surface wms-ops-lookup-popover wms-ops-list-select-content pointer-events-auto overflow-hidden outline-none',
+            skipPopoverPortal ? 'z-[5000]' : 'z-[2000]',
             DROPDOWN_OVERLAY_WIDTH_CLASS,
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
           )}
@@ -667,16 +692,16 @@ export function PagedLookupDialog<T>({
               skipBlurCloseRef.current = true;
             }}
             className={cn(
-              'relative h-64 space-y-1 overflow-y-auto overscroll-contain p-1.5',
+              'wms-ops-scrollbar relative max-h-[min(16rem,45dvh)] touch-pan-y space-y-1 overflow-y-auto overscroll-contain p-1.5',
               selectionFrozen && 'pointer-events-none',
             )}
           >
             {showComboboxLoading ? (
-              <div className="flex h-full items-center justify-center px-2">
+              <div className="flex min-h-32 items-center justify-center px-2">
                 <OpsLoadingState message={t('common.loading')} compact code="LOOKUP" />
               </div>
             ) : visibleComboboxItems.length === 0 ? (
-              <div className="flex h-full items-center justify-center px-3 text-center text-sm text-slate-500">
+              <div className="flex min-h-32 items-center justify-center px-3 text-center text-sm text-slate-500">
                 {comboboxEmptyText}
               </div>
             ) : (

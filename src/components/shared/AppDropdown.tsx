@@ -6,7 +6,6 @@ import {
   useState,
   type ReactElement,
   type ReactNode,
-  type RefObject,
   type UIEvent,
 } from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
@@ -15,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { localizeEnumOptionLabel } from '@/lib/enum-localization';
 import { cn } from '@/lib/utils';
 import { getWorkspacePortalRoot } from '@/lib/workspace-portal';
+import { useDropdownOverlayScroll } from '@/hooks/useDropdownOverlayScroll';
 import { useStickyPopoverSide } from '@/hooks/useStickyPopoverSide';
 import { DROPDOWN_OVERLAY_WIDTH_CLASS, DropdownOptionLabel } from './DropdownOptionLabel';
 
@@ -67,38 +67,6 @@ export interface AppDropdownProps<TValue extends string = string> {
 
 const SEARCH_DEBOUNCE_MS = 300;
 const LOAD_MORE_THRESHOLD = 0.82;
-
-/** Dialog scroll-lock body'de wheel'i yuttuğunda liste kaydırmayı korur. */
-function useDropdownListWheelScroll(
-  listRef: RefObject<HTMLDivElement | null>,
-  open: boolean,
-): void {
-  useEffect(() => {
-    if (!open) return;
-
-    const onWheel = (event: WheelEvent) => {
-      const list = listRef.current;
-      if (!list) return;
-      const target = event.target;
-      if (!(target instanceof Node) || !list.contains(target)) return;
-
-      const maxScroll = list.scrollHeight - list.clientHeight;
-      if (maxScroll <= 0) return;
-
-      const nextScrollTop = Math.min(
-        maxScroll,
-        Math.max(0, list.scrollTop + event.deltaY),
-      );
-
-      list.scrollTop = nextScrollTop;
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
-    document.addEventListener('wheel', onWheel, { passive: false, capture: true });
-    return () => document.removeEventListener('wheel', onWheel, { capture: true });
-  }, [listRef, open]);
-}
 
 export function AppDropdown<TValue extends string = string>({
   value,
@@ -161,7 +129,7 @@ export function AppDropdown<TValue extends string = string>({
     }
   }, [onSearchChange, onSearchInputChange, open, remoteSearch]);
 
-  useDropdownListWheelScroll(listRef, open);
+  useDropdownOverlayScroll(listRef, open);
 
   const popoverSide = useStickyPopoverSide({
     open,
@@ -295,7 +263,7 @@ export function AppDropdown<TValue extends string = string>({
             role="listbox"
             aria-label={ariaLabel}
             onScroll={handleScroll}
-            className="wms-ops-scrollbar max-h-64 space-y-1 overflow-y-auto overscroll-contain p-1.5"
+            className="wms-ops-scrollbar max-h-[min(16rem,45dvh)] touch-pan-y space-y-1 overflow-y-auto overscroll-contain p-1.5"
           >
             {errorText ? (
               <div className="flex min-h-20 flex-col items-center justify-center gap-2 px-3 text-center text-sm text-red-600 dark:text-red-400">

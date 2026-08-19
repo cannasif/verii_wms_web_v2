@@ -25,4 +25,4 @@ export function DropdownOptionLabel({
 }
 
 export const DROPDOWN_OVERLAY_WIDTH_CLASS =
-  'min-w-[var(--radix-popover-trigger-width)] w-max max-w-[min(36rem,calc(100vw-1.5rem))]';
+  'w-[min(var(--radix-popover-trigger-width),calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)]';

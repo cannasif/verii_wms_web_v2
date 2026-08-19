@@ -4,7 +4,11 @@
   transition: opacity 120ms ease;
 }
 
-:where(button, [role="button"])[data-wms-api-pending="true"]:not(:has(.animate-spin))::after {
+:where(button, [role="button"])[data-wms-api-pending="true"]:not(
+  :has(.animate-spin),
+  :has(.wms-ops-action-btn__spinner),
+  .wms-ops-action-btn
+)::after {
   animation: wms-api-action-spin 700ms linear infinite;
   border: 2px solid currentColor;
   border-right-color: transparent;
