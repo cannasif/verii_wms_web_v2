@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Ban, ArrowRightLeft, Check, CheckCircle2, ClipboardList, Eye, Hand, PackageCheck, PlayCircle, Plus, RefreshCw, SearchCheck, Trash2, TriangleAlert, Undo2, UserPlus, UserRoundCog, Users, X } from 'lucide-react';
+import { Ban, ArrowRightLeft, Check, CheckCircle2, ChevronDown, ChevronUp, ClipboardList, Eye, Hand, PackageCheck, PlayCircle, Plus, RefreshCw, SearchCheck, Trash2, TriangleAlert, Undo2, UserPlus, UserRoundCog, Users, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedDataGrid, type GridColumn, type GridRequest } from '@/components/shared/AdvancedDataGrid';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { AppDropdown } from '@/components/shared/AppDropdown';
 import { AppDateInput, AppInput } from '@/components/shared/AppInput';
+import { StockIdentityCell } from '@/components/shared/StockIdentityCell';
 import { PagedAppDropdown } from '@/components/shared/PagedAppDropdown';
 import { PagedLookupDialog } from '@/components/shared/PagedLookupDialog';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
@@ -24,6 +25,7 @@ import { useModuleTranslation } from '@/hooks/useModuleTranslation';
 import type { DropdownPage } from '@/hooks/useDropdownInfiniteSearch';
 import { useAuthStore } from '@/stores/auth-store';
 import { cn } from '@/lib/utils';
+import { formatProjectQuantity, isPieceUnit, maskProjectQuantityInput, nextQuantityCaret, parseLocalizedNumber } from '@/lib/project-format';
 import type { PagedResponse } from '@/types/api';
 import {
   kkdApi,
@@ -37,6 +39,12 @@ import {
   type KkdRequestRow,
   type KkdStockLookup,
 } from './kkd-api';
+import {
+  KkdQuotaReviewPanel,
+  QuotaDecisionBadge,
+  QuotaLineActions,
+} from './KkdQuotaReviewPanel';
+import { lineQuotaBucket, useKkdQuotaDecide, useKkdQuotaExcess } from './kkd-quota-review';
 import { KKD_CELL, KKD_HEAD_CELL, KkdField, KkdPanel, KkdTableShell } from './kkd-ops-ui';
 
 /** Dialog içi dropdown'lar body'ye portal edilir; aksi halde overflow keser / arkada kalır. */
@@ -66,7 +74,8 @@ type DraftLine = {
   groupName: string;
   stockId: number | null;
   stockLabel: string;
-  quantity: number;
+  unitCode: string;
+  quantity: string;
 };
 
 const newLine = (): DraftLine => ({
@@ -75,8 +84,20 @@ const newLine = (): DraftLine => ({
   groupName: '',
   stockId: null,
   stockLabel: '',
-  quantity: 1,
+  unitCode: '',
+  quantity: '1',
 });
+
+function parseDraftQuantity(value: string): number {
+  const qty = parseLocalizedNumber(value);
+  return Number.isFinite(qty) ? qty : 0;
+}
+
+function commitDraftQuantity(value: string, unitCode?: string | null): string {
+  const parsed = parseDraftQuantity(value);
+  if (parsed <= 0) return value.trim();
+  return formatProjectQuantity(parsed, unitCode || 'ADET');
+}
 
 const CLOSED = new Set(['Completed', 'Cancelled']);
 const ACTIVE_TASK_STATUSES = new Set(['Assigned', 'InPreparation']);
@@ -143,16 +164,25 @@ export function KkdRequestsPage(): ReactElement {
   const [handoffTask, setHandoffTask] = useState<KkdPreparationTaskRow | null>(null);
   const [handoffUser, setHandoffUser] = useState<ActiveUserOption | null>(null);
   const [handoffReason, setHandoffReason] = useState('');
+  const [expandedQuotaId, setExpandedQuotaId] = useState<number | null>(null);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (isPageTab(tab)) setActiveTab(tab);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (activeTab !== QUOTA_TAB) setExpandedQuotaId(null);
+  }, [activeTab]);
+
   const goToTab = useCallback((tab: PageTab) => {
     setActiveTab(tab);
     setSearchParams((params) => { params.set('tab', tab); return params; }, { replace: true });
   }, [setSearchParams]);
+
+  const toggleQuotaExpand = useCallback((rowId: number) => {
+    setExpandedQuotaId((current) => (current === rowId ? null : rowId));
+  }, []);
 
   const tabCounts = useQuery({
     queryKey: ['kkd', 'requests', 'tab-counts', revision],
@@ -371,13 +401,34 @@ export function KkdRequestsPage(): ReactElement {
 
   const columns = useMemo<GridColumn<KkdRequestRow>[]>(() => [
     {
-      key: 'id', label: t('grid.id'), width: 88, filterType: 'number', sortable: true,
-      render: (row) => (
-        <span className="inline-flex items-center gap-1">
-          {row.myActiveTaskStarted ? <PlayCircle className="size-3.5 shrink-0 text-sky-500" aria-label={t('grid.taskInProgress')} /> : null}
-          {row.id}
-        </span>
-      ),
+      key: 'id', label: t('grid.id'), width: activeTab === QUOTA_TAB ? 118 : 88, filterType: 'number', sortable: true,
+      render: (row) => {
+        const open = expandedQuotaId === row.id;
+        return (
+          <span className="inline-flex items-center gap-2">
+            {row.myActiveTaskStarted ? <PlayCircle className="size-3.5 shrink-0 text-sky-500" aria-label={t('grid.taskInProgress')} /> : null}
+            <span>{row.id}</span>
+            {activeTab === QUOTA_TAB ? (
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex size-7 shrink-0 items-center justify-center rounded-md border transition',
+                  'border-[color-mix(in_oklab,var(--wms-brand-primary)_40%,var(--wms-app-border))]',
+                  'bg-[var(--wms-brand-soft)] text-[var(--wms-brand-primary)]',
+                  'hover:border-[var(--wms-brand-primary)] hover:bg-[var(--wms-brand-primary)] hover:text-white',
+                  open && 'bg-[var(--wms-brand-primary)] text-white',
+                )}
+                title={open ? t('actions.collapse') : t('actions.expand')}
+                aria-label={open ? t('actions.collapse') : t('actions.expand')}
+                aria-expanded={open}
+                onClick={(event) => { event.stopPropagation(); toggleQuotaExpand(row.id); }}
+              >
+                {open ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
+              </button>
+            ) : null}
+          </span>
+        );
+      },
     },
     { key: 'requestNo', label: t('grid.requestNo'), width: 190, render: (row) => <strong>{row.requestNo}</strong>, searchable: true, defaultSearch: true, sortable: true },
     { key: 'status', label: t('grid.status'), width: 165, render: (row) => <Status value={row.status} text={enumText('status', row.status)}/>, filterType: 'enum', sortable: true },
@@ -423,7 +474,8 @@ export function KkdRequestsPage(): ReactElement {
     {
       key: 'myActiveTaskQuotaPendingCount', label: t('grid.quotaStatus'), width: 170, filterable: false, searchable: false, sortable: true,
       render: (row) => {
-        if ((row.myActiveTaskQuotaPendingCount ?? 0) > 0) {
+        const pendingOnThisTab = activeTab === QUOTA_TAB;
+        if (pendingOnThisTab || (row.myActiveTaskQuotaPendingCount ?? 0) > 0) {
           return (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-600">
               <TriangleAlert className="size-3 shrink-0" aria-hidden />{t('grid.quotaPending')}
@@ -476,17 +528,18 @@ export function KkdRequestsPage(): ReactElement {
         const open = !CLOSED.has(row.status);
         const hasUnassigned = row.unassignedLineCount > 0;
         const canManageMyTask = canResolve && open && Boolean(row.myActiveTaskId);
+        const quotaQueue = activeTab === QUOTA_TAB;
         return (
           <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
             <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.detail')} aria-label={t('actions.detail')} onClick={() => setDetailId(row.id)}>
               <Eye className="size-3.5" />
             </button>
-            {canAssignToOthers && open && hasUnassigned ? (
+            {!quotaQueue && canAssignToOthers && open && hasUnassigned ? (
               <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.assign')} aria-label={t('actions.assign')} onClick={() => openPrepare(row)}>
                 <UserRoundCog className="size-3.5" />
               </button>
             ) : null}
-            {canClaimSelf && open && row.hasPoolTask && row.poolTaskId && !row.myActiveTaskId ? (
+            {!quotaQueue && canClaimSelf && open && row.hasPoolTask && row.poolTaskId && !row.myActiveTaskId ? (
               <button
                 type="button" className="wms-ops-grid-icon-btn" title={t('actions.claimPool')} aria-label={t('actions.claimPool')}
                 disabled={claimPool.isPending}
@@ -495,12 +548,12 @@ export function KkdRequestsPage(): ReactElement {
                 <Users className="size-3.5" />
               </button>
             ) : null}
-            {canClaimSelf && open && hasUnassigned && !row.hasPoolTask && !row.myActiveTaskId ? (
+            {!quotaQueue && canClaimSelf && open && hasUnassigned && !row.hasPoolTask && !row.myActiveTaskId ? (
               <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.claim')} aria-label={t('actions.claim')} onClick={() => claimSelf(row)}>
                 <Hand className="size-3.5" />
               </button>
             ) : null}
-            {canPrepare && open && (row.myActiveTaskId || (row.hasPoolTask && row.poolTaskId)) ? (
+            {!quotaQueue && canPrepare && open && (row.myActiveTaskId || (row.hasPoolTask && row.poolTaskId)) ? (
               <button
                 type="button"
                 className="wms-ops-grid-icon-btn"
@@ -511,7 +564,7 @@ export function KkdRequestsPage(): ReactElement {
                 {row.myActiveTaskId && row.myActiveTaskStarted ? <PlayCircle className="size-3.5 text-sky-600" /> : <PackageCheck className="size-3.5" />}
               </button>
             ) : null}
-            {canManageMyTask ? (
+            {!quotaQueue && canManageMyTask ? (
               <button
                 type="button"
                 className="wms-ops-grid-icon-btn"
@@ -544,7 +597,7 @@ export function KkdRequestsPage(): ReactElement {
                 <RefreshCw className={cn('size-3.5', erpRetry.isPending && 'animate-spin')} />
               </button>
             ) : null}
-            {canCancel && open ? (
+            {!quotaQueue && canCancel && open ? (
               <button
                 type="button"
                 className="wms-ops-grid-icon-btn !text-rose-600"
@@ -571,14 +624,14 @@ export function KkdRequestsPage(): ReactElement {
         );
       },
     },
-  ], [canAssignToOthers, canCancel, canClaimSelf, canPrepare, canResolve, claimPool, claimSelf, enumText, erpRetry, formatDateTime, formatQuantity, openHandoffFromRow, openPrepare, prepare, reactivateRequest, t, warehouseFilterOptions, warehouseLabel]);
+  ], [activeTab, canAssignToOthers, canCancel, canClaimSelf, canPrepare, canResolve, claimPool, claimSelf, enumText, erpRetry, expandedQuotaId, formatDateTime, formatQuantity, openHandoffFromRow, openPrepare, prepare, reactivateRequest, t, toggleQuotaExpand, warehouseFilterOptions, warehouseLabel]);
 
   const createRequest = useMutation({
     mutationFn: async () => {
       const normalized = lines.filter((line) => line.groupCode.trim() || line.stockId != null);
       if (!employeeId || normalized.length === 0) throw new Error(t('validation.employeeAndLine'));
       if (normalized.some((line) => !line.groupCode.trim())) throw new Error(t('validation.groupRequired'));
-      if (normalized.some((line) => line.quantity <= 0)) throw new Error(t('validation.quantity'));
+      if (normalized.some((line) => parseDraftQuantity(line.quantity) <= 0)) throw new Error(t('validation.quantity'));
       return kkdApi.createRequest({
         idempotencyKey: crypto.randomUUID(), employeeId: Number(employeeId), warehouseId: null, assignedUserId: null,
         sourceType: 'Wms', externalRequestNo: null, priority,
@@ -586,7 +639,7 @@ export function KkdRequestsPage(): ReactElement {
         description: description.trim() || null,
         lines: normalized.map((line) => ({
           groupCode: line.groupCode, groupName: line.groupName || null, stockId: line.stockId,
-          quantity: line.quantity, externalOrderNo: null, externalOrderLineId: null,
+          quantity: parseDraftQuantity(line.quantity), externalOrderNo: null, externalOrderLineId: null,
         })),
       });
     },
@@ -648,6 +701,15 @@ export function KkdRequestsPage(): ReactElement {
       emptyMessage={t('page.empty')}
       columns={columns}
       fetchPage={fetchPage}
+      expandedRowId={activeTab === QUOTA_TAB ? expandedQuotaId : null}
+      renderExpandedRow={activeTab === QUOTA_TAB ? (row) => (
+        <KkdQuotaReviewPanel
+          requestId={row.id}
+          canManageQuota={canManageQuota}
+          formatQuantity={formatQuantity}
+          onBoardChanged={invalidateBoard}
+        />
+      ) : undefined}
       aboveToolbarExtra={(
         <div className="wms-ops-production-work-order-tabs wms-ops-detail-dialog mb-4">
           <Tabs
@@ -655,7 +717,7 @@ export function KkdRequestsPage(): ReactElement {
             onValueChange={(value) => goToTab(value as PageTab)}
           >
             <TabsList
-              className={cn('w-full', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--cols-5')}
+              className={cn('w-full', 'wms-ops-scrollbar', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--cols-5')}
               data-active-index={activeTab === QUOTA_TAB ? undefined : Math.max(activeTabIndex, 0)}
             >
               {activeTab === QUOTA_TAB ? null : <span className="wms-ops-detail-tab-indicator" aria-hidden />}
@@ -677,6 +739,10 @@ export function KkdRequestsPage(): ReactElement {
         </div>
       )}
       onRowDoubleClick={(row) => {
+        if (activeTab === QUOTA_TAB) {
+          toggleQuotaExpand(row.id);
+          return;
+        }
         if (activeTab === 'mine' && (row.myActiveTaskId || row.poolTaskId)) {
           prepare(row, row.myActiveTaskId ?? row.poolTaskId);
         }
@@ -689,10 +755,17 @@ export function KkdRequestsPage(): ReactElement {
             : t('tabs.quotapending'),
           icon: <TriangleAlert className="size-4" />,
           tooltip: t('tabDescriptions.quotapending'),
+          variant: 'secondary' as const,
+          disabled: !tabCounts.data || tabCounts.data.quotaPending <= 0,
+          className: cn(
+            'wms-kkd-quota-cta',
+            activeTab === QUOTA_TAB && 'wms-kkd-quota-cta--active',
+            activeTab !== QUOTA_TAB && tabCounts.data && tabCounts.data.quotaPending > 0 && 'wms-kkd-quota-cta--live',
+          ),
           run: async () => goToTab(QUOTA_TAB),
         } : null,
         can('WMS.KKD.REQUESTS.CREATE') ? {
-          label: t('actions.new'), icon: <Plus className="size-4"/>, run: async () => setCreateOpen(true),
+          label: t('actions.new'), icon: <Plus className="size-4"/>, variant: 'primary' as const, showBusy: false, run: async () => setCreateOpen(true),
         } : null,
       ].filter((action): action is NonNullable<typeof action> => action !== null)}
     />
@@ -800,6 +873,7 @@ export function KkdRequestsPage(): ReactElement {
         canClaim={canClaimSelf}
         canCancel={can('WMS.KKD.REQUESTS.CANCEL')}
         canPrepare={canPrepare}
+        canManageQuota={canManageQuota}
         prepareTaskId={detailPrepareTarget.prepareTaskId}
         currentUserId={currentUserOption?.id ?? null}
         initialTab={activeTab === 'preparing' || activeTab === 'mine' ? 'tasks' : 'content'}
@@ -820,6 +894,7 @@ export function KkdRequestsPage(): ReactElement {
         onPrepareTask={(taskId) => prepare(detail.data!, taskId)}
         onHandoff={(task) => { setHandoffUser(null); setHandoffReason(''); setHandoffTask(task); }}
         onClaimPool={(task) => claimPool.mutate({ taskId: task.id, expectedRowVersion: task.rowVersion })}
+        onQuotaBoardChanged={invalidateBoard}
       />
     ) : null}
 
@@ -1455,7 +1530,12 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
                           <td className="wms-ops-gr-detail-lines-table__num">{formatQuantity(line.remainingQuantity)}</td>
                           <td className="wms-ops-gr-detail-lines-table__muted text-xs" onClick={(event) => event.stopPropagation()}>
                             {line.stockId ? (
-                              `${line.stockCode} · ${line.stockName}`
+                              <StockIdentityCell
+                                stockId={line.stockId}
+                                stockCode={line.stockCode}
+                                stockName={line.stockName}
+                                layout="inline"
+                              />
                             ) : (
                               <span className="inline-flex items-center gap-1.5">
                                 {t('detail.stockAwaiting')}
@@ -1590,7 +1670,14 @@ function PrepareRequestDialog({ target, t, warehouseOptions, formatQuantity, cur
                                 </td>
                                 <td className="wms-ops-gr-detail-lines-table__num">{formatQuantity(line.remainingQuantity)}</td>
                                 <td className="wms-ops-gr-detail-lines-table__muted text-xs">
-                                  {line.stockId ? `${line.stockCode} · ${line.stockName}` : t('detail.stockAwaiting')}
+                                  {line.stockId ? (
+                                    <StockIdentityCell
+                                      stockId={line.stockId}
+                                      stockCode={line.stockCode}
+                                      stockName={line.stockName}
+                                      layout="inline"
+                                    />
+                                  ) : t('detail.stockAwaiting')}
                                 </td>
                                 <td>
                                   <button
@@ -1645,6 +1732,8 @@ function DraftLineEditor({ line, index, canRemove, t, onChange, onRemove }: {
 }): ReactElement {
   const [groupLookupOpen, setGroupLookupOpen] = useState(false);
   const [stockLookupOpen, setStockLookupOpen] = useState(false);
+  const quantityRef = useRef<HTMLInputElement>(null);
+  const pieceUnit = isPieceUnit(line.unitCode || 'ADET');
   const groupLabel = line.groupCode
     ? (line.groupName ? `${line.groupCode} · ${line.groupName}` : line.groupCode)
     : '';
@@ -1694,6 +1783,8 @@ function DraftLineEditor({ line, index, canRemove, t, onChange, onRemove }: {
                 groupName: group.name,
                 stockId: null,
                 stockLabel: '',
+                unitCode: '',
+                quantity: commitDraftQuantity(line.quantity, ''),
               })
             }
           />
@@ -1743,10 +1834,12 @@ function DraftLineEditor({ line, index, canRemove, t, onChange, onRemove }: {
                 ...line,
                 stockId: stock.id,
                 stockLabel: `${stock.code} · ${stock.name}`,
+                unitCode: stock.unitCode ?? '',
                 groupCode: stockGroup || line.groupCode,
                 groupName: stockGroup
                   ? (stockGroup === line.groupCode ? line.groupName : '')
                   : line.groupName,
+                quantity: commitDraftQuantity(line.quantity, stock.unitCode),
               });
             }}
           />
@@ -1755,11 +1848,35 @@ function DraftLineEditor({ line, index, canRemove, t, onChange, onRemove }: {
       <td className={KKD_CELL}>
         <div className="wms-ops-kkd-create-lines__cell wms-ops-kkd-create-lines__qty">
           <AppInput
-            type="number"
-            min="0.000001"
-            step="any"
+            ref={quantityRef}
+            type="text"
+            inputMode={pieceUnit ? 'numeric' : 'decimal'}
+            autoComplete="off"
+            spellCheck={false}
             value={line.quantity}
-            onChange={(event) => onChange({ ...line, quantity: Number(event.target.value) })}
+            onKeyDown={(event) => {
+              if (event.ctrlKey || event.metaKey || event.altKey) return;
+              if (event.key.length !== 1) return;
+              if (pieceUnit) {
+                if (!/\d/.test(event.key)) event.preventDefault();
+                return;
+              }
+              if (!/[\d.,]/.test(event.key)) event.preventDefault();
+            }}
+            onChange={(event) => {
+              const field = event.currentTarget;
+              const caret = field.selectionStart ?? field.value.length;
+              const next = maskProjectQuantityInput(field.value, line.unitCode || 'ADET');
+              onChange({ ...line, quantity: next });
+              const restoreAt = nextQuantityCaret(field.value, caret, next);
+              requestAnimationFrame(() => {
+                quantityRef.current?.setSelectionRange(restoreAt, restoreAt);
+              });
+            }}
+            onBlur={() => onChange({
+              ...line,
+              quantity: commitDraftQuantity(line.quantity, line.unitCode || 'ADET') || line.quantity,
+            })}
             aria-label={t('create.quantity')}
             className="wms-ops-kkd-create-lines__qty-input"
           />
@@ -1770,6 +1887,7 @@ function DraftLineEditor({ line, index, canRemove, t, onChange, onRemove }: {
           {canRemove ? (
             <button
               type="button"
+              tabIndex={-1}
               className="inline-flex size-7 items-center justify-center text-rose-500/80 transition hover:bg-rose-500/10 hover:text-rose-400"
               onClick={onRemove}
               aria-label={t('actions.removeLine')}
@@ -1802,6 +1920,7 @@ function KkdRequestDetailDialog({
   canClaim,
   canCancel,
   canPrepare,
+  canManageQuota,
   prepareTaskId,
   currentUserId,
   initialTab = 'content',
@@ -1818,6 +1937,7 @@ function KkdRequestDetailDialog({
   onPrepareTask,
   onHandoff,
   onClaimPool,
+  onQuotaBoardChanged,
 }: {
   open: boolean;
   loading: boolean;
@@ -1834,6 +1954,7 @@ function KkdRequestDetailDialog({
   canClaim: boolean;
   canCancel: boolean;
   canPrepare: boolean;
+  canManageQuota: boolean;
   prepareTaskId?: number | null;
   currentUserId: number | null;
   initialTab?: KkdDetailMainTab;
@@ -1850,6 +1971,7 @@ function KkdRequestDetailDialog({
   onPrepareTask: (taskId: number) => void;
   onHandoff: (task: KkdPreparationTaskRow) => void;
   onClaimPool: (task: KkdPreparationTaskRow) => void;
+  onQuotaBoardChanged: () => void;
 }): ReactElement {
   const [mainTab, setMainTab] = useState<KkdDetailMainTab>(initialTab);
   const [showCancelPanel, setShowCancelPanel] = useState(false);
@@ -1868,6 +1990,8 @@ function KkdRequestDetailDialog({
     () => new Set(activeTasks.flatMap((task) => task.lines.map((line) => line.requestLineId))),
     [activeTasks],
   );
+  const { excessLineIds } = useKkdQuotaExcess(value?.id ?? null, value?.employeeId, value?.lines ?? []);
+  const decideQuota = useKkdQuotaDecide(value?.id ?? null, onQuotaBoardChanged);
   const hasPoolTask = activeTasks.some((task) => task.assignedUserId == null);
   const myActiveTaskId = useMemo(() => {
     if (prepareTaskId) return prepareTaskId;
@@ -2122,6 +2246,7 @@ function KkdRequestDetailDialog({
                           <th className="wms-ops-gr-detail-lines-table__num">{t('detail.remaining')}</th>
                           <th>{t('detail.colAssignment')}</th>
                           <th>{t('grid.status')}</th>
+                          <th className="text-center">{t('prepareDialog.colQuota')}</th>
                           <th className="wms-ops-gr-detail-lines-table__actions">{t('grid.actions')}</th>
                         </tr>
                       </thead>
@@ -2132,8 +2257,15 @@ function KkdRequestDetailDialog({
                             && line.allocatedQuantity === 0
                             && line.deliveredQuantity === 0;
                           const lineOpen = line.status !== 'Cancelled' && line.status !== 'Completed';
+                          const needsQuotaDecision = lineQuotaBucket(
+                            line.quotaDecision,
+                            excessLineIds.has(line.id),
+                          ) === 'pending' && Boolean(line.stockId);
                           return (
-                            <tr key={line.id} className={cn(!line.stockId && 'bg-amber-500/[0.04]')}>
+                            <tr key={line.id} className={cn(
+                              !line.stockId && 'bg-amber-500/[0.04]',
+                              (excessLineIds.has(line.id) || line.quotaDecision !== 'None') && 'wms-kkd-quota-excess',
+                            )}>
                               <td>{line.lineNo}</td>
                               <td>
                                 <div className="font-medium">{line.groupCode}</div>
@@ -2143,10 +2275,12 @@ function KkdRequestDetailDialog({
                               </td>
                               <td>
                                 {line.stockId ? (
-                                  <>
-                                    <div className="font-medium">{line.stockCode}</div>
-                                    <div className="wms-ops-gr-detail-lines-table__muted text-xs">{line.stockName}</div>
-                                  </>
+                                  <StockIdentityCell
+                                    stockId={line.stockId}
+                                    stockCode={line.stockCode}
+                                    stockName={line.stockName}
+                                    nameClassName="wms-ops-gr-detail-lines-table__muted text-xs"
+                                  />
                                 ) : (
                                   <span className="text-amber-600">{t('detail.stockAwaiting')}</span>
                                 )}
@@ -2169,20 +2303,60 @@ function KkdRequestDetailDialog({
                                   {enumText('lineStatus', line.status)}
                                 </OpsStatusBadge>
                               </td>
+                              <td className="w-px whitespace-nowrap text-center align-middle">
+                                <div className="flex justify-center">
+                                  <QuotaDecisionBadge
+                                    decision={line.quotaDecision}
+                                    isExcess={excessLineIds.has(line.id)}
+                                  />
+                                </div>
+                              </td>
                               <td className="wms-ops-gr-detail-lines-table__actions">
-                                {canResolveLine ? (
-                                  <button
-                                    type="button"
-                                    className="wms-ops-grid-icon-btn"
-                                    title={t('actions.selectStock')}
-                                    aria-label={t('actions.selectStock')}
-                                    onClick={() => onResolve(line)}
-                                  >
-                                    <SearchCheck className="size-3.5" />
-                                  </button>
-                                ) : (
-                                  <span className="text-[var(--wms-app-text-muted)]">—</span>
-                                )}
+                                <div className="flex flex-col items-stretch gap-1.5">
+                                  {needsQuotaDecision && canManageQuota ? (
+                                    <QuotaLineActions
+                                      line={line}
+                                      canDecide
+                                      disabled={decideQuota.isPending}
+                                      onApprove={(item) => {
+                                        const pendingNow = (value?.lines ?? []).filter((candidate) =>
+                                          lineQuotaBucket(candidate.quotaDecision, excessLineIds.has(candidate.id)) === 'pending'
+                                          && Boolean(candidate.stockId)).length;
+                                        decideQuota.mutate({
+                                          lineId: item.id,
+                                          approve: true,
+                                          reason: t('quotaReview.approveReason'),
+                                          remainingPendingAfter: Math.max(0, pendingNow - 1),
+                                        });
+                                      }}
+                                      onReject={(item, reason) => {
+                                        const pendingNow = (value?.lines ?? []).filter((candidate) =>
+                                          lineQuotaBucket(candidate.quotaDecision, excessLineIds.has(candidate.id)) === 'pending'
+                                          && Boolean(candidate.stockId)).length;
+                                        decideQuota.mutate({
+                                          lineId: item.id,
+                                          approve: false,
+                                          reason,
+                                          remainingPendingAfter: Math.max(0, pendingNow - 1),
+                                        });
+                                      }}
+                                    />
+                                  ) : null}
+                                  {canResolveLine ? (
+                                    <button
+                                      type="button"
+                                      className="wms-ops-grid-icon-btn"
+                                      title={t('actions.selectStock')}
+                                      aria-label={t('actions.selectStock')}
+                                      onClick={() => onResolve(line)}
+                                    >
+                                      <SearchCheck className="size-3.5" />
+                                    </button>
+                                  ) : null}
+                                  {!needsQuotaDecision && !canResolveLine ? (
+                                    <span className="text-[var(--wms-app-text-muted)]">—</span>
+                                  ) : null}
+                                </div>
                               </td>
                             </tr>
                           );

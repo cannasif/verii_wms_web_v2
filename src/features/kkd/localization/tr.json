@@ -7,7 +7,7 @@
     "completed": "Teslimi tamamlanmış talepler. ERP durumunu buradan izleyin.",
     "cancelled": "İptal edilmiş talepler.",
     "mine": "Üzerinize aldığınız veya size atanan aktif görevler. Çift tıklayarak toplamaya başlayın.",
-    "quotapending": "KKD hak matrisini aşan, karar bekleyen kalemler. Talep detayından Onayla/Reddet ile karara bağlayın."
+    "quotapending": "Kota aşımı bekleyen kuyruk. Onay/red kaydedilince talep silinmez; bekleyen kota kalmazsa bu listeden çıkar, Beklemede veya Hazırlamada durur."
   },
   "grid": { "id": "Kayıt ID", "requestNo": "Talep no", "status": "Durum", "priority": "Öncelik", "employeeCode": "Personel kodu", "employeeName": "Personel", "department": "Departman", "warehouse": "Depo", "warehouseUnset": "Depo atanmadı", "assignedUser": "Hazırlayanlar", "assigned": "Atandı", "unassigned": "Atanmadı", "taskInProgress": "Devam ediyor", "quotaStatus": "Kota durumu", "quotaPending": "Kota onayı bekliyor", "quotaApproved": "Kota onayı verildi", "erp": "Belge / ERP", "lineCount": "Kalem", "unresolved": "Stok bekleyen", "requested": "Talep", "allocated": "Hazırlanan", "delivered": "Teslim", "neededAt": "İhtiyaç zamanı", "requestedAt": "Talep zamanı", "createdBy": "Oluşturan", "createdDate": "Oluşturma zamanı", "updatedBy": "Güncelleyen", "updatedDate": "Güncelleme zamanı", "actions": "İşlemler" },
   "actions": { "new": "Yeni KKD talebi", "detail": "Detay", "assign": "Talebi hazırlat (kalem bazlı ata)", "claim": "Üzerime al", "claimPool": "Havuzdan üzerime al", "prepare": "Toplama yap", "continuePrepare": "İşe devam et", "reactivate": "Beklemeye al", "operation": "Ambar çıkışı operasyonu", "handoff": "Kalan işi devret", "erpRetry": "ERP kaydını yeniden dene", "expand": "Kalemleri göster", "collapse": "Kalemleri gizle", "addLine": "Kalem ekle", "removeLine": "Kalemi kaldır", "selectStock": "Stok/beden seç", "create": "Talebi oluştur", "save": "Kaydet", "close": "Vazgeç", "cancel": "Talebi iptal et" },
@@ -75,6 +75,34 @@
     "taskAssignee": "Hazırlayan: {{user}}",
     "taskPool": "Depo havuzunda · sahipsiz, herkes üzerine alabilir",
     "taskOrigin": "Devreden: {{user}}"
+  },
+  "quotaReview": {
+    "lines": "Talep kalemleri",
+    "colLine": "Kalem",
+    "colStock": "Stok / beden",
+    "counts": "{{pending}} bekleyen · {{approved}} onaylı · {{rejected}} redli",
+    "checking": "Kota aşımı kontrol ediliyor...",
+    "filter": {
+      "label": "Kalem görünümü",
+      "allLines": "Tüm kalemler",
+      "excessOnly": "Sadece kota aşımları"
+    },
+    "empty": {
+      "all": "Bu talepte gösterilecek kalem yok.",
+      "excess": "Bu talepte kota aşımlı kalem yok."
+    },
+    "approved": "Kota onayı kaydedildi.",
+    "approvedOverride": "Kota onayı kaydedildi; bu kalem için ek hak tanımlandı.",
+    "approvedLeftQueue": "Kota onaylandı. Bekleyen kota kalmadığı için talep bu kuyruktan çıktı — silinmedi, Beklemede veya Hazırlamada duruyor.",
+    "rejected": "Kota reddi kaydedildi.",
+    "rejectedLeftQueue": "Kota reddedildi. Bekleyen kota kalmadığı için talep bu kuyruktan çıktı — silinmedi.",
+    "rejectedBadge": "Reddedildi",
+    "decideFailed": "Kota kararı kaydedilemedi.",
+    "approveReason": "Kota Onayı ekranından onaylandı.",
+    "rejectTitle": "Kota kalemini reddet",
+    "rejectDescription": "{{group}} / {{stock}} kalemi reddedilecek. Red gerekçesini yazın.",
+    "rejectReason": "Red gerekçesi",
+    "rejectPlaceholder": "Neden reddedildiğini yazın"
   },
   "create": {
     "title": "Yeni KKD talebi",

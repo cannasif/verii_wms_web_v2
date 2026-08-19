@@ -7,7 +7,7 @@
     "completed": "Requests whose delivery is completed. Track ERP status here.",
     "cancelled": "Cancelled requests.",
     "mine": "Active tasks you claimed or that were assigned to you. Double-click to start picking.",
-    "quotapending": "Lines that exceed the KKD entitlement matrix and await a decision. Approve/Reject from the request detail."
+    "quotapending": "Queue of lines that exceed entitlement. Approving/rejecting does not delete the request; when no pending quota remains it leaves this list and stays in Pending or In preparation."
   },
   "grid": { "id": "Record ID", "requestNo": "Request no", "status": "Status", "priority": "Priority", "employeeCode": "Employee code", "employeeName": "Employee", "department": "Department", "warehouse": "Warehouse", "warehouseUnset": "No warehouse yet", "assignedUser": "Preparers", "assigned": "Assigned", "unassigned": "Unassigned", "taskInProgress": "In progress", "quotaStatus": "Quota status", "quotaPending": "Quota approval pending", "quotaApproved": "Quota approved", "erp": "Document / ERP", "lineCount": "Lines", "unresolved": "Awaiting SKU", "requested": "Requested", "allocated": "Prepared", "delivered": "Delivered", "neededAt": "Needed by", "requestedAt": "Requested at", "createdBy": "Created by", "createdDate": "Created at", "updatedBy": "Updated by", "updatedDate": "Updated at", "actions": "Actions" },
   "actions": { "new": "New PPE request", "detail": "Details", "assign": "Prepare request (assign by line)", "claim": "Claim for myself", "claimPool": "Claim from pool", "prepare": "Start picking", "continuePrepare": "Continue picking", "reactivate": "Put back to pending", "operation": "Warehouse outbound operation", "handoff": "Hand over remaining work", "erpRetry": "Retry ERP posting", "expand": "Show lines", "collapse": "Hide lines", "addLine": "Add line", "removeLine": "Remove line", "selectStock": "Select SKU/size", "create": "Create request", "save": "Save", "close": "Close", "cancel": "Cancel request" },
@@ -75,6 +75,34 @@
     "taskAssignee": "Preparer: {{user}}",
     "taskPool": "In warehouse pool · unowned, anyone can claim it",
     "taskOrigin": "Handed over by: {{user}}"
+  },
+  "quotaReview": {
+    "lines": "Request lines",
+    "colLine": "Line",
+    "colStock": "SKU / size",
+    "counts": "{{pending}} pending · {{approved}} approved · {{rejected}} rejected",
+    "checking": "Checking quota excess...",
+    "filter": {
+      "label": "Line view",
+      "allLines": "All lines",
+      "excessOnly": "Quota excess only"
+    },
+    "empty": {
+      "all": "This request has no lines to show.",
+      "excess": "This request has no quota-exceeding lines."
+    },
+    "approved": "Quota approval was saved.",
+    "approvedOverride": "Quota approval was saved and extra entitlement was created for this line.",
+    "approvedLeftQueue": "Quota approved. The request left this queue because no pending quota remains — it was not deleted; look under Pending or In preparation.",
+    "rejected": "Quota rejection was saved.",
+    "rejectedLeftQueue": "Quota rejected. The request left this queue because no pending quota remains — it was not deleted.",
+    "rejectedBadge": "Rejected",
+    "decideFailed": "The quota decision could not be saved.",
+    "approveReason": "Approved from the Quota Approvals screen.",
+    "rejectTitle": "Reject quota line",
+    "rejectDescription": "Line {{group}} / {{stock}} will be rejected. Provide a reason.",
+    "rejectReason": "Rejection reason",
+    "rejectPlaceholder": "Explain why this line is rejected"
   },
   "create": {
     "title": "New PPE request",

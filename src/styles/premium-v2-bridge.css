@@ -566,6 +566,41 @@ html.skin-premium .wms-ops-action-btn--secondary:hover:not(:disabled) {
   box-shadow: 0 0 16px -6px var(--wms-brand-shadow) !important;
 }
 
+html.skin-premium .wms-ops-action-btn--secondary.wms-kkd-quota-cta--live:not(:hover):not(.wms-kkd-quota-cta--active),
+html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn--secondary.wms-kkd-quota-cta--live:not(:hover):not(.wms-kkd-quota-cta--active) {
+  border-color: color-mix(in oklab, var(--wms-brand-accent) 62%, var(--wms-brand-primary)) !important;
+  color: color-mix(in oklab, #9a3412 35%, hsl(var(--foreground))) !important;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--wms-brand-primary) 42%, var(--wms-app-panel-strong)) 0%,
+      color-mix(in oklab, var(--wms-brand-secondary) 36%, var(--wms-app-panel-strong)) 48%,
+      color-mix(in oklab, var(--wms-brand-accent) 48%, var(--wms-app-panel-strong)) 100%
+    ) !important;
+}
+
+html.skin-premium .wms-ops-action-btn--secondary.wms-kkd-quota-cta:hover:not(:disabled),
+html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn--secondary.wms-kkd-quota-cta:hover:not(:disabled),
+html.skin-premium .wms-ops-action-btn--secondary.wms-kkd-quota-cta--active:not(:disabled),
+html.skin-premium .wms-ops-workspace-host .wms-ops-action-btn--secondary.wms-kkd-quota-cta--active:not(:disabled) {
+  transform: translateY(-1px);
+  animation: none;
+  border-color: color-mix(in oklab, var(--wms-brand-accent) 55%, var(--wms-brand-primary)) !important;
+  background: linear-gradient(
+    90deg,
+    var(--wms-brand-primary) 0%,
+    var(--wms-brand-secondary) 42%,
+    var(--wms-brand-accent) 100%
+  ) !important;
+  background-size: 100% 100% !important;
+  color: var(--wms-brand-on-primary) !important;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 28%);
+  box-shadow:
+    0 0 16px 1px var(--wms-brand-shadow),
+    0 0 28px -4px color-mix(in oklab, var(--wms-brand-accent) 50%, transparent),
+    0 0 48px -8px var(--wms-brand-shadow) !important;
+}
+
 /* Secondary outline buttons / step chips */
 html.skin-premium .wms-ops-workspace-host button[class*='rounded-xl'].border.text-xs.font-semibold {
   border-radius: 999px !important;

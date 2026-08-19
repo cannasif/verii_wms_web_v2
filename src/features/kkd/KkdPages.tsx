@@ -848,7 +848,7 @@ export function KkdDefinitionsPage(): ReactElement {
             className="gap-0"
           >
             <TabsList
-              className={cn('w-full', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--cols-5')}
+              className={cn('w-full', 'wms-ops-scrollbar', 'wms-ops-detail-main-tabs', 'wms-ops-detail-main-tabs--cols-5')}
               data-active-index={activeTabIndex}
             >
               <span className="wms-ops-detail-tab-indicator" aria-hidden />

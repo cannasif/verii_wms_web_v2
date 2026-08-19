@@ -433,6 +433,8 @@ export const kkdApi = {
     expectedTaskLineId?: number | null;
     quantity?: number | null;
     sourceLocationId?: number | null;
+    serialNo?: string | null;
+    lotNo?: string | null;
     expectedRequestLineRowVersion?: string | null;
     confirmAboveThreshold?: boolean;
   }) =>

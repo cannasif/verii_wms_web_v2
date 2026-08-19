@@ -662,3 +662,60 @@ html.skin-premium
   .wms-ops-detail-tab-indicator {
   transform: translateX(calc(4 * (100% + 0.3rem)));
 }
+
+/* Dar ekranda 5 sekme: soldan başlasın, yatay kaydırılsın, aktif turuncu kalsın */
+@media (max-width: 40rem) {
+  .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+    [data-slot='tabs-list'].wms-ops-detail-main-tabs.wms-ops-detail-main-tabs--cols-5,
+  .wms-ops-kkd-definition-tabs.wms-ops-detail-dialog
+    [data-slot='tabs-list'].wms-ops-detail-main-tabs.wms-ops-detail-main-tabs--cols-5 {
+    display: flex !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-contain: contain;
+    -webkit-overflow-scrolling: touch;
+    grid-template-columns: none !important;
+  }
+
+  .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+    [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5
+    .wms-ops-detail-tab-indicator,
+  .wms-ops-kkd-definition-tabs.wms-ops-detail-dialog
+    [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5
+    .wms-ops-detail-tab-indicator {
+    display: none;
+  }
+
+  .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+    [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5
+    [data-slot='tabs-trigger'].wms-ops-detail-main-tab,
+  .wms-ops-kkd-definition-tabs.wms-ops-detail-dialog
+    [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5
+    [data-slot='tabs-trigger'].wms-ops-detail-main-tab {
+    flex: 0 0 auto;
+    width: auto !important;
+    min-width: max-content;
+    overflow: visible;
+    text-overflow: unset;
+    letter-spacing: 0.04em;
+    padding-inline: 0.7rem;
+  }
+
+  .wms-ops-production-work-order-tabs.wms-ops-detail-dialog
+    [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5
+    [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'],
+  .wms-ops-kkd-definition-tabs.wms-ops-detail-dialog
+    [data-slot='tabs-list'].wms-ops-detail-main-tabs--cols-5
+    [data-slot='tabs-trigger'].wms-ops-detail-main-tab[data-state='active'] {
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--wms-ops-tab-active-bg) 82%, #ffd4bc),
+      var(--wms-ops-tab-active-bg)
+    ) !important;
+    color: var(--wms-ops-tab-active-fg) !important;
+    -webkit-text-fill-color: var(--wms-ops-tab-active-fg) !important;
+    box-shadow: 0 0 12px var(--wms-ops-warm-soft) !important;
+  }
+}

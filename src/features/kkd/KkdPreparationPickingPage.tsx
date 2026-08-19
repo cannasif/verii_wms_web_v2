@@ -3,17 +3,25 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, Barcode, CheckCircle2, HardHat, List, Loader2, MapPinned, PackageCheck,
+  ArrowLeft, Barcode, CheckCircle2, HardHat, List, MapPinned, PackageCheck,
   PlayCircle, RotateCcw, ScanBarcode, Search, TriangleAlert, Undo2, UserRound, Warehouse,
 } from 'lucide-react';
 import { AppInput } from '@/components/shared/AppInput';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
+import { OpsLoadingState } from '@/components/shared/OpsLoadingState';
 import { OpsQrCaptureField } from '@/components/shared/OpsQrCaptureField';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { useTheme } from '@/components/theme-provider';
 import { warehouseOutboundApi, type ShipmentOperationLinePayload } from '@/features/warehouse-outbound/warehouseOutbound-api';
-import { formatProjectNumber } from '@/lib/project-format';
+import {
+  formatProjectNumber,
+  formatProjectQuantity,
+  isPieceUnit,
+  maskProjectQuantityInput,
+  nextQuantityCaret,
+  parseLocalizedNumber,
+} from '@/lib/project-format';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
 import { KKD_CELL, KKD_HEAD_CELL, KkdCallout, KkdPage, KkdPanel, KkdTableShell } from './kkd-ops-ui';
@@ -89,6 +97,8 @@ type PendingPick = {
   quantity: string;
   /** Üretimdeki requiresThresholdConfirm — eşik üstü ikinci onay. */
   requiresThresholdConfirm?: boolean;
+  selected: Record<string, boolean>;
+  quantities: Record<string, string>;
 };
 
 type RouteCandidate = {
@@ -108,6 +118,54 @@ type RouteDialogState = {
 
 function candidateKey(locationId: number, serialNo?: string | null): string {
   return `${locationId}:${serialNo ?? ''}`;
+}
+
+function maxRouteCandidateQuantity(candidate: RouteCandidate, line: PickLine): number {
+  return Math.max(0, Math.min(candidate.availableQuantity, line.targetQuantity));
+}
+
+function capRouteQuantity(raw: string, unitCode: string, max: number): string {
+  const masked = maskProjectQuantityInput(raw, unitCode);
+  if (!masked) return '';
+  const parsed = parseLocalizedNumber(masked);
+  if (!Number.isFinite(parsed) || parsed <= 0) return masked;
+  if (parsed > max) return formatProjectQuantity(max, unitCode);
+  return masked;
+}
+
+function pickCandidateKey(candidate: { locationId: number; serialNo?: string | null; lotNo?: string | null }): string {
+  return `${candidate.locationId}:${candidate.serialNo ?? ''}:${candidate.lotNo ?? ''}`;
+}
+
+function maxPickCandidateQuantity(
+  candidate: { availableQuantity: number; serialNo?: string | null },
+  remaining: number,
+  isSerial: boolean,
+): number {
+  if (isSerial || candidate.serialNo) return Math.max(0, Math.min(1, remaining, candidate.availableQuantity));
+  return Math.max(0, Math.min(candidate.availableQuantity, remaining));
+}
+
+function buildPendingPick(resolved: KkdPreparationResolveScanResult): PendingPick {
+  const unitCode = resolved.unitCode || 'ADET';
+  const remaining = resolved.remainingQuantity;
+  const candidates = resolved.balanceCandidates ?? [];
+  const selected: Record<string, boolean> = {};
+  const quantities: Record<string, string> = {};
+  const unique = candidates.length === 1;
+  for (const candidate of candidates) {
+    const key = pickCandidateKey(candidate);
+    const max = maxPickCandidateQuantity(candidate, remaining, resolved.isSerial);
+    quantities[key] = max > 0 ? formatProjectQuantity(max, unitCode) : '';
+    if (unique) selected[key] = true;
+  }
+  const defaultQty = Math.min(resolved.defaultQuantity, remaining);
+  return {
+    resolved,
+    quantity: defaultQty > 0 ? formatProjectQuantity(defaultQty, unitCode) : '',
+    selected,
+    quantities,
+  };
 }
 
 function mapTaskToPickLines(task: KkdPreparationTaskRow): PickLine[] {
@@ -469,64 +527,89 @@ export function KkdPreparationPickingPage(): ReactElement {
   /** Kota kararı bekleyen/reddedilen kalemler — bunlar varken StartAsync toplamayı başlatmaz (bkz. backend). */
   const quotaBlockedLines = lines.filter((line) => line.quotaDecision === 'Pending' || line.quotaDecision === 'Rejected');
 
-  const commitPick = async (pending: PendingPick, confirmAboveThreshold = false): Promise<void> => {
+  const commitPick = async (
+    pending: PendingPick,
+    confirmAboveThreshold = false,
+    selection?: { locationId: number; serialNo?: string | null; lotNo?: string | null; quantity: number },
+  ): Promise<void> => {
     const line = lines.find((item) => item.requestLineId === pending.resolved.requestLineId);
     if (!line) {
-      toast.error('Hedef kalem bulunamadı.');
-      return;
+      throw new Error('Hedef kalem bulunamadı.');
     }
     const maxQty = Math.min(remainingFor(line), pending.resolved.remainingQuantity);
-    const qty = pending.resolved.isSerial
-      ? Math.min(1, maxQty)
-      : parsePositiveQuantity(pending.quantity, maxQty);
-    if (qty == null || qty <= 0) {
-      toast.error('Geçerli bir miktar girin.');
-      return;
+    const pickedQty = selection?.quantity
+      ?? (pending.resolved.isSerial
+        ? Math.min(1, maxQty)
+        : parsePositiveQuantity(pending.quantity, maxQty));
+    if (pickedQty == null || pickedQty <= 0) {
+      throw new Error('Geçerli bir miktar girin.');
+    }
+    const sourceLocationId = selection?.locationId ?? pending.resolved.suggestedLocationId ?? null;
+    if (!sourceLocationId) {
+      throw new Error('Kaynak raf belirlenemedi; birden fazla raf/seri varsa birini seçmelisiniz.');
     }
 
     const result = await kkdApi.scanPickPreparationTask(taskId, {
       barcode: pending.resolved.rawBarcode,
       expectedTaskLineId: pending.resolved.taskLineId,
-      quantity: pending.resolved.isSerial ? 1 : qty,
-      sourceLocationId: pending.resolved.suggestedLocationId ?? null,
+      quantity: pending.resolved.isSerial || selection?.serialNo ? 1 : pickedQty,
+      sourceLocationId,
+      serialNo: selection?.serialNo ?? pending.resolved.serialNo ?? null,
+      lotNo: selection?.lotNo ?? pending.resolved.lotNo ?? null,
       expectedRequestLineRowVersion: pending.resolved.needsGroupResolve
         ? line.requestLineRowVersion
         : null,
-      // Dialogdan Topla = kullanıcı miktarı gördü; eşik üstünde de tutarlı onay.
       confirmAboveThreshold: confirmAboveThreshold || pending.requiresThresholdConfirm === true,
     });
     applyScanResult(result);
+    setLastMatch({
+      ...pending.resolved,
+      serialNo: selection?.serialNo ?? pending.resolved.serialNo,
+      lotNo: selection?.lotNo ?? pending.resolved.lotNo,
+      suggestedLocationId: selection?.locationId ?? pending.resolved.suggestedLocationId,
+    });
     toast.success(`${result.stockCode}: +${formatProjectNumber(result.acceptedQuantity)} toplandı.`);
   };
 
-  /** Üretim ile aynı: resolve → (seri/eşik altı otomatik | miktar diyaloğu) → scan-pick. */
+  /** Üretim ile aynı: resolve → (tek raf + eşik altı otomatik | raf/miktar diyaloğu) → scan-pick. */
   const resolveBarcode = async (rawBarcode?: string): Promise<void> => {
     const scanned = (rawBarcode ?? barcode).trim();
     if (!scanned || !working || !started || !task || scanBusy || pendingPick) return;
     setScanBusy(true);
     try {
-      const resolved = await kkdApi.resolvePreparationScan(taskId, { barcode: scanned });
-      setLastMatch(resolved);
+      const resolved = await kkdApi.resolvePreparationScan(taskId, {
+        barcode: scanned,
+        expectedTaskLineId: lines.find((item) => item.requestLineId === selectedLineId)?.taskLineId ?? null,
+      });
       if (resolved.defaultQuantity <= 0 || resolved.remainingQuantity <= 0) {
         toast.error('Bu kalemde kalan miktar yok.');
         return;
       }
 
       const threshold = resolved.autoPickWithoutConfirmMaxQuantity;
-      const pending: PendingPick = {
-        resolved,
-        quantity: String(resolved.defaultQuantity),
-        requiresThresholdConfirm: Boolean(
-          !resolved.isSerial
-          && threshold
-          && threshold > 0
-          && resolved.defaultQuantity > threshold,
-        ),
-      };
-
-      if (resolved.canAutoPick) {
+      const pending = buildPendingPick(resolved);
+      pending.requiresThresholdConfirm = Boolean(
+        !resolved.isSerial
+        && threshold
+        && threshold > 0
+        && resolved.defaultQuantity > threshold,
+      );
+      const candidates = resolved.balanceCandidates ?? [];
+      const only = candidates.length === 1 ? candidates[0] : undefined;
+      const autoQty = only
+        ? Math.min(
+          resolved.defaultQuantity,
+          maxPickCandidateQuantity(only, resolved.remainingQuantity, resolved.isSerial),
+        )
+        : 0;
+      if (resolved.canAutoPick && only && autoQty > 0) {
         try {
-          await commitPick(pending, false);
+          await commitPick(pending, false, {
+            locationId: only.locationId,
+            serialNo: only.serialNo,
+            lotNo: only.lotNo,
+            quantity: autoQty,
+          });
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Toplama kaydı yazılamadı.';
           if (isPickAboveThresholdConfirmError(message)) {
@@ -539,7 +622,6 @@ export function KkdPreparationPickingPage(): ReactElement {
         setPendingPick(pending);
       }
     } catch (error) {
-      setLastMatch(null);
       toast.error(error instanceof Error ? error.message : 'Barkod çözümlenemedi.');
     } finally {
       setBarcode('');
@@ -550,10 +632,54 @@ export function KkdPreparationPickingPage(): ReactElement {
 
   const confirmPendingPick = async (): Promise<void> => {
     if (!pendingPick || scanBusy) return;
+    const candidates = pendingPick.resolved.balanceCandidates ?? [];
+    if (candidates.length === 0) {
+      toast.error('Bu stok için kullanılabilir raf bakiyesi yok.');
+      return;
+    }
+    const selectedCandidates = candidates.filter((candidate) =>
+      pendingPick.selected[pickCandidateKey(candidate)]);
+    if (selectedCandidates.length === 0) {
+      toast.error('En az bir raf/seri seçin.');
+      return;
+    }
+    const picks = selectedCandidates
+      .map((candidate) => {
+        const key = pickCandidateKey(candidate);
+        const max = maxPickCandidateQuantity(
+          candidate,
+          pendingPick.resolved.remainingQuantity,
+          pendingPick.resolved.isSerial,
+        );
+        const quantity = pendingPick.resolved.isSerial || candidate.serialNo
+          ? Math.min(1, max)
+          : parseLocalizedNumber(pendingPick.quantities[key] ?? pendingPick.quantity);
+        return { candidate, quantity, max };
+      });
+    if (picks.some((item) => !Number.isFinite(item.quantity) || item.quantity <= 0)) {
+      toast.error('Seçilen her raf için geçerli bir miktar girin.');
+      return;
+    }
+    const total = picks.reduce((sum, item) => sum + item.quantity, 0);
+    if (total > pendingPick.resolved.remainingQuantity + 0.000001) {
+      toast.error('Seçilen miktar kalemin kalanını aşıyor.');
+      return;
+    }
+
     setScanBusy(true);
     try {
-      // Miktar diyaloğunda Topla = açık kullanıcı onayı (üretim eşik onayı ile uyumlu, tutarlı).
-      await commitPick(pendingPick, true);
+      let remaining = pendingPick.resolved.remainingQuantity;
+      for (const item of picks) {
+        const quantity = Math.min(item.quantity, item.max, remaining);
+        if (quantity <= 0) break;
+        await commitPick(pendingPick, true, {
+          locationId: item.candidate.locationId,
+          serialNo: item.candidate.serialNo,
+          lotNo: item.candidate.lotNo,
+          quantity,
+        });
+        remaining -= quantity;
+      }
       setPendingPick(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Toplama kaydı yazılamadı.';
@@ -586,12 +712,17 @@ export function KkdPreparationPickingPage(): ReactElement {
     setRouteDialog((current) => {
       if (!current) return current;
       const key = candidateKey(candidate.locationId, candidate.serialNo);
+      const nextQuantities = { ...current.quantities };
+      if (checked && !nextQuantities[key]) {
+        const unitCode = current.line.unitCode || 'ADET';
+        nextQuantities[key] = current.isSerial
+          ? '1'
+          : formatProjectQuantity(maxRouteCandidateQuantity(candidate, current.line), unitCode);
+      }
       return {
         ...current,
         selected: { ...current.selected, [key]: checked },
-        quantities: current.quantities[key]
-          ? current.quantities
-          : { ...current.quantities, [key]: current.isSerial ? '1' : String(candidate.availableQuantity) },
+        quantities: nextQuantities,
       };
     });
   };
@@ -602,7 +733,12 @@ export function KkdPreparationPickingPage(): ReactElement {
       .filter((candidate) => routeDialog.selected[candidateKey(candidate.locationId, candidate.serialNo)])
       .map((candidate) => {
         const key = candidateKey(candidate.locationId, candidate.serialNo);
-        const quantity = routeDialog.isSerial ? 1 : Number(routeDialog.quantities[key]?.replace(',', '.') || 0);
+        const quantity = routeDialog.isSerial
+          ? 1
+          : Math.min(
+            parseLocalizedNumber(routeDialog.quantities[key] ?? ''),
+            maxRouteCandidateQuantity(candidate, routeDialog.line),
+          );
         return { locationId: candidate.locationId, quantity, serialNo: candidate.serialNo ?? null };
       })
       .filter((selection) => selection.quantity > 0);
@@ -651,6 +787,7 @@ export function KkdPreparationPickingPage(): ReactElement {
         (current) => (current ? current.map((item) => (item.id === result.task.id ? result.task : item)) : [result.task]),
       );
       void queryClient.invalidateQueries({ queryKey: ['kkd', 'preparation-tasks', taskId, 'scans'] });
+      setLastMatch(null);
       toast.success('Tarama geri alındı; raf bakiyesi geri yüklendi.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Geri alınamadı.');
@@ -679,7 +816,10 @@ export function KkdPreparationPickingPage(): ReactElement {
 
   const openDeliveryDialog = (): void => {
     setDeliveryQuantities(
-      Object.fromEntries(deliverableLines.map((line) => [line.requestLineId, String(line.deliverable)])),
+      Object.fromEntries(deliverableLines.map((line) => [
+        line.requestLineId,
+        formatProjectQuantity(line.deliverable, line.unitCode || 'ADET'),
+      ])),
     );
     setDeliveryOpen(true);
   };
@@ -687,7 +827,13 @@ export function KkdPreparationPickingPage(): ReactElement {
   const confirmDelivery = async (): Promise<void> => {
     if (!task || !requestQuery.data) return;
     const toDeliver = deliverableLines
-      .map((line) => ({ line, quantity: parsePositiveQuantity(deliveryQuantities[line.requestLineId] ?? '', line.deliverable) }))
+      .map((line) => {
+        const parsed = parseLocalizedNumber(deliveryQuantities[line.requestLineId] ?? '');
+        const quantity = Number.isFinite(parsed) && parsed > 0
+          ? Math.min(parsed, line.deliverable)
+          : null;
+        return { line, quantity };
+      })
       .filter((item) => item.quantity != null && item.quantity > 0) as Array<{ line: PickLine; quantity: number }>;
     if (toDeliver.length === 0) {
       toast.error('Teslim edilecek en az bir kalem için miktar girin.');
@@ -803,8 +949,8 @@ export function KkdPreparationPickingPage(): ReactElement {
           </OpsActionButton>
         }
       >
-        <div className="grid min-h-60 place-items-center text-[var(--wms-ops-accent)]">
-          <Loader2 className="size-7 animate-spin" />
+        <div className="grid min-h-60 place-items-center px-4">
+          <OpsLoadingState code="PICK" message="Hazırlama görevi yükleniyor…" />
         </div>
       </KkdPage>
     );
@@ -1002,7 +1148,7 @@ export function KkdPreparationPickingPage(): ReactElement {
                   Onayla
                 </OpsActionButton>
                 <p className="text-[0.7rem] leading-4 text-[var(--wms-app-text-muted)]">
-                  Seri otomatik · serisizde depo eşiğine göre diyalog · grup satırında beden okutunca bağlanır.
+                  Tek rafta eşik altı otomatik · birden fazla raf/seride önce kaynak seçilir · grup satırında beden okutunca bağlanır.
                 </p>
               </div>
               {lastMatch ? (
@@ -1174,15 +1320,23 @@ export function KkdPreparationPickingPage(): ReactElement {
       {pendingPick && pendingTarget ? (
         <ResponsiveDialog
           onClose={() => { setPendingPick(null); focusBarcode(); }}
-          title={pendingPick.requiresThresholdConfirm ? 'Onay eşiği aşıldı' : 'Toplama miktarı'}
+          title={
+            pendingPick.requiresThresholdConfirm
+              ? 'Onay eşiği aşıldı'
+              : (pendingPick.resolved.balanceCandidates?.length ?? 0) > 1
+                ? 'Kaynak raf seç'
+                : 'Toplama miktarı'
+          }
           description={
             pendingPick.requiresThresholdConfirm
               ? KKD_PICK_ABOVE_THRESHOLD_CONFIRM_MESSAGE
               : pendingPick.resolved.needsGroupResolve
-                ? `${pendingTarget.groupCode} grubu ${pendingPick.resolved.stockCode} stoğuna bağlanacak. Miktarı onaylayın.`
-                : `${pendingPick.resolved.stockCode} için miktarı onaylayın. Kalan: ${formatProjectNumber(remainingFor(pendingTarget))} ${pendingTarget.unitCode}.`
+                ? `${pendingTarget.groupCode} grubu ${pendingPick.resolved.stockCode} stoğuna bağlanacak. Kaynağı ve miktarı onaylayın.`
+                : (pendingPick.resolved.balanceCandidates?.length ?? 0) > 1
+                  ? `${pendingPick.resolved.stockCode} birden fazla rafta. Toplamadan önce kaynak raf/seri seçin. Kalan: ${formatProjectQuantity(remainingFor(pendingTarget), pendingTarget.unitCode)} ${pendingTarget.unitCode}.`
+                  : `${pendingPick.resolved.stockCode} için miktarı onaylayın. Kalan: ${formatProjectQuantity(remainingFor(pendingTarget), pendingTarget.unitCode)} ${pendingTarget.unitCode}.`
           }
-          className="!max-w-md"
+          className="!max-w-xl"
         >
           <div className="space-y-4">
             <div className="rounded-xl border border-[var(--wms-app-border)] p-3 text-sm">
@@ -1194,22 +1348,126 @@ export function KkdPreparationPickingPage(): ReactElement {
               {pendingPick.resolved.lotNo ? (
                 <p className="text-xs">Lot: <strong>{pendingPick.resolved.lotNo}</strong></p>
               ) : null}
-              {pendingPick.resolved.balanceCandidates.length > 1 ? (
-                <p className="mt-2 text-[0.7rem] text-amber-700 dark:text-amber-400">
-                  Bu stok için birden fazla raf/seri bulundu; toplama sonrası &quot;Rotayı güncelle&quot;den seçebilirsiniz.
-                </p>
-              ) : null}
             </div>
-            <label className="block text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
-              Miktar
-            </label>
-            <AppInput
-              inputMode="decimal"
-              value={pendingPick.quantity}
-              onChange={(event) => setPendingPick({ ...pendingPick, quantity: event.target.value })}
-              onFocus={(event) => event.currentTarget.select()}
-              autoFocus
-            />
+            {(pendingPick.resolved.balanceCandidates?.length ?? 0) > 0 ? (
+              <div>
+                <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+                  Kaynak raf / seri
+                </p>
+                <div className="wms-kkd-route-list max-h-80 overflow-y-auto">
+                  {pendingPick.resolved.balanceCandidates.map((candidate) => {
+                    const key = pickCandidateKey(candidate);
+                    const checked = Boolean(pendingPick.selected[key]);
+                    const unitCode = pendingPick.resolved.unitCode || 'ADET';
+                    const max = maxPickCandidateQuantity(
+                      candidate,
+                      pendingPick.resolved.remainingQuantity,
+                      pendingPick.resolved.isSerial,
+                    );
+                    const serialPick = pendingPick.resolved.isSerial || Boolean(candidate.serialNo);
+                    return (
+                      <div
+                        key={key}
+                        className={cn(
+                          'wms-kkd-route-row flex w-full items-center gap-2.5 border border-transparent px-2 py-1.5',
+                          checked && 'wms-kkd-route-row--on',
+                        )}
+                      >
+                        <OpsSkinCheckbox
+                          checked={checked}
+                          onCheckedChange={(next) => setPendingPick((current) => (current
+                            ? { ...current, selected: { ...current.selected, [key]: next } }
+                            : current))}
+                          aria-label={candidate.locationCode}
+                        />
+                        <button
+                          type="button"
+                          className="min-w-0 flex-1 text-left"
+                          onClick={() => setPendingPick((current) => (current
+                            ? { ...current, selected: { ...current.selected, [key]: !checked } }
+                            : current))}
+                        >
+                          <strong className="block truncate text-sm">{candidate.locationCode}</strong>
+                          {candidate.locationName && candidate.locationName !== candidate.locationCode ? (
+                            <span className="block truncate text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                              {candidate.locationName}
+                            </span>
+                          ) : null}
+                          {candidate.serialNo ? (
+                            <span className="block truncate text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                              Seri: {candidate.serialNo}
+                            </span>
+                          ) : null}
+                          {candidate.lotNo ? (
+                            <span className="block truncate text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                              Lot: {candidate.lotNo}
+                            </span>
+                          ) : null}
+                          <span className="block text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                            Mevcut: {formatProjectQuantity(candidate.availableQuantity, unitCode)}
+                          </span>
+                        </button>
+                        {!serialPick ? (
+                          <div className="wms-kkd-route-qty" data-disabled={!checked || undefined}>
+                            <AppInput
+                              className="wms-kkd-route-qty__input w-full text-right tabular-nums"
+                              inputMode="decimal"
+                              disabled={!checked}
+                              readOnly={!checked}
+                              tabIndex={checked ? 0 : -1}
+                              aria-label="Miktar"
+                              placeholder={checked ? '' : '—'}
+                              value={checked ? (pendingPick.quantities[key] ?? '') : ''}
+                              onFocus={(event) => event.currentTarget.select()}
+                              onKeyDown={(event) => {
+                                if (event.ctrlKey || event.metaKey || event.altKey) return;
+                                if (event.key.length !== 1) return;
+                                if (isPieceUnit(unitCode) && !/\d/.test(event.key)) event.preventDefault();
+                                else if (!isPieceUnit(unitCode) && !/[\d.,]/.test(event.key)) event.preventDefault();
+                              }}
+                              onChange={(event) => {
+                                const field = event.currentTarget;
+                                const caret = field.selectionStart ?? field.value.length;
+                                const next = capRouteQuantity(field.value, unitCode, max);
+                                const restoreAt = nextQuantityCaret(field.value, caret, next);
+                                setPendingPick((current) => (current
+                                  ? { ...current, quantities: { ...current.quantities, [key]: next } }
+                                  : current));
+                                requestAnimationFrame(() => {
+                                  field.setSelectionRange(restoreAt, restoreAt);
+                                });
+                              }}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <>
+                <KkdCallout tone="warn" title="Kaynak raf yok">
+                  Bu stok için kullanılabilir raf bakiyesi bulunamadı.
+                </KkdCallout>
+                <label className="block text-xs font-bold uppercase tracking-wide text-[var(--wms-app-text-muted)]">
+                  Miktar
+                </label>
+                <AppInput
+                  inputMode="decimal"
+                  value={pendingPick.quantity}
+                  onChange={(event) => {
+                    const max = remainingFor(pendingTarget);
+                    setPendingPick({
+                      ...pendingPick,
+                      quantity: capRouteQuantity(event.target.value, pendingTarget.unitCode || 'ADET', max),
+                    });
+                  }}
+                  onFocus={(event) => event.currentTarget.select()}
+                  autoFocus
+                />
+              </>
+            )}
             <div className="flex justify-end gap-2 border-t border-[var(--wms-ops-card-border)] pt-4">
               <OpsActionButton
                 type="button"
@@ -1224,6 +1482,10 @@ export function KkdPreparationPickingPage(): ReactElement {
                 variant="primary"
                 className="wms-ops-list-toolbar-btn"
                 loading={scanBusy}
+                disabled={
+                  (pendingPick.resolved.balanceCandidates?.length ?? 0) === 0
+                  || !Object.values(pendingPick.selected).some(Boolean)
+                }
                 onClick={() => void confirmPendingPick()}
               >
                 <PackageCheck className="size-3.5" />
@@ -1239,48 +1501,107 @@ export function KkdPreparationPickingPage(): ReactElement {
           onClose={() => setRouteDialog(null)}
           title="Rotayı güncelle"
           description={`${routeDialog.line.stockCode} için mevcut rafın dışındaki aday raf/serileri seçin.`}
-          className="!max-w-lg"
+          className="!max-w-xl"
         >
           {routeDialog.loading ? (
-            <div className="grid min-h-32 place-items-center"><Loader2 className="size-6 animate-spin text-[var(--wms-ops-accent)]" /></div>
+            <OpsLoadingState compact code="ROUTE" message="Aday raflar yükleniyor…" />
           ) : routeDialog.candidates.length === 0 ? (
             <KkdCallout tone="warn" title="Aday bulunamadı">
               Bu stok için mevcut rafın dışında kullanılabilir bakiye yok.
             </KkdCallout>
           ) : (
             <div className="space-y-3">
-              <div className="max-h-80 space-y-1.5 overflow-y-auto">
+              <div className="wms-kkd-route-list max-h-80 overflow-y-auto">
                 {routeDialog.candidates.map((candidate) => {
                   const key = candidateKey(candidate.locationId, candidate.serialNo);
                   const checked = Boolean(routeDialog.selected[key]);
+                  const unitCode = routeDialog.line.unitCode || 'ADET';
+                  const showLocationName = Boolean(
+                    candidate.locationName
+                    && candidate.locationName !== candidate.locationCode,
+                  );
                   return (
                     <div
                       key={key}
-                      className="flex items-center gap-3 border border-[var(--wms-ops-card-border)] p-2.5"
+                      className={cn(
+                        'wms-kkd-route-row flex w-full items-center gap-2.5 border border-transparent px-2 py-1.5',
+                        checked && 'wms-kkd-route-row--on',
+                      )}
                     >
                       <OpsSkinCheckbox
                         checked={checked}
                         onCheckedChange={(next) => toggleRouteCandidate(candidate, next)}
                         aria-label={candidate.locationCode}
                       />
-                      <div className="min-w-0 flex-1">
-                        <strong className="block text-sm">{candidate.locationCode}</strong>
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 text-left"
+                        onClick={() => toggleRouteCandidate(candidate, !checked)}
+                      >
+                        <strong className="block truncate text-sm">{candidate.locationCode}</strong>
+                        {showLocationName ? (
+                          <span className="block truncate text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                            {candidate.locationName}
+                          </span>
+                        ) : null}
+                        {candidate.serialNo ? (
+                          <span className="block truncate text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                            Seri: {candidate.serialNo}
+                          </span>
+                        ) : null}
+                        {candidate.lotNo ? (
+                          <span className="block truncate text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                            Lot: {candidate.lotNo}
+                          </span>
+                        ) : null}
                         <span className="block text-[0.7rem] text-[var(--wms-app-text-muted)]">
-                          {candidate.locationName}
-                          {candidate.serialNo ? ` · Seri: ${candidate.serialNo}` : ''}
-                          {' · Mevcut: '}{formatProjectNumber(candidate.availableQuantity)}
+                          Mevcut: {formatProjectQuantity(candidate.availableQuantity, unitCode)}
                         </span>
-                      </div>
+                      </button>
                       {!routeDialog.isSerial ? (
-                        <AppInput
-                          className="w-24"
-                          inputMode="decimal"
-                          disabled={!checked}
-                          value={routeDialog.quantities[key] ?? ''}
-                          onChange={(event) => setRouteDialog((current) => (current
-                            ? { ...current, quantities: { ...current.quantities, [key]: event.target.value } }
-                            : current))}
-                        />
+                        <div className="wms-kkd-route-qty" data-disabled={!checked || undefined}>
+                          <AppInput
+                            className="wms-kkd-route-qty__input w-full text-right tabular-nums"
+                            inputMode="decimal"
+                            disabled={!checked}
+                            readOnly={!checked}
+                            tabIndex={checked ? 0 : -1}
+                            aria-label="Miktar"
+                            placeholder={checked ? '' : '—'}
+                            value={checked ? (routeDialog.quantities[key] ?? '') : ''}
+                            onFocus={(event) => event.currentTarget.select()}
+                            onKeyDown={(event) => {
+                              if (event.ctrlKey || event.metaKey || event.altKey) return;
+                              if (event.key.length !== 1) return;
+                              if (isPieceUnit(unitCode)) {
+                                if (!/\d/.test(event.key)) event.preventDefault();
+                                return;
+                              }
+                              if (!/[\d.,]/.test(event.key)) event.preventDefault();
+                            }}
+                            onChange={(event) => {
+                              const field = event.currentTarget;
+                              const caret = field.selectionStart ?? field.value.length;
+                              const max = maxRouteCandidateQuantity(candidate, routeDialog.line);
+                              const next = capRouteQuantity(field.value, unitCode, max);
+                              const restoreAt = nextQuantityCaret(field.value, caret, next);
+                              setRouteDialog((current) => (current
+                                ? { ...current, quantities: { ...current.quantities, [key]: next } }
+                                : current));
+                              requestAnimationFrame(() => {
+                                field.setSelectionRange(restoreAt, restoreAt);
+                              });
+                            }}
+                            onBlur={(event) => {
+                              const max = maxRouteCandidateQuantity(candidate, routeDialog.line);
+                              const next = capRouteQuantity(event.currentTarget.value, unitCode, max);
+                              if (!next) return;
+                              setRouteDialog((current) => (current
+                                ? { ...current, quantities: { ...current.quantities, [key]: next } }
+                                : current));
+                            }}
+                          />
+                        </div>
                       ) : null}
                     </div>
                   );
@@ -1313,7 +1634,7 @@ export function KkdPreparationPickingPage(): ReactElement {
             />
             <div className="max-h-80 space-y-1 overflow-y-auto">
               {stockListQuery.isLoading ? (
-                <div className="grid min-h-24 place-items-center"><Loader2 className="size-5 animate-spin text-[var(--wms-ops-accent)]" /></div>
+                <OpsLoadingState compact code="STK" message="Stoklar yükleniyor…" />
               ) : (stockListQuery.data ?? []).length === 0 ? (
                 <p className="p-3 text-sm text-[var(--wms-app-text-muted)]">Sonuç bulunamadı.</p>
               ) : (
@@ -1382,7 +1703,7 @@ export function KkdPreparationPickingPage(): ReactElement {
         <ResponsiveDialog onClose={() => setScansOpen(false)} title="Son okutmalar" description="Yanlış okutulan bir kalemi geri alabilirsiniz." className="!max-w-lg">
           <div className="max-h-96 space-y-1.5 overflow-y-auto">
             {scansQuery.isLoading ? (
-              <div className="grid min-h-24 place-items-center"><Loader2 className="size-5 animate-spin text-[var(--wms-ops-accent)]" /></div>
+              <OpsLoadingState compact code="SCAN" message="Okutmalar yükleniyor…" />
             ) : (scansQuery.data ?? []).length === 0 ? (
               <p className="p-3 text-sm text-[var(--wms-app-text-muted)]">Henüz okutma yok.</p>
             ) : (
@@ -1419,26 +1740,51 @@ export function KkdPreparationPickingPage(): ReactElement {
           onClose={() => setDeliveryOpen(false)}
           title="Fiziksel Teslim Onayı"
           description="Talep sahibi malzemeyi alınca tam veya eksik teslimi onaylayın. Onaylanmayan miktar hazır bekler, sonra tekrar teslim edilebilir."
-          className="!max-w-lg"
+          className="!max-w-xl"
         >
           <div className="space-y-3">
-            <div className="max-h-80 space-y-1.5 overflow-y-auto">
-              {deliverableLines.map((line) => (
-                <div key={line.requestLineId} className="flex items-center justify-between gap-3 border border-[var(--wms-ops-card-border)] p-2.5">
-                  <span className="min-w-0">
-                    <strong className="block font-mono text-sm">{line.stockCode}</strong>
-                    <span className="block text-[0.7rem] text-[var(--wms-app-text-muted)]">
-                      Hazır: {formatProjectNumber(line.deliverable)} {line.unitCode}
+            <div className="wms-kkd-route-list max-h-80 overflow-y-auto">
+              {deliverableLines.map((line) => {
+                const unitCode = line.unitCode || 'ADET';
+                return (
+                  <div
+                    key={line.requestLineId}
+                    className="wms-kkd-route-row flex w-full items-center gap-2.5 border border-[var(--wms-ops-card-border)] px-2 py-1.5"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <strong className="block truncate font-mono text-sm">{line.stockCode}</strong>
+                      <span className="block text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                        Hazır: {formatProjectQuantity(line.deliverable, unitCode)} {unitCode}
+                      </span>
                     </span>
-                  </span>
-                  <AppInput
-                    className="w-24"
-                    inputMode="decimal"
-                    value={deliveryQuantities[line.requestLineId] ?? ''}
-                    onChange={(event) => setDeliveryQuantities((current) => ({ ...current, [line.requestLineId]: event.target.value }))}
-                  />
-                </div>
-              ))}
+                    <div className="wms-kkd-route-qty">
+                      <AppInput
+                        className="wms-kkd-route-qty__input w-full text-right tabular-nums"
+                        inputMode="decimal"
+                        aria-label="Teslim miktarı"
+                        value={deliveryQuantities[line.requestLineId] ?? ''}
+                        onFocus={(event) => event.currentTarget.select()}
+                        onKeyDown={(event) => {
+                          if (event.ctrlKey || event.metaKey || event.altKey) return;
+                          if (event.key.length !== 1) return;
+                          if (isPieceUnit(unitCode) && !/\d/.test(event.key)) event.preventDefault();
+                          else if (!isPieceUnit(unitCode) && !/[\d.,]/.test(event.key)) event.preventDefault();
+                        }}
+                        onChange={(event) => {
+                          const field = event.currentTarget;
+                          const caret = field.selectionStart ?? field.value.length;
+                          const next = capRouteQuantity(field.value, unitCode, line.deliverable);
+                          const restoreAt = nextQuantityCaret(field.value, caret, next);
+                          setDeliveryQuantities((current) => ({ ...current, [line.requestLineId]: next }));
+                          requestAnimationFrame(() => {
+                            field.setSelectionRange(restoreAt, restoreAt);
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
             <div className="flex justify-end gap-2 border-t border-[var(--wms-ops-card-border)] pt-4">
               <OpsActionButton variant="secondary" onClick={() => setDeliveryOpen(false)}>Vazgeç</OpsActionButton>
