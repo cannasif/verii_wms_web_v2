@@ -19,7 +19,7 @@
       "controlQuantity": "GKK Kontrol Miktarı",
       "status": "Durum",
       "work": "GKK Çalışması",
-      "createdAt": "Oluşturma",
+      "createdAt": "Oluşturma tarihi",
       "decidedAt": "Kalite Onay",
       "detail": "Detay"
     },
@@ -550,7 +550,7 @@
     "title": "GKK Raporları",
     "description": "Mal kabul miktarı, zorunlu numune, fiilen kontrol edilen miktar, karar dağılımı, aktif çalışma, duruşlar, çalışanlar ve görsel kanıtları tek raporda inceleyin.",
     "tabs": {
-      "inspection": { "title": "Mal Kabul Bazlı GKK", "description": "Her kalite kaydında 300 adetten kaçı kontrol edildi, kim çalıştı ve süreç ne kadar sürdü?", "gridDescription": "İrsaliye ve kontrol bazında miktar, sonuç, süre, mola ve çalışan performansı." },
+      "inspection": { "title": "Mal Kabul Bazlı GKK", "description": "Her kalite kaydında incelemeye gelen miktardan kaçı kontrol edildi, kim çalıştı ve süreç ne kadar sürdü?", "gridDescription": "İrsaliye ve kontrol bazında miktar, sonuç, süre, mola ve çalışan performansı." },
       "stock": { "title": "Stok Bazlı Kalite Performansı", "description": "Bir stok için geçmiş GKK sayısını, kontrol oranını ve ilişkili çalışma süresini görün.", "gridDescription": "Stok kodu bazında tüm kalite incelemelerinin toplu performansı.", "timeNotice": "Süre kaydı GKK başlığı düzeyindedir. Aynı GKK içinde birden fazla stok varsa aktif süre, bu stokların her biri için ‘ilişkili GKK süresi’ olarak gösterilir; stok başında geçirilen kesin süre anlamına gelmez." }
     },
     "columns": {

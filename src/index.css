@@ -9163,6 +9163,11 @@ html.skin-premium .wms-ops-quality-detail__chip {
   letter-spacing: 0.08em !important;
 }
 
+.wms-ops-quality-detail .wms-ops-quality-footer-apply-btn {
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+}
+
 .wms-ops-quality-bulk {
   max-width: 100%;
 }

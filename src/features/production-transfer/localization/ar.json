@@ -121,7 +121,7 @@
       "overIssueTolerancePercent": "نسبة تسامح الصرف الزائد (%)"
     }
   },
-  "execution": { "erp": { "title": "حالة الإرسال إلى Netsis", "documentNo": "رقم مستند Netsis", "retry": "إرسال إلى Netsis / إعادة المحاولة", "postedWithCompletion": "اكتمل تحويل الإنتاج وتم إنشاء مستند Netsis.", "failedAfterCompletion": "اكتمل التحويل في WMS لكن فشل الإرسال إلى Netsis. يمكن إعادة المحاولة.", "uncertainAfterCompletion": "نتيجة Netsis غير مؤكدة. تحقق من Netsis قبل إعادة المحاولة.", "retrySucceeded": "اكتمل الإرسال إلى Netsis بنجاح.", "retryFailed": "تعذر إكمال الإرسال إلى Netsis.", "status": { "Pending": "بانتظار الإرسال", "Processing": "جارٍ الإرسال إلى Netsis", "Succeeded": "تم إنشاء مستند Netsis", "Failed": "فشل الإرسال ويمكن إعادة المحاولة", "CommitUncertain": "النتيجة غير مؤكدة وتتطلب تحققًا يدويًا", "Cancelled": "تم إلغاء مستند Netsis" } } },
+  "execution": { "erp": { "title": "حالة الإرسال إلى Netsis", "openPanel": "إرسال إلى Netsis", "documentNo": "رقم مستند Netsis", "retry": "إرسال إلى Netsis / إعادة المحاولة", "postedWithCompletion": "اكتمل تحويل الإنتاج وتم إنشاء مستند Netsis.", "failedAfterCompletion": "اكتمل التحويل في WMS لكن فشل الإرسال إلى Netsis. يمكن إعادة المحاولة.", "uncertainAfterCompletion": "نتيجة Netsis غير مؤكدة. تحقق من Netsis قبل إعادة المحاولة.", "retrySucceeded": "اكتمل الإرسال إلى Netsis بنجاح.", "retryFailed": "تعذر إكمال الإرسال إلى Netsis.", "status": { "Pending": "بانتظار الإرسال", "Processing": "جارٍ الإرسال إلى Netsis", "Succeeded": "تم إنشاء مستند Netsis", "Failed": "فشل الإرسال ويمكن إعادة المحاولة", "CommitUncertain": "النتيجة غير مؤكدة وتتطلب تحققًا يدويًا", "Cancelled": "تم إلغاء مستند Netsis" } } },
   "enums": {
     "transferStatus": {
       "Draft": "مسودة",
@@ -200,7 +200,7 @@
       "targetWarehouse": "المستودع الهدف",
       "requestedQuantity": "الكمية المطلوبة",
       "pickedQuantity": "الكمية المجمعة",
-      "handedOverQuantity": "المُسلَّم",
+      "handedOverQuantity": "الكمية المُسلَّمة",
       "shortageQuantity": "النقص",
       "documentDate": "تاريخ المستند",
       "createdDate": "تاريخ الإنشاء",

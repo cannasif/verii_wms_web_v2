@@ -5300,7 +5300,7 @@
       "colUnit": "Unité",
       "colCombinedSize": "Taille combinée",
       "colMaterialGrade": "Qualité matériau",
-      "colHeatNumber": "Heat Number",
+      "colHeatNumber": "N° coulée",
       "colCertificateNumber": "N° certificat",
       "colAction": "Action",
       "colDCode": "DCode",
@@ -5768,6 +5768,13 @@
     "resolveModeHint": "Sélectionnez ci-dessous une ligne acier pour associer la tôle inconnue.",
     "resolveUnavailable": "L'association est actuellement indisponible pour cette tôle.",
     "unknownBadge": "Inconnue",
+    "status": {
+      "CheckedIn": "Entrée enregistrée",
+      "LinkedToReceipt": "Lié à la réception",
+      "Completed": "Terminé",
+      "Cancelled": "Annulé",
+      "ContainsUnknownPlates": "Contient des tôles inconnues"
+    },
     "unknownSlotDescription": "L'identité série de la tôle {{sequence}} sera associée ultérieurement.",
     "unknownSequence": "Séquence {{sequence}}",
     "unknownAwaitingMatch": "En attente d'association à une ligne acier.",

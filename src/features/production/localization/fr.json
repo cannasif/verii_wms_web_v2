@@ -4,6 +4,8 @@
     "description": "Gérez l'article produit, la référence de nomenclature, le poste de charge, les besoins en matières, les sorties et les responsables sous un seul plan auditable.",
     "create": { "title": "Créer un plan de production", "text": "Planifiez ensemble l'ordre, la sortie principale, les besoins en matières et l'affectation." },
     "list": { "title": "Plans de production", "text": "Suivez les plans de production brouillon, publiés et en cours dans une liste côté serveur." },
+    "workOrders": { "title": "Ordres de Production", "text": "Consultez les ordres ouverts et les nomenclatures de la source ERP ou WMS sélectionnée dans les paramètres." },
+    "launch": "Continuer",
     "boundary": { "title": "Première tranche opérationnelle", "text": "Cette version enregistre et publie les plans et ordres en toute sécurité. La consommation physique, le reporting de production et les mouvements de stock de sortie seront liés à ces identités dans la tranche d'exécution." }
   },
   "create": {
@@ -61,6 +63,9 @@
       "week": "Semaine",
       "month": "Mois",
       "year": "Année"
+    },
+    "columns": {
+      "status": "Statut"
     },
     "assignmentProgress": {
       "progressHover": "{{percent}} %",

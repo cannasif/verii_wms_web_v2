@@ -19,7 +19,7 @@
       "controlQuantity": "GKK Inspected Quantity",
       "status": "Status",
       "work": "Inspection Work",
-      "createdAt": "Created",
+      "createdAt": "Created date",
       "decidedAt": "Quality Decision",
       "detail": "Detail"
     },
@@ -550,7 +550,7 @@
     "title": "Incoming Quality Control Reports",
     "description": "Review receipt quantity, required sample, actually inspected quantity, disposition, active work, stops, operators and visual evidence in one report.",
     "tabs": {
-      "inspection": { "title": "Receipt-based IQC", "description": "For each inspection, see how many of 300 units were checked, who worked and how long it took.", "gridDescription": "Quantity, outcome, work time, stops and operator performance by receipt and inspection." },
+      "inspection": { "title": "Receipt-based IQC", "description": "For each quality record, see how much of the incoming quantity was inspected, who worked and how long the process took.", "gridDescription": "Quantity, outcome, work time, stops and operator performance by receipt and inspection." },
       "stock": { "title": "Item Quality Performance", "description": "See an item's historical inspection count, coverage and related quality work time.", "gridDescription": "Aggregated performance of all inspections by item code.", "timeNotice": "Work sessions are recorded at inspection-header level. If one inspection contains multiple items, its active time is shown for each item as related inspection time; it is not an exact per-item stopwatch." }
     },
     "columns": {

@@ -88,8 +88,10 @@ export function ProductionHubPage(): ReactElement {
           code: 'PRD.ERP',
           href: '/warehouse/production/work-orders',
           icon: Boxes,
-          title: 'Üretim iş emirleri',
-          description: 'Parametrede seçilen ERP veya WMS kaynağındaki açık iş emirlerini ve reçetelerini inceleyin.',
+          title: t('hub.workOrders.title', { defaultValue: 'Üretim İş Emirleri' }),
+          description: t('hub.workOrders.text', {
+            defaultValue: 'Parametrede seçilen ERP veya WMS kaynağındaki açık iş emirlerini ve reçetelerini inceleyin.',
+          }),
         },
         {
           key: 'create',
@@ -119,6 +121,7 @@ export function ProductionHubPage(): ReactElement {
       description={t('hub.description')}
       phases={phases}
       callout={{ title: t('hub.boundary.title'), text: t('hub.boundary.text') }}
+      launchLabel={t('hub.launch', { defaultValue: 'Devam et' })}
     />
   );
 }

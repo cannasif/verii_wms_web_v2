@@ -19,7 +19,7 @@
       "controlQuantity": "Cantidad inspeccionada GKK",
       "status": "Estado",
       "work": "Trabajo de inspección",
-      "createdAt": "Creado",
+      "createdAt": "Fecha de creación",
       "decidedAt": "Decisión de Calidad",
       "detail": "Detalle"
     },
@@ -176,6 +176,40 @@
   },
   "bulkApplySuccess": "\"{{label}}\" aplicado a {{count}} líneas.",
   "decisionSaved": "Decisión de calidad y movimiento de stock registrados.",
+  "decisionFlow": {
+    "submit": {
+      "eyebrow": "Aprobación de calidad",
+      "title": "Aprobando calidad",
+      "subtitle": "{{name}} · aplicando la decisión a {{count}} líneas",
+      "documentLabel": "N.º de albarán",
+      "errorEyebrow": "Operación fallida",
+      "errorTitle": "No se pudo completar la aprobación",
+      "errorReturning": "Volviendo al detalle de calidad…",
+      "errorFallback": "Se produjo un error inesperado.",
+      "log0": "Validando decisiones de calidad",
+      "log1": "Registrando movimientos de stock",
+      "log2": "Actualizando el estado de calidad",
+      "log3": "Comprobando albarán / ERP",
+      "log4": "Completando la aprobación"
+    },
+    "success": {
+      "eyebrow": "Tras la aprobación de calidad",
+      "title": "Albarán creado",
+      "subtitle": "La creación del albarán tras la aprobación de calidad se ha completado.",
+      "subtitleWithSource": "La creación del albarán tras la aprobación de calidad para {{name}} se ha completado.",
+      "documentLabel": "N.º de albarán",
+      "electronicDocumentLabel": "N.º de albarán electrónico",
+      "copyDocument": "Copiar número de albarán",
+      "documentCopied": "Número de albarán copiado",
+      "documentCopyFailed": "No se pudo copiar el número de albarán",
+      "line": "Líneas",
+      "status": "Estado",
+      "erp": "ERP",
+      "statusCompleted": "Completado",
+      "backToList": "Lista de calidad",
+      "receiptList": "Lista de recepciones"
+    }
+  },
   "detail": {
     "work": {
       "title": "Registro de trabajo GKK",
@@ -242,7 +276,8 @@
       "reasonNoteRequired": "Se requiere una nota para este código",
       "reasonLabel": "Motivo",
       "reasonPlaceholder": "Motivo breve",
-      "applyButton": "Aplicar"
+      "applyButton": "Aplicar",
+      "toggleAria": "Mostrar u ocultar las herramientas de decisión masiva"
     },
     "table": {
       "selectAllAria": "Seleccionar todas las líneas sujetas a control",
@@ -478,7 +513,7 @@
     "title": "Informes de control de calidad de recepción",
     "description": "Revise cantidad de lote, muestra requerida, cantidad inspeccionada, decisión, tiempos, pausas, operarios y evidencias visuales.",
     "tabs": {
-      "inspection": { "title": "Calidad por recepción", "description": "Vea por inspección cuántas de 300 unidades se controlaron, quién trabajó y cuánto tardó.", "gridDescription": "Cantidades, resultados, tiempos, paradas y operarios por recepción." },
+      "inspection": { "title": "Calidad por recepción", "description": "Vea por registro de calidad cuánto de la cantidad recibida para inspección se controló, quién trabajó y cuánto duró el proceso.", "gridDescription": "Cantidades, resultados, tiempos, paradas y operarios por recepción." },
       "stock": { "title": "Rendimiento de calidad del artículo", "description": "Historial, cobertura y tiempo de calidad de un artículo.", "gridDescription": "Rendimiento agregado de todas las inspecciones por artículo.", "timeNotice": "El tiempo se registra en la cabecera de inspección. Si una inspección incluye varios artículos, su tiempo activo se muestra para cada uno como tiempo relacionado; no es un cronómetro exacto por artículo." }
     },
     "columns": {

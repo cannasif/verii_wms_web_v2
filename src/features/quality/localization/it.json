@@ -19,7 +19,7 @@
       "controlQuantity": "Quantità controllata GKK",
       "status": "Stato",
       "work": "Lavoro di controllo",
-      "createdAt": "Creato Il",
+      "createdAt": "Data di creazione",
       "decidedAt": "Decisione Qualità",
       "detail": "Dettaglio"
     },
@@ -176,6 +176,40 @@
   },
   "bulkApplySuccess": "\"{{label}}\" applicata a {{count}} righe.",
   "decisionSaved": "Decisione di qualità e movimento di magazzino registrati.",
+  "decisionFlow": {
+    "submit": {
+      "eyebrow": "Approvazione qualità",
+      "title": "Approvazione qualità in corso",
+      "subtitle": "{{name}} · applicazione della decisione a {{count}} righe",
+      "documentLabel": "N. DDT",
+      "errorEyebrow": "Operazione non riuscita",
+      "errorTitle": "Impossibile completare l’approvazione",
+      "errorReturning": "Ritorno al dettaglio qualità…",
+      "errorFallback": "Si è verificato un errore imprevisto.",
+      "log0": "Validazione delle decisioni di qualità",
+      "log1": "Registrazione dei movimenti di magazzino",
+      "log2": "Aggiornamento dello stato qualità",
+      "log3": "Controllo DDT / ERP",
+      "log4": "Completamento dell’approvazione"
+    },
+    "success": {
+      "eyebrow": "Dopo l’approvazione qualità",
+      "title": "DDT creato",
+      "subtitle": "La creazione del DDT dopo l’approvazione qualità è stata completata.",
+      "subtitleWithSource": "La creazione del DDT dopo l’approvazione qualità per {{name}} è stata completata.",
+      "documentLabel": "N. DDT",
+      "electronicDocumentLabel": "N. DDT elettronico",
+      "copyDocument": "Copia il numero DDT",
+      "documentCopied": "Numero DDT copiato",
+      "documentCopyFailed": "Impossibile copiare il numero DDT",
+      "line": "Righe",
+      "status": "Stato",
+      "erp": "ERP",
+      "statusCompleted": "Completato",
+      "backToList": "Elenco qualità",
+      "receiptList": "Elenco ricevimenti"
+    }
+  },
   "detail": {
     "work": {
       "title": "Registro attività GKK",
@@ -242,7 +276,8 @@
       "reasonNoteRequired": "È richiesta una nota per questo codice",
       "reasonLabel": "Motivo",
       "reasonPlaceholder": "Motivo breve",
-      "applyButton": "Applica"
+      "applyButton": "Applica",
+      "toggleAria": "Mostra o nascondi gli strumenti di decisione massiva"
     },
     "table": {
       "selectAllAria": "Seleziona tutte le righe soggette a controllo",
@@ -478,7 +513,7 @@
     "title": "Report controllo qualità in ingresso",
     "description": "Consulta quantità lotto, campione richiesto, quantità controllata, esito, tempi, pause, operatori ed evidenze visive.",
     "tabs": {
-      "inspection": { "title": "CQ per ricevimento", "description": "Per ogni controllo mostra quante unità su 300 sono state verificate, da chi e in quanto tempo.", "gridDescription": "Quantità, esiti, tempi, soste e operatori per ricevimento." },
+      "inspection": { "title": "CQ per ricevimento", "description": "Per ogni registrazione qualità mostra quanta parte della quantità in ispezione è stata controllata, da chi e quanto è durato il processo.", "gridDescription": "Quantità, esiti, tempi, soste e operatori per ricevimento." },
       "stock": { "title": "Prestazioni qualità articolo", "description": "Storico controlli, copertura e tempo qualità di un articolo.", "gridDescription": "Prestazioni aggregate di tutti i controlli per codice articolo.", "timeNotice": "I tempi sono registrati a livello di testata controllo. Se un controllo contiene più articoli, il tempo attivo appare per ciascuno come tempo associato e non come cronometro esatto per articolo." }
     },
     "columns": {

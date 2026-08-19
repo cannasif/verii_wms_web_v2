@@ -222,10 +222,10 @@
       "targetWarehouse": "Target warehouse",
       "requestedQuantity": "Requested quantity",
       "pickedQuantity": "Picked quantity",
-      "handedOverQuantity": "Handed over",
+      "handedOverQuantity": "Handed over quantity",
       "shortageQuantity": "Shortage",
       "documentDate": "Document date",
-      "createdDate": "Created",
+      "createdDate": "Created date",
       "waitingLocation": "Staging location",
       "handoverConfirmation": "Handover confirmation"
     },

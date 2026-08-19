@@ -42,6 +42,6 @@ export function InboundProcessHeader({eyebrow,title,description,steps,currentSte
         })}
       </ol>
     </nav>
-    {notice&&<div className="mx-4 mb-4 flex items-start gap-2 rounded-xl border border-amber-500/25 bg-amber-500/5 px-3 py-2.5 text-xs leading-5 text-amber-200 sm:mx-5"><Info className="mt-0.5 size-4 shrink-0 text-amber-500"/><span>{notice}</span></div>}
+    {notice&&<div className="mx-4 mb-4 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs leading-5 text-amber-800 dark:border-amber-500/25 dark:bg-amber-500/5 dark:text-amber-200 sm:mx-5"><Info className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-500"/><span>{notice}</span></div>}
   </header>;
 }

@@ -1407,6 +1407,13 @@
     "resolveModeHint": "Wählen Sie unten eine Stahlzeile für das ausgewählte unbekannte Blech aus.",
     "resolveUnavailable": "Die Zuordnung ist für dieses Blech derzeit nicht verfügbar.",
     "unknownBadge": "Unbekannt",
+    "status": {
+      "CheckedIn": "Eingecheckt",
+      "LinkedToReceipt": "Mit Wareneingang verknüpft",
+      "Completed": "Abgeschlossen",
+      "Cancelled": "Storniert",
+      "ContainsUnknownPlates": "Enthält unbekannte Bleche"
+    },
     "unknownSlotDescription": "Die Serienidentität von Blech {{sequence}} wird später zugeordnet.",
     "unknownSequence": "Reihenfolge {{sequence}}",
     "unknownAwaitingMatch": "Wartet auf Stahlzeilenzuordnung.",
@@ -6639,7 +6646,7 @@
       "colUnit": "Einheit",
       "colCombinedSize": "Kombinierte Größe",
       "colMaterialGrade": "Materialqualität",
-      "colHeatNumber": "Heat Number",
+      "colHeatNumber": "Schmelznummer",
       "colCertificateNumber": "Zertifikatsnummer",
       "colAction": "Aktion",
       "colDCode": "DCode",

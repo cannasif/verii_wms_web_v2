@@ -121,7 +121,7 @@
       "overIssueTolerancePercent": "Tolerancia de exceso de salida (%)"
     }
   },
-  "execution": { "erp": { "title": "Estado de envío a Netsis", "documentNo": "N.º de documento Netsis", "retry": "Enviar a Netsis / Reintentar", "postedWithCompletion": "La transferencia terminó y se creó el documento Netsis.", "failedAfterCompletion": "La transferencia terminó en WMS, pero falló el envío a Netsis. Puede reintentarlo.", "uncertainAfterCompletion": "El resultado de Netsis es incierto. Compruebe Netsis antes de reintentar.", "retrySucceeded": "Envío a Netsis completado correctamente.", "retryFailed": "No se pudo completar el envío a Netsis.", "status": { "Pending": "Pendiente de envío", "Processing": "Enviando a Netsis", "Succeeded": "Documento Netsis creado", "Failed": "Envío fallido; se puede reintentar", "CommitUncertain": "Resultado incierto; requiere control manual", "Cancelled": "Documento Netsis cancelado" } } },
+  "execution": { "erp": { "title": "Estado de envío a Netsis", "openPanel": "Enviar a Netsis", "documentNo": "N.º de documento Netsis", "retry": "Enviar a Netsis / Reintentar", "postedWithCompletion": "La transferencia terminó y se creó el documento Netsis.", "failedAfterCompletion": "La transferencia terminó en WMS, pero falló el envío a Netsis. Puede reintentarlo.", "uncertainAfterCompletion": "El resultado de Netsis es incierto. Compruebe Netsis antes de reintentar.", "retrySucceeded": "Envío a Netsis completado correctamente.", "retryFailed": "No se pudo completar el envío a Netsis.", "status": { "Pending": "Pendiente de envío", "Processing": "Enviando a Netsis", "Succeeded": "Documento Netsis creado", "Failed": "Envío fallido; se puede reintentar", "CommitUncertain": "Resultado incierto; requiere control manual", "Cancelled": "Documento Netsis cancelado" } } },
   "enums": {
     "transferStatus": {
       "Draft": "Borrador",
@@ -200,10 +200,10 @@
       "targetWarehouse": "Almacén destino",
       "requestedQuantity": "Cantidad solicitada",
       "pickedQuantity": "Cantidad preparada",
-      "handedOverQuantity": "Entregado",
+      "handedOverQuantity": "Cantidad entregada",
       "shortageQuantity": "Faltante",
       "documentDate": "Fecha del documento",
-      "createdDate": "Creado",
+      "createdDate": "Fecha de creación",
       "waitingLocation": "Ubicación de espera",
       "handoverConfirmation": "Confirmación de entrega"
     },

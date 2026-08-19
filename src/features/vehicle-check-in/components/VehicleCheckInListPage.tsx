@@ -1,11 +1,13 @@
 import {useCallback,useMemo,useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import type {TFunction} from 'i18next';
 import {AlertTriangle,SquarePen} from 'lucide-react';
 import {AdvancedDataGrid,type GridColumn,type GridRequest} from '@/components/shared/AdvancedDataGrid';
 import {requiredActionColumn,systemColumns} from '@/components/shared/GridSystemColumns';
 import {ResponsiveDialog} from '@/components/shared/ResponsiveDialog';
 import {formatProjectDateTime} from '@/lib/project-format';
 import {localizeEnumValue} from '@/lib/enum-localization';
+import {cn} from '@/lib/utils';
 import {SteelProcessHeader} from '@/features/steel-receipt/components/SteelProcessHeader';
 import {vehicleCheckInApi} from '../api/vehicle-check-in.api';
 import type {VehicleCheckInRow} from '../types';
@@ -18,6 +20,32 @@ import {
 } from '../utils/vehicle-check-in-list-filters';
 
 const G='dataGrid.sacVehicleCheckIns';
+
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  ContainsUnknownPlates: 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+  CheckedIn: 'border-cyan-500/40 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300',
+  LinkedToReceipt: 'border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300',
+  Completed: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  Cancelled: 'border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300',
+};
+
+function vehicleCheckInStatusLabel(status: string, t: TFunction): string {
+  const key = `vehicleCheckIn.status.${status}`;
+  const label = t(key);
+  return !label || label === key ? localizeEnumValue(status) : label;
+}
+
+function VehicleCheckInStatusBadge({status, t}: {status: string; t: TFunction}) {
+  return (
+    <span className={cn(
+      'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold',
+      STATUS_BADGE_CLASS[status] ?? 'border-slate-500/40 bg-slate-500/10 text-slate-700 dark:text-slate-300',
+    )}>
+      {status === 'ContainsUnknownPlates' ? <AlertTriangle className="size-3.5"/> : null}
+      {vehicleCheckInStatusLabel(status, t)}
+    </span>
+  );
+}
 
 export function VehicleCheckInListPage(){
   const {t}=useTranslation('common');
@@ -41,9 +69,11 @@ export function VehicleCheckInListPage(){
     {key:'steelSheetCount',label:t(`${G}.steelSheetCount`),sortable:true,filterable:true,render:r=>r.steelSheetCount},
     {key:'customerCode',label:t(`${G}.customerCode`),render:r=>r.customerCode||'—'},
     {key:'customerName',label:t(`${G}.customerName`),render:r=>r.customerName||'—'},
-    {key:'status',label:t(`${G}.status`),render:r=>r.status==='ContainsUnknownPlates'
-      ?<span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-300"><AlertTriangle className="size-3.5"/>{t('vehicleCheckIn.status.containsUnknownPlates',{defaultValue:'Bilinmeyen levha içeriyor'})}</span>
-      :localizeEnumValue(r.status)},
+    {key:'status',label:t(`${G}.status`),width:220,contextValue:r=>vehicleCheckInStatusLabel(r.status,t),render:r=>(
+      <div className="flex justify-center">
+        <VehicleCheckInStatusBadge status={r.status} t={t}/>
+      </div>
+    )},
     {key:'imageCount',label:t(`${G}.imageCount`),render:r=>r.imageCount},
     {key:'actions',label:t(`${G}.actions`),width:72,...requiredActionColumn,render:r=><button type="button" onClick={()=>setDialogId(r.id)} title={t(`${G}.viewUpdate`)} aria-label={t(`${G}.viewUpdate`)} className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-cyan-500/30 p-2 text-cyan-500 transition hover:bg-cyan-500/10"><SquarePen className="size-4"/></button>},
   ],[t]);

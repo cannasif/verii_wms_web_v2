@@ -19,7 +19,7 @@
       "controlQuantity": "GKK-Prüfmenge",
       "status": "Status",
       "work": "Prüfarbeit",
-      "createdAt": "Erstellt",
+      "createdAt": "Erstellungsdatum",
       "decidedAt": "Qualitätsentscheidung",
       "detail": "Detail"
     },
@@ -176,6 +176,40 @@
   },
   "bulkApplySuccess": "\"{{label}}\" auf {{count}} Positionen angewendet.",
   "decisionSaved": "Qualitätsentscheidung und Lagerbewegung erfasst.",
+  "decisionFlow": {
+    "submit": {
+      "eyebrow": "Qualitätsfreigabe",
+      "title": "Qualität wird freigegeben",
+      "subtitle": "{{name}} · Entscheidung für {{count}} Positionen wird angewendet",
+      "documentLabel": "Lieferscheinnummer",
+      "errorEyebrow": "Vorgang fehlgeschlagen",
+      "errorTitle": "Freigabe konnte nicht abgeschlossen werden",
+      "errorReturning": "Zurück zur Qualitätsdetailansicht…",
+      "errorFallback": "Ein unerwarteter Fehler ist aufgetreten.",
+      "log0": "Qualitätsentscheidungen werden geprüft",
+      "log1": "Lagerbewegungen werden gebucht",
+      "log2": "Qualitätsstatus wird aktualisiert",
+      "log3": "Lieferschein / ERP wird geprüft",
+      "log4": "Freigabe wird abgeschlossen"
+    },
+    "success": {
+      "eyebrow": "Nach der Qualitätsfreigabe",
+      "title": "Lieferschein erstellt",
+      "subtitle": "Die Lieferscheinerstellung nach der Qualitätsfreigabe wurde abgeschlossen.",
+      "subtitleWithSource": "Die Lieferscheinerstellung nach der Qualitätsfreigabe für {{name}} wurde abgeschlossen.",
+      "documentLabel": "Lieferscheinnummer",
+      "electronicDocumentLabel": "E-Lieferscheinnummer",
+      "copyDocument": "Lieferscheinnummer kopieren",
+      "documentCopied": "Lieferscheinnummer kopiert",
+      "documentCopyFailed": "Lieferscheinnummer konnte nicht kopiert werden",
+      "line": "Positionen",
+      "status": "Status",
+      "erp": "ERP",
+      "statusCompleted": "Abgeschlossen",
+      "backToList": "Qualitätsliste",
+      "receiptList": "Wareneingangsliste"
+    }
+  },
   "detail": {
     "work": {
       "title": "GKK-Arbeitsnachweis",
@@ -242,7 +276,8 @@
       "reasonNoteRequired": "Für diesen Code ist eine Notiz erforderlich",
       "reasonLabel": "Begründung",
       "reasonPlaceholder": "Kurze Begründung",
-      "applyButton": "Anwenden"
+      "applyButton": "Anwenden",
+      "toggleAria": "Sammelentscheidung ein- oder ausblenden"
     },
     "table": {
       "selectAllAria": "Alle prüfpflichtigen Positionen auswählen",
@@ -478,7 +513,7 @@
     "title": "Berichte zur Wareneingangsprüfung",
     "description": "Prüfen Sie Losmenge, erforderliche Stichprobe, tatsächlich geprüfte Menge, Entscheidung, Arbeitszeit, Unterbrechungen, Mitarbeiter und Bildnachweise in einem Bericht.",
     "tabs": {
-      "inspection": { "title": "Prüfung nach Wareneingang", "description": "Sehen Sie je Prüfung, wie viele von 300 Einheiten geprüft wurden, wer gearbeitet hat und wie lange.", "gridDescription": "Mengen, Ergebnisse, Arbeitszeit, Unterbrechungen und Mitarbeiterleistung je Wareneingang." },
+      "inspection": { "title": "Prüfung nach Wareneingang", "description": "Sehen Sie je Qualitätsprüfung, wie viel der eingegangenen Menge geprüft wurde, wer gearbeitet hat und wie lange der Prozess dauerte.", "gridDescription": "Mengen, Ergebnisse, Arbeitszeit, Unterbrechungen und Mitarbeiterleistung je Wareneingang." },
       "stock": { "title": "Artikel-Qualitätsleistung", "description": "Historische Prüfanzahl, Abdeckung und Qualitätsarbeitszeit eines Artikels.", "gridDescription": "Aggregierte Leistung aller Prüfungen nach Artikelcode.", "timeNotice": "Arbeitszeiten werden auf Prüfungskopfebene erfasst. Enthält eine Prüfung mehrere Artikel, wird die aktive Zeit für jeden Artikel als zugehörige Prüfzeit angezeigt und ist keine exakte Stoppuhr je Artikel." }
     },
     "columns": {

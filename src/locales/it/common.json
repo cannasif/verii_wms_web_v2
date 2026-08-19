@@ -5300,7 +5300,7 @@
       "colUnit": "Unità",
       "colCombinedSize": "Dimensione combinata",
       "colMaterialGrade": "Qualità materiale",
-      "colHeatNumber": "Heat Number",
+      "colHeatNumber": "N° colata",
       "colCertificateNumber": "N. certificato",
       "colAction": "Azione",
       "colDCode": "DCode",
@@ -5768,6 +5768,13 @@
     "resolveModeHint": "Seleziona sotto una riga acciaio per associare la lamiera sconosciuta.",
     "resolveUnavailable": "L'associazione non è attualmente disponibile per questa lamiera.",
     "unknownBadge": "Sconosciuta",
+    "status": {
+      "CheckedIn": "Ingresso registrato",
+      "LinkedToReceipt": "Collegato al ricevimento",
+      "Completed": "Completato",
+      "Cancelled": "Annullato",
+      "ContainsUnknownPlates": "Contiene lamiere sconosciute"
+    },
     "unknownSlotDescription": "L'identità seriale della lamiera {{sequence}} verrà associata in seguito.",
     "unknownSequence": "Sequenza {{sequence}}",
     "unknownAwaitingMatch": "In attesa di associazione alla riga acciaio.",

@@ -222,10 +222,10 @@
       "targetWarehouse": "Hedef depo",
       "requestedQuantity": "Planlanan miktar",
       "pickedQuantity": "Toplanan miktar",
-      "handedOverQuantity": "Teslim edilen",
+      "handedOverQuantity": "Teslim edilen miktar",
       "shortageQuantity": "Eksik",
       "documentDate": "Belge tarihi",
-      "createdDate": "Oluşturma",
+      "createdDate": "Oluşturma tarihi",
       "waitingLocation": "Bekleme rafı",
       "handoverConfirmation": "Teslim onayı"
     },

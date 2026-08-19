@@ -1502,6 +1502,13 @@
     "resolveModeHint": "Select a steel line below to match the selected unknown plate.",
     "resolveUnavailable": "Matching is currently unavailable for this plate.",
     "unknownBadge": "Unknown",
+    "status": {
+      "CheckedIn": "Checked in",
+      "LinkedToReceipt": "Linked to goods receipt",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled",
+      "ContainsUnknownPlates": "Contains unknown plates"
+    },
     "unknownSlotDescription": "The serial identity of plate {{sequence}} will be matched later.",
     "unknownSequence": "Sequence {{sequence}}",
     "unknownAwaitingMatch": "Waiting for steel-line matching.",

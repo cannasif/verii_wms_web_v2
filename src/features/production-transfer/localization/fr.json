@@ -121,7 +121,7 @@
       "overIssueTolerancePercent": "Tolérance de sur-sortie (%)"
     }
   },
-  "execution": { "erp": { "title": "État de l’envoi Netsis", "documentNo": "N° de document Netsis", "retry": "Envoyer à Netsis / Réessayer", "postedWithCompletion": "Le transfert est terminé et le document Netsis a été créé.", "failedAfterCompletion": "Le transfert est terminé dans WMS, mais l’envoi Netsis a échoué. Vous pouvez réessayer.", "uncertainAfterCompletion": "Le résultat Netsis est incertain. Vérifiez Netsis avant de réessayer.", "retrySucceeded": "Envoi Netsis terminé avec succès.", "retryFailed": "L’envoi Netsis n’a pas pu être terminé.", "status": { "Pending": "En attente d’envoi", "Processing": "Envoi vers Netsis", "Succeeded": "Document Netsis créé", "Failed": "Échec de l’envoi ; nouvel essai possible", "CommitUncertain": "Résultat incertain ; contrôle manuel requis", "Cancelled": "Document Netsis annulé" } } },
+  "execution": { "erp": { "title": "État de l’envoi Netsis", "openPanel": "Envoyer à Netsis", "documentNo": "N° de document Netsis", "retry": "Envoyer à Netsis / Réessayer", "postedWithCompletion": "Le transfert est terminé et le document Netsis a été créé.", "failedAfterCompletion": "Le transfert est terminé dans WMS, mais l’envoi Netsis a échoué. Vous pouvez réessayer.", "uncertainAfterCompletion": "Le résultat Netsis est incertain. Vérifiez Netsis avant de réessayer.", "retrySucceeded": "Envoi Netsis terminé avec succès.", "retryFailed": "L’envoi Netsis n’a pas pu être terminé.", "status": { "Pending": "En attente d’envoi", "Processing": "Envoi vers Netsis", "Succeeded": "Document Netsis créé", "Failed": "Échec de l’envoi ; nouvel essai possible", "CommitUncertain": "Résultat incertain ; contrôle manuel requis", "Cancelled": "Document Netsis annulé" } } },
   "enums": {
     "transferStatus": {
       "Draft": "Brouillon",
@@ -200,10 +200,10 @@
       "targetWarehouse": "Entrepôt cible",
       "requestedQuantity": "Quantité demandée",
       "pickedQuantity": "Quantité prélevée",
-      "handedOverQuantity": "Remis",
+      "handedOverQuantity": "Quantité remise",
       "shortageQuantity": "Manquant",
       "documentDate": "Date document",
-      "createdDate": "Créé le",
+      "createdDate": "Date de création",
       "waitingLocation": "Emplacement d'attente",
       "handoverConfirmation": "Confirmation de remise"
     },

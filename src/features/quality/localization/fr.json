@@ -19,7 +19,7 @@
       "controlQuantity": "Quantité contrôlée GKK",
       "status": "Statut",
       "work": "Travail de contrôle",
-      "createdAt": "Créé le",
+      "createdAt": "Date de création",
       "decidedAt": "Décision qualité",
       "detail": "Détail"
     },
@@ -176,6 +176,40 @@
   },
   "bulkApplySuccess": "\"{{label}}\" appliqué à {{count}} lignes.",
   "decisionSaved": "Décision qualité et mouvement de stock enregistrés.",
+  "decisionFlow": {
+    "submit": {
+      "eyebrow": "Approbation qualité",
+      "title": "Approbation qualité en cours",
+      "subtitle": "{{name}} · application de la décision pour {{count}} lignes",
+      "documentLabel": "N° de bon de livraison",
+      "errorEyebrow": "Opération échouée",
+      "errorTitle": "L’approbation n’a pas pu aboutir",
+      "errorReturning": "Retour au détail qualité…",
+      "errorFallback": "Une erreur inattendue s’est produite.",
+      "log0": "Validation des décisions qualité",
+      "log1": "Écriture des mouvements de stock",
+      "log2": "Mise à jour du statut qualité",
+      "log3": "Contrôle du bon de livraison / ERP",
+      "log4": "Finalisation de l’approbation"
+    },
+    "success": {
+      "eyebrow": "Après l’approbation qualité",
+      "title": "Bon de livraison créé",
+      "subtitle": "La création du bon de livraison après l’approbation qualité est terminée.",
+      "subtitleWithSource": "La création du bon de livraison après l’approbation qualité pour {{name}} est terminée.",
+      "documentLabel": "N° de bon de livraison",
+      "electronicDocumentLabel": "N° de bon de livraison électronique",
+      "copyDocument": "Copier le numéro du bon de livraison",
+      "documentCopied": "Numéro du bon de livraison copié",
+      "documentCopyFailed": "Impossible de copier le numéro du bon de livraison",
+      "line": "Lignes",
+      "status": "Statut",
+      "erp": "ERP",
+      "statusCompleted": "Terminé",
+      "backToList": "Liste qualité",
+      "receiptList": "Liste des réceptions"
+    }
+  },
   "detail": {
     "work": {
       "title": "Suivi du travail GKK",
@@ -242,7 +276,8 @@
       "reasonNoteRequired": "Une note est obligatoire pour ce code",
       "reasonLabel": "Motif",
       "reasonPlaceholder": "Motif court",
-      "applyButton": "Appliquer"
+      "applyButton": "Appliquer",
+      "toggleAria": "Afficher ou masquer les outils de décision en masse"
     },
     "table": {
       "selectAllAria": "Sélectionner toutes les lignes soumises au contrôle",
@@ -478,7 +513,7 @@
     "title": "Rapports de contrôle qualité à réception",
     "description": "Consultez la quantité du lot, l'échantillon requis, la quantité réellement contrôlée, la décision, les temps, les pauses, les opérateurs et les preuves visuelles.",
     "tabs": {
-      "inspection": { "title": "CQ réception", "description": "Pour chaque contrôle, voyez combien d'unités sur 300 ont été vérifiées, par qui et pendant combien de temps.", "gridDescription": "Quantités, résultats, temps de travail, arrêts et opérateurs par réception." },
+      "inspection": { "title": "CQ réception", "description": "Pour chaque enregistrement qualité, voyez quelle part de la quantité présentée au contrôle a été inspectée, par qui et combien de temps a duré le processus.", "gridDescription": "Quantités, résultats, temps de travail, arrêts et opérateurs par réception." },
       "stock": { "title": "Performance qualité article", "description": "Historique des contrôles, couverture et temps qualité d'un article.", "gridDescription": "Performance agrégée de tous les contrôles par code article.", "timeNotice": "Les temps sont enregistrés au niveau de l'en-tête du contrôle. Si un contrôle contient plusieurs articles, son temps actif apparaît pour chacun comme temps associé, et non comme chronomètre exact par article." }
     },
     "columns": {

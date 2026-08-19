@@ -4,6 +4,8 @@
     "description": "Gestisci l'articolo prodotto, il riferimento alla distinta base, il centro di lavoro, il fabbisogno di materiali, le uscite e gli assegnatari in un unico piano verificabile.",
     "create": { "title": "Crea piano di produzione", "text": "Pianifica insieme l'ordine, l'uscita principale, il fabbisogno di materiali e l'assegnazione." },
     "list": { "title": "Piani di produzione", "text": "Traccia i piani di produzione in bozza, rilasciati e in corso in un elenco lato server." },
+    "workOrders": { "title": "Ordini di Produzione", "text": "Esamina gli ordini aperti e le distinte dalla fonte ERP o WMS selezionata nei parametri." },
+    "launch": "Continua",
     "boundary": { "title": "Prima fase operativa", "text": "Questa versione registra e rilascia piani e ordini in modo sicuro. Il consumo fisico, la rendicontazione di produzione e i movimenti di stock in uscita saranno collegati a queste identità nella fase di esecuzione." }
   },
   "create": {
@@ -61,6 +63,9 @@
       "week": "Settimana",
       "month": "Mese",
       "year": "Anno"
+    },
+    "columns": {
+      "status": "Stato"
     },
     "assignmentProgress": {
       "progressHover": "{{percent}}%",

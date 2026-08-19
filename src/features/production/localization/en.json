@@ -4,6 +4,8 @@
     "description": "Manage the produced item, BOM reference, work center, material requirements, outputs and assignees under one auditable plan.",
     "create": { "title": "Create Production Plan", "text": "Plan the order, primary output, material requirements and assignment together." },
     "list": { "title": "Production Plans", "text": "Track draft, released and active production plans in a server-side list." },
+    "workOrders": { "title": "Production Work Orders", "text": "Review open work orders and recipes from the ERP or WMS source selected in parameters." },
+    "launch": "Continue",
     "boundary": { "title": "First operational slice", "text": "This version safely records and releases plans and orders. Physical consumption, production reporting and output stock movements will be linked to these identities in the execution slice." }
   },
   "create": {
@@ -61,6 +63,9 @@
       "week": "Week",
       "month": "Month",
       "year": "Year"
+    },
+    "columns": {
+      "status": "Status"
     },
     "assignmentProgress": {
       "progressHover": "{{percent}}%",

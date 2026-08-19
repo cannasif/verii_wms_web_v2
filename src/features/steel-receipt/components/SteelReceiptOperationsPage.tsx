@@ -79,6 +79,11 @@ function ReceiptPanel(){
   const loadSourceRef=useRef<(value?:string,options?:LoadReceiptSourceOptions)=>Promise<SteelReceiptSource|null>>(async()=>null);
   const selectedRows=Object.values(selected);
   const total=selectedRows.reduce((sum,row)=>sum+row.approvedQuantity,0);
+  const approvedUnit=(()=>{
+    const units=[...new Set(selectedRows.map(row=>row.unitCode?.trim()).filter(Boolean))];
+    return units.length===1?units[0]:'';
+  })();
+  const totalApprovedDisplay=approvedUnit?`${formatProjectNumber(total)} ${approvedUnit}`:formatProjectNumber(total);
   const receiptNoValid=isValidGoodsReceiptDocumentNo(receiptNo);
   const openImportFiles=useQuery({
     queryKey:['netsis-import-open-files'],
@@ -347,7 +352,7 @@ function ReceiptPanel(){
       </section>
 
       <aside className="h-fit space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><SectionHead title={t(`${R}.directReceiptTitle`)} text={t(`${R}.directReceiptText`)}/>
-      <Metric label={t(`${R}.selectedSheets`)} value={String(selectedRows.length)}/><Metric label={t(`${R}.totalApprovedQty`)} value={formatProjectNumber(total)}/><Metric label={t(`${R}.sacPlan`)} value={source.importReferenceNo}/><Metric label={t(`${R}.lastConversionWaybill`)} value={lastConversionWaybill??'—'} valueClassName="font-mono"/>
+      <Metric label={t(`${R}.selectedSheets`)} value={String(selectedRows.length)}/><Metric label={t(`${R}.totalApprovedQty`)} value={totalApprovedDisplay}/><Metric label={t(`${R}.sacPlan`)} value={source.importReferenceNo}/><Metric label={t(`${R}.lastConversionWaybill`)} value={lastConversionWaybill??'—'} valueClassName="font-mono"/>
       <section className="space-y-3 rounded-xl border border-violet-500/20 bg-violet-500/5 p-3">
         <div className="flex items-start gap-2"><Globe2 className="mt-0.5 size-5 text-violet-500"/><div><strong className="text-sm">{t(`${R}.tradeTypeLabel`)}</strong><p className="text-xs text-slate-500">{t(`${R}.tradeTypeText`)}</p></div></div>
         <AppDropdown<SteelReceiptTradeType>
@@ -680,7 +685,6 @@ function PlacementPanel(){
         <div><strong className="text-sm">{t(`${P}.stackOrderList`,{count:occupancy.data?.length??0})}</strong><div className="mt-2 grid gap-2 md:grid-cols-2">{[...(occupancy.data??[])].sort((a,b)=>(b.stackOrderNo??0)-(a.stackOrderNo??0)).map(item=><div key={item.placementId} className="rounded-xl border p-3 text-xs"><strong>{t(`${P}.stackItem`,{order:item.stackOrderNo,dCode:item.dCode})}</strong><span className="block text-slate-500">{item.stockCode} · {item.supplierSerialNo}</span></div>)}</div>{!occupancy.isLoading&&!occupancy.data?.length&&<p className="mt-2 text-xs text-slate-500">{t(`${P}.emptyShelf`)}</p>}</div>
         <button disabled={busy||occupancy.isLoading} onClick={()=>void place()} className="w-full rounded-xl bg-cyan-600 px-4 py-3 font-bold text-white disabled:opacity-40"><Layers3 className="mr-2 inline size-4"/>{t(`${P}.placeButton`,{order:nextStack})}</button></>}</>}</section>
     </div>}
-    {!source&&<div className="rounded-2xl border border-dashed border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-10 text-center text-sm text-slate-500">{t(`${P}.selectImportFirst`)}</div>}
   </div>;
 }
 

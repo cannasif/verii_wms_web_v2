@@ -708,7 +708,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
     },
     {
       key: 'listingKindLabel',
-      label: 'Tür',
+      label: tProduction('workOrders.columns.status'),
       sortable: true,
       filterable: true,
       filterType: 'enum',

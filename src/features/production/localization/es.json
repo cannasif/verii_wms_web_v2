@@ -4,6 +4,8 @@
     "description": "Gestione el artículo producido, la referencia de lista de materiales, el centro de trabajo, las necesidades de material, las salidas y los responsables bajo un plan auditable.",
     "create": { "title": "Crear plan de producción", "text": "Planifique juntos la orden, la salida principal, las necesidades de material y la asignación." },
     "list": { "title": "Planes de producción", "text": "Siga los planes de producción en borrador, publicados y en curso en una lista del lado del servidor." },
+    "workOrders": { "title": "Órdenes de Producción", "text": "Revise las órdenes abiertas y las recetas de la fuente ERP o WMS seleccionada en los parámetros." },
+    "launch": "Continuar",
     "boundary": { "title": "Primera fase operativa", "text": "Esta versión registra y publica planes y órdenes de forma segura. El consumo físico, el reporte de producción y los movimientos de stock de salida se vincularán a estas identidades en la fase de ejecución." }
   },
   "create": {
@@ -61,6 +63,9 @@
       "week": "Semana",
       "month": "Mes",
       "year": "Año"
+    },
+    "columns": {
+      "status": "Estado"
     },
     "assignmentProgress": {
       "progressHover": "{{percent}} %",

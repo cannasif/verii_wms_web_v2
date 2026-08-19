@@ -5,6 +5,8 @@
     "description": "Üretilecek mamulü, reçete/BOM referansını, iş merkezini, malzeme ihtiyaçlarını, çıktıları ve sorumluları aynı denetlenebilir plan altında yönetin.",
     "create": { "title": "Üretim Planı Oluştur", "text": "Üretim emri, ana çıktı, malzeme ihtiyaçları ve kullanıcı atamasını birlikte planlayın." },
     "list": { "title": "Üretim Planları", "text": "Taslak, serbest bırakılmış ve devam eden üretim planlarını sunucu taraflı listede izleyin." },
+    "workOrders": { "title": "Üretim İş Emirleri", "text": "Parametrede seçilen ERP veya WMS kaynağındaki açık iş emirlerini ve reçetelerini inceleyin." },
+    "launch": "Devam et",
     "boundary": { "title": "İlk operasyonel dilim", "text": "Bu sürüm plan ve emri güvenli biçimde kaydeder ve serbest bırakır. Fiziksel sarf, üretim bildirimi ve mamul stok hareketleri sonraki yürütme diliminde bu kimliklere bağlanacaktır." }
   },
   "create": {
@@ -77,6 +79,9 @@
       "week": "Hafta",
       "month": "Ay",
       "year": "Yıl"
+    },
+    "columns": {
+      "status": "Durum"
     },
     "assignmentProgress": {
       "progressHover": "%{{percent}}",

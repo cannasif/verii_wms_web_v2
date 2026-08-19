@@ -38,6 +38,8 @@ export type OpsProcessHubProps = {
   callout?: { title: string; text: string };
   loading?: boolean;
   className?: string;
+  /** Overrides skin-specific launch button text (terminal: Başlat, premium: Devam et). */
+  launchLabel?: string;
 };
 
 function CornerFrame({ className }: { className?: string }): ReactElement {
@@ -250,13 +252,15 @@ export function OpsProcessHub({
   callout,
   loading,
   className,
+  launchLabel,
 }: OpsProcessHubProps): ReactElement {
   const { t } = useTranslation('common');
   const { skin } = useTheme();
   const isPremium = skin === 'premium';
-  const openLabel = isPremium
-    ? t('dashboard.premium.launch', { defaultValue: 'Devam et' })
-    : t('dashboard.terminal.launch', { defaultValue: 'Başlat' });
+  const openLabel = launchLabel
+    ?? (isPremium
+      ? t('dashboard.premium.launch', { defaultValue: 'Devam et' })
+      : t('dashboard.terminal.launch', { defaultValue: 'Başlat' }));
 
   if (loading) {
     return (

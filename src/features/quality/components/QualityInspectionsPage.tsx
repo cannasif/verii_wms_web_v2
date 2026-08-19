@@ -781,6 +781,13 @@ function message(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
+function inspectionPanelSubtitle(header?: QualityInspection | null): string {
+  return [header?.sourceWaybillNo, header?.supplierName]
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value))
+    .join(" · ");
+}
+
 const DECIDED_LIST_STATUSES = new Set([
   "Passed",
   "Failed",
@@ -1338,6 +1345,7 @@ export function QualityInspectionsPage({
   const decided = async (nextStatus?: string, inspectionId?: number) => {
     await moveInspectionToListStatus(resolveDecidedListStatus(nextStatus), inspectionId);
   };
+  const editPanelSubtitle = inspectionPanelSubtitle(editDetail?.header);
   if (!quarantineOnly && statusCatalogQuery.isPending) {
     return (
       <div className="flex min-h-64 items-center justify-center gap-3 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface)] text-sm text-slate-500">
@@ -1452,9 +1460,9 @@ export function QualityInspectionsPage({
           </p>
           <DialogTitle className="wms-ops-detail-dialog__title">
             {t("list.editTitle")}
-            {editDetail?.header.inspectionNo ? (
+            {editPanelSubtitle ? (
               <span className="ml-2 font-mono text-base font-bold text-cyan-600 dark:text-cyan-300">
-                {editDetail.header.inspectionNo}
+                {editPanelSubtitle}
               </span>
             ) : null}
           </DialogTitle>
@@ -2647,6 +2655,7 @@ function InspectionDetailPanel({
                     portalContainer={null}
                   />
                 </label>
+                {bulkDecision && bulkDecision !== "Accepted" ? (
                 <label className="wms-ops-quality-bulk__field">
                   <span>{t("detail.bulk.reasonCodeLabel")}</span>
                   <PagedAppDropdown
@@ -2678,6 +2687,7 @@ function InspectionDetailPanel({
                     portalContainer={null}
                   />
                 </label>
+                ) : null}
                 <label className="wms-ops-quality-bulk__field">
                   <span>{t("detail.bulk.reasonLabel")}</span>
                   <AppInput
@@ -2891,7 +2901,6 @@ function InspectionDetailPanel({
                                   tone={inferOpsStatusTone(part.decision)}
                                 >
                                   {localizeEnumValue(part.decision)} · {formatProjectNumber(parseQty(part.quantity) || 0)}
-                                  {part.targetLocationId ? ` · #${part.targetLocationId}` : ""}
                                 </OpsStatusBadge>
                               ));
                             }
@@ -2916,11 +2925,6 @@ function InspectionDetailPanel({
                               </OpsStatusBadge>
                             );
                           })()}
-                          {draft.reasonCode ? (
-                            <div className="font-mono text-[0.65rem] text-slate-500">
-                              {draft.reasonCode}
-                            </div>
-                          ) : null}
                         </div>
                       ) : (
                         <span className="text-xs text-slate-400">{t("detail.table.waitingBadge")}</span>
@@ -3116,17 +3120,34 @@ function InspectionDetailPanel({
       ) : null}
 
       {!final && actionable.length > 0 && (
-        <section className="flex flex-col gap-3 rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_22%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,transparent)] p-4 sm:flex-row sm:items-end sm:justify-between">
-          <label className="min-w-0 flex-1 space-y-1.5 text-sm">
-            <span className="text-xs font-semibold text-slate-500">
-              {t("detail.footer.generalNoteLabel")}
-            </span>
-            <AppInput
-              value={headerNote}
-              onChange={(e) => setHeaderNote(e.target.value)}
-              placeholder={t("detail.footer.generalNotePlaceholder")}
-              className="wms-ops-quality-field h-8 text-xs"
-            />
+        <section className="flex flex-col gap-3 rounded-xl border border-[color-mix(in_oklab,var(--wms-brand-primary)_22%,var(--wms-app-border))] bg-[color-mix(in_oklab,var(--wms-brand-primary)_5%,transparent)] p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="min-w-0 flex-1 space-y-1.5 text-sm">
+              <span className="text-xs font-semibold text-slate-500">
+                {t("detail.footer.generalNoteLabel")}
+              </span>
+              <AppInput
+                value={headerNote}
+                onChange={(e) => setHeaderNote(e.target.value)}
+                placeholder={t("detail.footer.generalNotePlaceholder")}
+                className="wms-ops-quality-field h-8 text-xs"
+              />
+            </label>
+            <OpsActionButton
+              type="button"
+              disabled={saving || saveLocked || applyBlocked || !canApplyDecision}
+              onClick={() => setApplyConfirmOpen(true)}
+              className="wms-ops-quality-decide-btn wms-ops-quality-footer-apply-btn shrink-0 self-stretch sm:self-auto !min-h-8 !px-4 !text-[0.65rem]"
+            >
+              {saving ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="size-4" />
+              )}
+              {t("detail.footer.applyButton")}
+            </OpsActionButton>
+          </div>
+          <div className="space-y-1">
             <span className="block text-xs text-slate-500">
               {t("detail.footer.readyCount", {
                 decided: decidedCount,
@@ -3157,20 +3178,7 @@ function InspectionDetailPanel({
                   : t("detail.work.decisionRequiresStart")}
               </span>
             ) : null}
-          </label>
-          <OpsActionButton
-            type="button"
-            disabled={saving || saveLocked || applyBlocked || !canApplyDecision}
-            onClick={() => setApplyConfirmOpen(true)}
-            className="wms-ops-quality-decide-btn !min-h-8 !px-4 !text-[0.65rem]"
-          >
-            {saving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <ShieldCheck className="size-4" />
-            )}
-            {t("detail.footer.applyButton")}
-          </OpsActionButton>
+          </div>
         </section>
       )}
 
@@ -3611,6 +3619,9 @@ function LineDecisionPopover({
     ?? (draft.decision !== "Accepted" ? draft.decision : hasRemainder && draft.remainderDecision !== "Accepted"
       ? draft.remainderDecision
       : draft.decision || "Accepted");
+  const showDecisionCode = advancedDispositions.some((part) => part.decision && part.decision !== "Accepted")
+    || Boolean(draft.decision && draft.decision !== "Accepted")
+    || Boolean(hasRemainder && draft.remainderDecision && draft.remainderDecision !== "Accepted");
   const allocatedQuantity = roundQty(
     advancedDispositions.reduce((sum, part) => {
       const quantity = parseQty(part.quantity);
@@ -4284,6 +4295,7 @@ function LineDecisionPopover({
                   </button>
                 </div>
               )}
+              {showDecisionCode ? (
               <label className="block space-y-1 text-sm">
                 <span className="text-xs font-semibold text-slate-500">
                   {t("linePopover.reasonCodeLabel")}
@@ -4318,6 +4330,7 @@ function LineDecisionPopover({
                   contentClassName="!z-[5100]"
                 />
               </label>
+              ) : null}
               <label className="block space-y-1 text-sm">
                 <span className="text-xs font-semibold text-slate-500">
                   {t("linePopover.reasonLabel")}

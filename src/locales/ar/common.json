@@ -5300,7 +5300,7 @@
       "colUnit": "الوحدة",
       "colCombinedSize": "الحجم المركب",
       "colMaterialGrade": "جودة المادة",
-      "colHeatNumber": "Heat Number",
+      "colHeatNumber": "رقم الصب",
       "colCertificateNumber": "رقم الشهادة",
       "colAction": "إجراء",
       "colDCode": "DCode",
@@ -5768,6 +5768,13 @@
     "resolveModeHint": "حدد سطر صلب أدناه لربط اللوح المجهول المحدد.",
     "resolveUnavailable": "المطابقة غير متاحة حاليًا لهذا اللوح.",
     "unknownBadge": "مجهول",
+    "status": {
+      "CheckedIn": "تم تسجيل الدخول",
+      "LinkedToReceipt": "مرتبط باستلام البضاعة",
+      "Completed": "مكتمل",
+      "Cancelled": "ملغى",
+      "ContainsUnknownPlates": "يحتوي على صفائح مجهولة"
+    },
     "unknownSlotDescription": "سيتم ربط هوية الرقم التسلسلي للوح {{sequence}} لاحقًا.",
     "unknownSequence": "التسلسل {{sequence}}",
     "unknownAwaitingMatch": "بانتظار الربط بسطر الصلب.",

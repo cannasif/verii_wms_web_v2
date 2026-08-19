@@ -4,6 +4,8 @@
     "description": "Verwalten Sie das produzierte Teil, die Stücklistenreferenz, den Arbeitsplatz, den Materialbedarf, die Ausgaben und die Zuständigen unter einem prüfbaren Plan.",
     "create": { "title": "Produktionsplan erstellen", "text": "Planen Sie Auftrag, Hauptausgabe, Materialbedarf und Zuweisung gemeinsam." },
     "list": { "title": "Produktionspläne", "text": "Verfolgen Sie Entwurfs-, freigegebene und laufende Produktionspläne in einer serverseitigen Liste." },
+    "workOrders": { "title": "Produktionsaufträge", "text": "Prüfen Sie offene Aufträge und Rezepte aus der in den Parametern gewählten ERP- oder WMS-Quelle." },
+    "launch": "Fortfahren",
     "boundary": { "title": "Erste operative Ausbaustufe", "text": "Diese Version speichert und gibt Pläne und Aufträge sicher frei. Physischer Verbrauch, Produktionsmeldung und Ausgabebestandsbewegungen werden in der Ausführungsstufe mit diesen Kennungen verknüpft." }
   },
   "create": {
@@ -61,6 +63,9 @@
       "week": "Woche",
       "month": "Monat",
       "year": "Jahr"
+    },
+    "columns": {
+      "status": "Status"
     },
     "assignmentProgress": {
       "progressHover": "{{percent}} %",

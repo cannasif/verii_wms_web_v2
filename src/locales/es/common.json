@@ -5300,7 +5300,7 @@
       "colUnit": "Unidad",
       "colCombinedSize": "Tamaño combinado",
       "colMaterialGrade": "Calidad material",
-      "colHeatNumber": "Heat Number",
+      "colHeatNumber": "N.º colada",
       "colCertificateNumber": "N.º certificado",
       "colAction": "Acción",
       "colDCode": "DCode",
@@ -5768,6 +5768,13 @@
     "resolveModeHint": "Seleccione abajo una línea de acero para vincular la chapa desconocida.",
     "resolveUnavailable": "La vinculación no está disponible actualmente para esta chapa.",
     "unknownBadge": "Desconocida",
+    "status": {
+      "CheckedIn": "Vehículo registrado",
+      "LinkedToReceipt": "Vinculado a la recepción",
+      "Completed": "Completado",
+      "Cancelled": "Cancelado",
+      "ContainsUnknownPlates": "Contiene chapas desconocidas"
+    },
     "unknownSlotDescription": "La identidad de serie de la chapa {{sequence}} se vinculará más tarde.",
     "unknownSequence": "Secuencia {{sequence}}",
     "unknownAwaitingMatch": "Esperando vinculación con una línea de acero.",

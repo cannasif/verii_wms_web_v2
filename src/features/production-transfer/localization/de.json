@@ -121,7 +121,7 @@
       "overIssueTolerancePercent": "Mehrverbrauchstoleranz (%)"
     }
   },
-  "execution": { "erp": { "title": "Netsis-Buchungsstatus", "documentNo": "Netsis-Belegnummer", "retry": "An Netsis senden / Erneut versuchen", "postedWithCompletion": "Produktionstransfer abgeschlossen und Netsis-Beleg erstellt.", "failedAfterCompletion": "Transfer in WMS abgeschlossen, Netsis-Buchung fehlgeschlagen. Ein erneuter Versuch ist möglich.", "uncertainAfterCompletion": "Transfer abgeschlossen, Netsis-Ergebnis unklar. Vor erneutem Senden Netsis prüfen.", "retrySucceeded": "Netsis-Buchung erfolgreich abgeschlossen.", "retryFailed": "Netsis-Buchung konnte nicht abgeschlossen werden.", "status": { "Pending": "Buchung ausstehend", "Processing": "Wird an Netsis gesendet", "Succeeded": "Netsis-Beleg erstellt", "Failed": "Buchung fehlgeschlagen; Wiederholung möglich", "CommitUncertain": "Ergebnis unklar; manuelle Prüfung erforderlich", "Cancelled": "Netsis-Beleg storniert" } } },
+  "execution": { "erp": { "title": "Netsis-Buchungsstatus", "openPanel": "An Netsis senden", "documentNo": "Netsis-Belegnummer", "retry": "An Netsis senden / Erneut versuchen", "postedWithCompletion": "Produktionstransfer abgeschlossen und Netsis-Beleg erstellt.", "failedAfterCompletion": "Transfer in WMS abgeschlossen, Netsis-Buchung fehlgeschlagen. Ein erneuter Versuch ist möglich.", "uncertainAfterCompletion": "Transfer abgeschlossen, Netsis-Ergebnis unklar. Vor erneutem Senden Netsis prüfen.", "retrySucceeded": "Netsis-Buchung erfolgreich abgeschlossen.", "retryFailed": "Netsis-Buchung konnte nicht abgeschlossen werden.", "status": { "Pending": "Buchung ausstehend", "Processing": "Wird an Netsis gesendet", "Succeeded": "Netsis-Beleg erstellt", "Failed": "Buchung fehlgeschlagen; Wiederholung möglich", "CommitUncertain": "Ergebnis unklar; manuelle Prüfung erforderlich", "Cancelled": "Netsis-Beleg storniert" } } },
   "enums": {
     "transferStatus": {
       "Draft": "Entwurf",
@@ -200,10 +200,10 @@
       "targetWarehouse": "Ziellager",
       "requestedQuantity": "Geplante Menge",
       "pickedQuantity": "Kommissionierte Menge",
-      "handedOverQuantity": "Übergeben",
+      "handedOverQuantity": "Übergebene Menge",
       "shortageQuantity": "Fehlmenge",
       "documentDate": "Belegdatum",
-      "createdDate": "Erstellt",
+      "createdDate": "Erstellungsdatum",
       "waitingLocation": "Staging-Lagerplatz",
       "handoverConfirmation": "Übergabebestätigung"
     },
