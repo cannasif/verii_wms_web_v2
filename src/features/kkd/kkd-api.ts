@@ -603,11 +603,21 @@ export const kkdApi = {
     unwrap(await api.post<Envelope<unknown>>(`/api/kkd/distributions/${id}/cancel`, {
       idempotencyKey: crypto.randomUUID(), reason, expectedRowVersion,
     })),
-  saveDepartment: async (payload: { code: string; name: string; isActive: boolean }) =>
-    unwrap(await api.post<Envelope<number>>('/api/kkd/departments', payload)),
-  saveRole: async (payload: { departmentId?: number; code: string; name: string; isActive: boolean }) =>
-    unwrap(await api.post<Envelope<number>>('/api/kkd/roles', payload)),
-  saveEmployee: async (payload: unknown) => unwrap(await api.post<Envelope<number>>('/api/kkd/employees', payload)),
+  saveDepartment: async (payload: { code: string; name: string; isActive: boolean }, id?: number) =>
+    unwrap(id
+      ? await api.put<Envelope<number>>(`/api/kkd/departments/${id}`, payload)
+      : await api.post<Envelope<number>>('/api/kkd/departments', payload)),
+  saveRole: async (
+    payload: { departmentId?: number; code: string; name: string; isActive: boolean },
+    id?: number,
+  ) =>
+    unwrap(id
+      ? await api.put<Envelope<number>>(`/api/kkd/roles/${id}`, payload)
+      : await api.post<Envelope<number>>('/api/kkd/roles', payload)),
+  saveEmployee: async (payload: unknown, id?: number) =>
+    unwrap(id
+      ? await api.put<Envelope<number>>(`/api/kkd/employees/${id}`, payload)
+      : await api.post<Envelope<number>>('/api/kkd/employees', payload)),
   saveMatrix: async (payload: unknown, id?: number) => unwrap(id
     ? await api.put<Envelope<number>>(`/api/kkd/matrices/${id}`, payload)
     : await api.post<Envelope<number>>('/api/kkd/matrices', payload)),

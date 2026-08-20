@@ -11,6 +11,50 @@ export const KKD_QUOTA_FREQUENCY_HINT =
 export const KKD_QUOTA_REJECT_HINT =
   'Reddederseniz yalnızca kota aşan kalem(ler) belgeden düşer; hak edilen diğer kalemler aynı ambar çıkışıyla teslim edilmeye devam eder. Personel, düşen kalem için ayrıca yeni bir talep açmalıdır.';
 
+/** Hak motoru ret koduna göre operatör başlığı — her ret “kota dolu” sanılmasın. */
+export function formatEntitlementDenialTitle(reasonCode?: string | null): string {
+  switch (reasonCode) {
+    case 'EMPLOYMENT_NOT_STARTED':
+      return 'İşe giriş tarihi henüz gelmedi';
+    case 'EMPLOYEE_INACTIVE':
+      return 'Personel aktif değil';
+    case 'STOCK_GROUP_MISSING':
+      return 'Stokta KKD grup kodu yok';
+    case 'RULE_NOT_FOUND':
+      return 'Geçerli KKD kuralı bulunamadı';
+    case 'BULK_ISSUE_NOT_ALLOWED':
+      return 'Tek seferde verilebilecek miktar aşıldı';
+    case 'INSUFFICIENT_ENTITLEMENT':
+      return KKD_QUOTA_FULL_TITLE;
+    default:
+      return reasonCode ? `Hak uygun değil (${reasonCode})` : KKD_QUOTA_FULL_TITLE;
+  }
+}
+
+export function formatEntitlementDenialBadge(reasonCode?: string | null): string {
+  switch (reasonCode) {
+    case 'EMPLOYMENT_NOT_STARTED':
+      return 'İŞE GİRİŞ BEKLENİYOR';
+    case 'EMPLOYEE_INACTIVE':
+      return 'PASİF PERSONEL';
+    case 'STOCK_GROUP_MISSING':
+      return 'GRUP YOK';
+    case 'RULE_NOT_FOUND':
+      return 'KURAL YOK';
+    case 'BULK_ISSUE_NOT_ALLOWED':
+      return 'TOPLU LİMİT';
+    case 'INSUFFICIENT_ENTITLEMENT':
+      return 'KOTA DOLU';
+    default:
+      return 'UYGUN DEĞİL';
+  }
+}
+
+/** Kota aşımı dışı retlerde müdür onayı metni yanıltıcı olur; yalnızca gerçek kota retlerinde göster. */
+export function isQuotaExhaustionReason(reasonCode?: string | null): boolean {
+  return reasonCode === 'INSUFFICIENT_ENTITLEMENT' || !reasonCode;
+}
+
 export function formatExcessApprovalStatus(status: string): string {
   switch (status) {
     case 'Pending':

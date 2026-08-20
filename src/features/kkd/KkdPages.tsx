@@ -80,10 +80,13 @@ import { KkdImportTypeDialog } from './KkdImportTypeDialog';
 import { KkdSimpleMatrixImportDialog } from './KkdSimpleMatrixImportDialog';
 import {
   formatDistributionStatus,
+  formatEntitlementDenialBadge,
+  formatEntitlementDenialTitle,
   formatErpStatus,
   formatExcessApprovalStatus,
   isErpLocked,
   isExcessApprovalPending,
+  isQuotaExhaustionReason,
   KKD_QUOTA_FREQUENCY_HINT,
   KKD_QUOTA_FULL_MESSAGE,
   KKD_QUOTA_FULL_TITLE,
@@ -227,15 +230,19 @@ export function KkdOverviewPage(): ReactElement {
           description: 'Departman, rol veya KKD grubu bazında teslim, hak ve sipariş fazlasını izleyin.',
           badge: count(departments.data) ? `${count(departments.data)} departman` : undefined,
         },
-        {
-          key: 'policy',
-          code: 'KKD.POL',
-          href: '/warehouse/kkd/policy',
-          icon: Settings2,
-          title: 'KKD süreç politikası',
-          description: 'Sipariş zorunluluğu, hak üstü teslim ve operasyon güvenlik kurallarını yönetin.',
-          featured: true,
-        },
+        ...(can('WMS.KKD.POLICY.VIEW')
+          ? [
+              {
+                key: 'policy',
+                code: 'KKD.POL',
+                href: '/warehouse/kkd/policy',
+                icon: Settings2,
+                title: 'KKD süreç politikası',
+                description: 'Sipariş zorunluluğu, hak üstü teslim ve operasyon güvenlik kurallarını yönetin.',
+                featured: true,
+              },
+            ]
+          : []),
       ],
     },
   ];
@@ -621,7 +628,7 @@ export function KkdDefinitionsPage(): ReactElement {
     mutationFn: async () => {
       // Ops seçim bileşenleri native `required` doğrulaması yapmadığından zorunlu
       // ilişkiler burada kontrol edilir; aksi halde sunucuya 0 id gönderilir.
-      if (tab === 'role' && !isEditing && !n(form.departmentId)) throw new Error('Departman seçilmelidir.');
+      if (tab === 'role' && !n(form.departmentId)) throw new Error('Departman seçilmelidir.');
       if (tab === 'employee' && !n(form.departmentId)) throw new Error('Departman seçilmelidir.');
       if (tab === 'employee' && !n(form.roleId)) throw new Error('Rol seçilmelidir.');
       if (tab === 'employee' && !n(form.customerId)) throw new Error('Entegre cari seçilmelidir.');
@@ -630,15 +637,15 @@ export function KkdDefinitionsPage(): ReactElement {
           code: form.code.trim(),
           name: form.name.trim(),
           isActive: formActive,
-        });
+        }, editingId ?? undefined);
       }
       if (tab === 'role') {
         return kkdApi.saveRole({
-          ...(n(form.departmentId) ? { departmentId: n(form.departmentId) } : {}),
+          departmentId: n(form.departmentId),
           code: form.code.trim(),
           name: form.name.trim(),
           isActive: formActive,
-        });
+        }, editingId ?? undefined);
       }
       return kkdApi.saveEmployee({
         customerId: n(form.customerId),
@@ -651,7 +658,7 @@ export function KkdDefinitionsPage(): ReactElement {
         qrCode: form.qrCode.trim(),
         employmentStartDate: form.employmentStartDate,
         isActive: formActive,
-      });
+      }, editingId ?? undefined);
     },
     onSuccess: async () => {
       toast.success(isEditing ? 'KKD tanımı güncellendi.' : 'KKD tanımı kaydedildi.');
@@ -671,17 +678,18 @@ export function KkdDefinitionsPage(): ReactElement {
           code: department.code,
           name: department.name,
           isActive: nextActive,
-        });
+        }, row.id);
       }
       if (tab === 'role') {
         const role = roles.data?.find((item) => item.id === row.id);
         if (!role) throw new Error('Rol kaydı bulunamadı.');
+        if (!role.departmentId) throw new Error('Rol departmanı eksik; kaydı düzenleyip departman seçin.');
         return kkdApi.saveRole({
-          ...(role.departmentId ? { departmentId: role.departmentId } : {}),
+          departmentId: role.departmentId,
           code: role.code,
           name: role.name,
           isActive: nextActive,
-        });
+        }, row.id);
       }
       const employee = employees.data?.find((item) => item.id === row.id);
       if (!employee) throw new Error('Personel kaydı bulunamadı.');
@@ -697,7 +705,7 @@ export function KkdDefinitionsPage(): ReactElement {
         qrCode: employee.qrCode,
         employmentStartDate: employee.employmentStartDate,
         isActive: nextActive,
-      });
+      }, row.id);
     },
     onSuccess: async (_data, row) => {
       toast.success(row.active ? 'Tanım pasife alındı.' : 'Tanım aktifleştirildi.');
@@ -710,7 +718,7 @@ export function KkdDefinitionsPage(): ReactElement {
 
   const validateForm = (): boolean => {
     const next: Record<string, boolean> = {};
-    if (tab === 'role' && !isEditing && !n(form.departmentId)) next.departmentId = true;
+    if (tab === 'role' && !n(form.departmentId)) next.departmentId = true;
     if (tab === 'employee' && !n(form.departmentId)) next.departmentId = true;
     if (tab === 'employee' && !n(form.roleId)) next.roleId = true;
     if (tab === 'employee' && !n(form.customerId)) next.customerId = true;
@@ -898,10 +906,7 @@ export function KkdDefinitionsPage(): ReactElement {
         >
           <form className="grid content-start gap-3" onSubmit={submit} noValidate>
             {(tab === 'role' || tab === 'employee') && (
-              <KkdField
-                label="Departman"
-                hint={tab === 'role' && isEditing && !form.departmentId ? 'API departman dönmediyse mevcut bağ korunur.' : undefined}
-              >
+              <KkdField label="Departman">
                 <PagedLookupDialog<KkdLookup>
                   variant="ops"
                   triggerMode="combobox"
@@ -1530,6 +1535,10 @@ export function KkdEntitlementPage(): ReactElement {
   const [result, setResult] = useState<KkdEntitlementResult>();
   const [atDate, setAtDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [remainingItems, setRemainingItems] = useState<KkdRemainingEntitlement[]>([]);
+  const selectedEmployee = employees.data?.find((item) => String(item.id) === employeeId);
+  const employmentStartLabel = selectedEmployee?.employmentStartDate
+    ? new Date(`${selectedEmployee.employmentStartDate.slice(0, 10)}T00:00:00`).toLocaleDateString('tr-TR')
+    : null;
   const mutation = useMutation({
     mutationFn: () => kkdApi.check({ employeeId: n(employeeId), stockId: n(stockId), quantity: n(quantity) }),
     onSuccess: setResult,
@@ -1563,10 +1572,17 @@ export function KkdEntitlementPage(): ReactElement {
             mutation.mutate();
           }}
         >
-          <KkdField label="Personel">
+          <KkdField
+            label="Personel"
+            hint={employmentStartLabel ? `İşe giriş: ${employmentStartLabel}` : undefined}
+          >
             <OpsSelect
               value={employeeId}
-              onValueChange={setEmployeeId}
+              onValueChange={(next) => {
+                setEmployeeId(next);
+                setResult(undefined);
+                setRemainingItems([]);
+              }}
               options={employeeOptions(employees.data)}
               placeholder="Personel seçin"
               searchable
@@ -1577,11 +1593,19 @@ export function KkdEntitlementPage(): ReactElement {
               <PagedAppDropdown
                 queryKey="kkd-entitlement-stock-lookup"
                 fetchPage={(request) => kkdApi.stocksPaged(request)}
-                toOption={(item) => ({
-                  value: String(item.id),
-                  label: `${item.code} · ${item.name}`,
-                  description: [item.groupCode, item.unitCode].filter(Boolean).join(' · '),
-                })}
+                toOption={(item) => {
+                  /* Grup kodu olmayan stok için hak motoru her zaman STOCK_GROUP_MISSING döner;
+                     listede görünsün ama seçilemesin ki boşuna sorgu yapılmasın. */
+                  const hasGroup = Boolean(item.groupCode?.trim());
+                  return {
+                    value: String(item.id),
+                    label: `${item.code} · ${item.name}`,
+                    description: hasGroup
+                      ? [item.groupCode, item.unitCode].filter(Boolean).join(' · ')
+                      : ['KKD grubu yok', item.unitCode].filter(Boolean).join(' · '),
+                    disabled: !hasGroup,
+                  };
+                }}
                 value={stockId || null}
                 onValueChange={setStockId}
                 placeholder="Stok kodu veya adıyla seçin"
@@ -1635,7 +1659,14 @@ export function KkdEntitlementPage(): ReactElement {
         }
       >
         <div className="mb-3 grid items-end gap-3 sm:grid-cols-[minmax(220px,360px)_auto]">
-          <KkdField label="Hesaplama tarihi">
+          <KkdField
+            label="Hesaplama tarihi"
+            hint={
+              employmentStartLabel
+                ? `Personel işe girişi ${employmentStartLabel}. Bu tarihten önce hak 0 döner.`
+                : undefined
+            }
+          >
             <AppDateInput value={atDate} onChange={(event) => setAtDate(event.target.value)} />
           </KkdField>
           <p className="pb-2 text-xs text-[var(--wms-app-text-muted)]">
@@ -1646,21 +1677,25 @@ export function KkdEntitlementPage(): ReactElement {
           <OpsLoadingState code="ENT" message="Kalan haklar hesaplanıyor…" compact />
         ) : remainingItems.length ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {remainingItems.map((item) => (
+            {remainingItems.map((item) => {
+              const hasQuota = item.totalRemainingQuantity > 0;
+              const denialTitle = formatEntitlementDenialTitle(item.reasonCode);
+              const denialBadge = formatEntitlementDenialBadge(item.reasonCode);
+              return (
               <div key={`${item.groupCode}-${item.stockId}`} className="rounded-xl border border-[var(--wms-app-border)] bg-[var(--wms-app-surface-muted)] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <strong className="block font-mono text-[var(--wms-brand-primary)]">{item.groupCode}</strong>
                     <span className="text-xs text-[var(--wms-app-text-muted)]">{item.groupName}</span>
                   </div>
-                  <OpsStatusBadge tone={item.totalRemainingQuantity > 0 ? 'active' : 'danger'}>
-                    {item.totalRemainingQuantity > 0 ? 'HAK VAR' : 'KOTA DOLU'}
+                  <OpsStatusBadge tone={hasQuota ? 'active' : 'danger'}>
+                    {hasQuota ? 'HAK VAR' : denialBadge}
                   </OpsStatusBadge>
                 </div>
                 <p className="mt-3 text-sm font-semibold">{item.stockCode} · {item.stockName}</p>
-                {item.totalRemainingQuantity <= 0 ? (
+                {!hasQuota ? (
                   <p className="mt-2 text-xs leading-5 text-amber-600 dark:text-amber-400">
-                    {KKD_QUOTA_FULL_TITLE}. {item.message || KKD_QUOTA_FULL_MESSAGE}
+                    {denialTitle}. {item.message || (isQuotaExhaustionReason(item.reasonCode) ? KKD_QUOTA_FULL_MESSAGE : '')}
                   </p>
                 ) : null}
                 <div className="mt-3 grid grid-cols-3 gap-2">
@@ -1674,7 +1709,8 @@ export function KkdEntitlementPage(): ReactElement {
                   <span className="block">Sonraki hak: {item.nextEligibleDate ? new Date(item.nextEligibleDate).toLocaleDateString('tr-TR') : '—'}</span>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <OpsGridEmptyState message={employeeId ? 'Kalan hakları görmek için “Kalan hakları getir” düğmesini kullanın.' : 'Önce üst bölümden personel seçin.'} />
@@ -1691,7 +1727,7 @@ export function KkdEntitlementPage(): ReactElement {
               <ShieldAlert className="size-4" strokeWidth={1.75} />
             )
           }
-          title={result.isAllowed ? 'Teslime uygun' : KKD_QUOTA_FULL_TITLE}
+          title={result.isAllowed ? 'Teslime uygun' : formatEntitlementDenialTitle(result.reasonCode)}
           description={
             result.isAllowed
               ? result.message
@@ -1699,11 +1735,11 @@ export function KkdEntitlementPage(): ReactElement {
           }
           actions={
             <OpsStatusBadge tone={result.isAllowed ? 'done' : 'danger'}>
-              {result.isAllowed ? 'UYGUN' : 'KOTA DOLU'}
+              {result.isAllowed ? 'UYGUN' : formatEntitlementDenialBadge(result.reasonCode)}
             </OpsStatusBadge>
           }
         >
-          {!result.isAllowed ? (
+          {!result.isAllowed && isQuotaExhaustionReason(result.reasonCode) ? (
             <KkdCallout tone="warn" icon={<ShieldAlert className="size-4" strokeWidth={1.75} />} className="mb-3">
               {KKD_QUOTA_FULL_MESSAGE}
               {result.nextEligibleDate ? (
@@ -1711,6 +1747,14 @@ export function KkdEntitlementPage(): ReactElement {
                   {KKD_QUOTA_FREQUENCY_HINT} Sonraki hak:{' '}
                   <strong>{new Date(result.nextEligibleDate).toLocaleDateString('tr-TR')}</strong>
                 </span>
+              ) : null}
+            </KkdCallout>
+          ) : null}
+          {!result.isAllowed && !isQuotaExhaustionReason(result.reasonCode) ? (
+            <KkdCallout tone="warn" icon={<ShieldAlert className="size-4" strokeWidth={1.75} />} className="mb-3">
+              {result.message}
+              {employmentStartLabel ? (
+                <span className="mt-1 block">Personel işe girişi: <strong>{employmentStartLabel}</strong></span>
               ) : null}
             </KkdCallout>
           ) : null}

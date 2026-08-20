@@ -134,6 +134,18 @@ const ruleFromDetail = (rule: KkdMatrixRule): RuleForm => {
   };
 };
 
+/** Boş tarih = süresiz; API çakışma kontrolüyle aynı anlam. */
+function formatMatrixValidity(from?: string | null, to?: string | null): string {
+  const start = from?.trim();
+  const end = to?.trim();
+  if (!start && !end) return 'Süresiz';
+  const fmt = (value: string) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+    return match ? `${match[3]}.${match[2]}.${match[1]}` : value;
+  };
+  return `${start ? fmt(start) : '…'} – ${end ? fmt(end) : '…'}`;
+}
+
 function buildMatrixPayload(form: MatrixForm, isActive = form.isActive) {
   return {
     customerId: number(form.customerId),
@@ -519,10 +531,13 @@ export function KkdMatrixManager(): ReactElement {
                 </span>
               </label>
             </KkdField>
-            <KkdField label="Başlangıç">
+            <KkdField
+              label="Başlangıç"
+              hint="Boş bırakılırsa süresiz; aynı cari/departman/roldeki aktif matrislerle çakışır."
+            >
               <AppDateInput value={form.effectiveFrom} onChange={(event) => setHeader('effectiveFrom', event.target.value)} />
             </KkdField>
-            <KkdField label="Bitiş">
+            <KkdField label="Bitiş" hint="Boş bırakılırsa bitiş sınırı yoktur.">
               <AppDateInput value={form.effectiveTo} onChange={(event) => setHeader('effectiveTo', event.target.value)} />
             </KkdField>
             <KkdField label="Açıklama">
@@ -649,11 +664,12 @@ export function KkdMatrixManager(): ReactElement {
             />
           </div>
         </div>
-        <KkdTableShell fill minWidthClass="min-w-[650px]" className="border-0" maxHeightClass={false}>
+        <KkdTableShell fill minWidthClass="min-w-[780px]" className="border-0" maxHeightClass={false}>
           <thead className="sticky top-0 z-10">
             <tr>
               <th className={KKD_HEAD_CELL}>Kod</th>
               <th className={KKD_HEAD_CELL}>Ad</th>
+              <th className={KKD_HEAD_CELL}>Geçerlilik</th>
               <th className={KKD_HEAD_CELL}>Kural</th>
               <th className={KKD_HEAD_CELL}>Durum</th>
               <th className={cn(KKD_HEAD_CELL, 'w-[1%] whitespace-nowrap')}>İşlem</th>
@@ -662,21 +678,37 @@ export function KkdMatrixManager(): ReactElement {
           <tbody>
             {matrices.isLoading ? (
               <tr>
-                <td colSpan={5} className="wms-ops-grid-state-cell">
+                <td colSpan={6} className="wms-ops-grid-state-cell">
                   <OpsLoadingState code="FETCH" message="Matrisler yükleniyor…" compact />
                 </td>
               </tr>
             ) : visibleMatrices.length === 0 ? (
               <tr>
-                <td colSpan={5} className="wms-ops-grid-state-cell">
+                <td colSpan={6} className="wms-ops-grid-state-cell">
                   <OpsGridEmptyState message="Hak matrisi bulunamadı." />
                 </td>
               </tr>
             ) : (
-              visibleMatrices.map((item) => (
+              visibleMatrices.map((item) => {
+                const validity = formatMatrixValidity(item.effectiveFrom, item.effectiveTo);
+                const isIndefinite = validity === 'Süresiz';
+                return (
                 <tr key={item.id} className={cn(form.id === item.id && 'bg-cyan-500/5')}>
                   <td className={cn(KKD_CELL, 'font-mono font-bold')}>{item.code}</td>
                   <td className={KKD_CELL}>{item.name}</td>
+                  <td className={KKD_CELL}>
+                    <span
+                      className={cn(
+                        'text-xs',
+                        isIndefinite
+                          ? 'font-semibold text-[var(--wms-brand-primary)]'
+                          : 'text-[var(--wms-app-text-muted)]',
+                      )}
+                      title={isIndefinite ? 'Tarih girilmemiş — her aralıkla çakışır' : validity}
+                    >
+                      {validity}
+                    </span>
+                  </td>
                   <td className={KKD_CELL}>{item.ruleCount}</td>
                   <td className={KKD_CELL}>
                     <OpsStatusBadge tone={item.isActive ? 'active' : 'neutral'}>
@@ -721,7 +753,8 @@ export function KkdMatrixManager(): ReactElement {
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </KkdTableShell>
