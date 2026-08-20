@@ -145,6 +145,19 @@ export type KkdDefinitionWorkbookImportResult = {
   warnings: string[];
 };
 
+export type KkdSimpleMatrixWorkbookIssue = {
+  code: string; message: string; sheet?: string | null; row?: number | null; cell?: string | null;
+};
+export type KkdSimpleMatrixWorkbookPreview = {
+  fileHash: string; stateHash: string; canCommit: boolean; sourceRowCount: number;
+  matrixCount: number; ruleCount: number; phaseCount: number; createCount: number;
+  updateCount: number; duplicateRowCount: number;
+  errors: KkdSimpleMatrixWorkbookIssue[]; warnings: KkdSimpleMatrixWorkbookIssue[];
+};
+export type KkdSimpleMatrixWorkbookImportResult = {
+  fileHash: string; created: number; updated: number; processed: number; warnings: string[];
+};
+
 /** Not: 'quotapending' backend'deki KkdRequestBoardTab.QuotaPending'e Enum.TryParse(ignoreCase:true) ile eşleşir — tire/boşluk desteklenmiyor. */
 export type KkdRequestBoardTab = 'all' | 'pending' | 'preparing' | 'completed' | 'cancelled' | 'mine' | 'quotapending';
 
@@ -320,6 +333,42 @@ export const kkdApi = {
     return unwrap(await api.post<Envelope<KkdDefinitionWorkbookImportResult>>('/api/kkd/definitions/import', data, {
       headers: { 'Idempotency-Key': idempotencyKey },
     }));
+  },
+  downloadSimpleMatrixWorkbook: async (customerId: number): Promise<Blob> =>
+    api.get<Blob>('/api/kkd/imports/simple-matrix/template', {
+      params: { customerId }, responseType: 'blob',
+    }),
+  previewSimpleMatrixWorkbook: async (
+    file: File,
+    customerId: number,
+    effectiveFrom: string,
+  ): Promise<KkdSimpleMatrixWorkbookPreview> => {
+    const data = new FormData();
+    data.append('file', file);
+    return unwrap(await api.post<Envelope<KkdSimpleMatrixWorkbookPreview>>(
+      '/api/kkd/imports/simple-matrix/preview',
+      data,
+      { params: { customerId, effectiveFrom } },
+    ));
+  },
+  importSimpleMatrixWorkbook: async (
+    file: File,
+    customerId: number,
+    effectiveFrom: string,
+    previewHash: string,
+    stateHash: string,
+    idempotencyKey: string,
+  ): Promise<KkdSimpleMatrixWorkbookImportResult> => {
+    const data = new FormData();
+    data.append('file', file);
+    return unwrap(await api.post<Envelope<KkdSimpleMatrixWorkbookImportResult>>(
+      '/api/kkd/imports/simple-matrix/commit',
+      data,
+      {
+        params: { customerId, effectiveFrom, previewHash, stateHash },
+        headers: { 'Idempotency-Key': idempotencyKey },
+      },
+    ));
   },
   departments: async () => unwrap(await api.get<Envelope<KkdLookup[]>>('/api/kkd/departments')),
   roles: async (departmentId?: number) => unwrap(await api.get<Envelope<KkdLookup[]>>('/api/kkd/roles', { params: { departmentId } })),
