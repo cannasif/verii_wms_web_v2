@@ -1,5 +1,5 @@
 import type { KkdDistributionDetail } from './kkd-api';
-import { formatExcessApprovalStatus } from './kkd-quota-copy';
+import { formatErpStatus, formatExcessApprovalStatus } from './kkd-quota-copy';
 
 const escapeHtml = (value: string | number | null | undefined): string =>
   String(value ?? '')
@@ -165,9 +165,11 @@ export function buildKkdReceiptHtml(detail: KkdDistributionDetail): string {
       <div><dt>Personel</dt><dd>${escapeHtml(detail.employeeCode)} · ${escapeHtml(detail.employeeName)}</dd></div>
       <div><dt>Durum</dt><dd>${escapeHtml(detail.status)}</dd></div>
       <div><dt>Depo</dt><dd>#${escapeHtml(detail.warehouseId)}</dd></div>
-      <div><dt>Ambar çıkışı</dt><dd>${escapeHtml(detail.warehouseOutboundId || '—')}</dd></div>
-      <div><dt>Kota onayı</dt><dd>${escapeHtml(formatExcessApprovalStatus(detail.excessApprovalStatus))}</dd></div>
-      <div><dt>Oluşturma</dt><dd>${escapeHtml(formatDateTime(detail.createdDate))}</dd></div>
+      <div><dt>Ambar çıkışı</dt><dd>${escapeHtml(detail.warehouseOutboundDocumentNo || detail.warehouseOutboundId || '—')}</dd></div>
+      <div><dt>Kaynak</dt><dd>${escapeHtml(detail.kkdRequestNo ? `Talep · ${detail.kkdRequestNo}` : 'Sipariş kanalı')}</dd></div>
+      <div><dt>Netsis</dt><dd>${escapeHtml(formatErpStatus(detail.erpStatus))}${detail.erpDocumentNo ? ` · ${escapeHtml(detail.erpDocumentNo)}` : ''}</dd></div>
+      <div><dt>Teslim tarihi</dt><dd>${escapeHtml(formatDateTime(detail.completedAtUtc ?? detail.createdDate))}</dd></div>
+      ${excessQty > 0 ? `<div><dt>Kota onayı</dt><dd>${escapeHtml(formatExcessApprovalStatus(detail.excessApprovalStatus))}</dd></div>` : ''}
     </dl>
     <table>
       <thead>
@@ -189,8 +191,8 @@ export function buildKkdReceiptHtml(detail: KkdDistributionDetail): string {
         : ''
     }
     <div class="sign">
-      <div class="box">Teslim eden (depo)</div>
-      <div class="box">Teslim alan (personel)</div>
+      <div class="box">Teslim eden (depo)${detail.deliveredByName ? ` · ${escapeHtml(detail.deliveredByName)}` : ''}</div>
+      <div class="box">Teslim alan (personel) · ${escapeHtml(detail.employeeName)}</div>
     </div>
     <p class="foot">Bu belge bilgilendirme amaçlıdır. Sistem kaydı: ${escapeHtml(detail.correlationId || detail.id)}</p>
   </div>
@@ -198,15 +200,31 @@ export function buildKkdReceiptHtml(detail: KkdDistributionDetail): string {
 </html>`;
 }
 
+/**
+ * Belgeyi yeni sekmeye yazar ve yazdırma önizlemesini açar.
+ *
+ * Pencere "noopener" ile açılamaz: tarayıcı o durumda boş bir sekme açıp null döndürür, dolayısıyla
+ * belge hiç yazılamaz. Bağı biz kesiyoruz. Ayrıca boş sayfanın load olayı belge yazılmadan önce
+ * geçtiği için yazdırma, belge hazır olduğunda tetiklenir.
+ */
 export function printKkdReceipt(detail: KkdDistributionDetail): boolean {
-  const win = window.open('', '_blank', 'noopener,noreferrer');
+  const win = window.open('', '_blank');
   if (!win) return false;
+  try {
+    win.opener = null;
+  } catch {
+    // Tarayıcı izin vermezse belge yine de aynı köken altında ve bizim ürettiğimiz içeriktir.
+  }
+  win.document.open();
   win.document.write(buildKkdReceiptHtml(detail));
   win.document.close();
   win.focus();
-  win.onload = () => {
+
+  const print = (): void => {
+    win.focus();
     win.print();
-    win.onafterprint = () => win.close();
   };
+  if (win.document.readyState === 'complete') window.setTimeout(print, 120);
+  else win.addEventListener('load', print, { once: true });
   return true;
 }

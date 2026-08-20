@@ -588,6 +588,7 @@
     "serviceAllocation": "Service Allocation",
     "kkd": "PPE",
     "kkdOverview": "PPE Operations Hub",
+    "kkdDefinitions": "PPE Definitions",
     "kkdDistributionNew": "KKD Material Request Orders",
     "kkdRequests": "Open PPE Requests",
     "kkdInitialOrder": "PPE Initial Order",

@@ -5,7 +5,12 @@ import { OpsActionButton } from '@/components/shared/OpsActionButton';
 import { OpsDialogBody, OpsDialogContent, OpsDialogFooter, OpsDialogHeader } from '@/components/shared/OpsDialogShell';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import type { KkdDistributionDetail } from './kkd-api';
-import { formatExcessApprovalStatus, isExcessApprovalPending, KKD_QUOTA_FULL_TITLE } from './kkd-quota-copy';
+import {
+  formatErpStatus,
+  formatExcessApprovalStatus,
+  isExcessApprovalPending,
+  KKD_QUOTA_FULL_TITLE,
+} from './kkd-quota-copy';
 import { printKkdReceipt } from './kkd-receipt-print';
 
 /** CRM teklif önizlemesine benzer: ekranda belge + yazdır. */
@@ -66,16 +71,33 @@ export function KkdDistributionReceiptDialog({
                 </div>
                 <div>
                   <dt>Ambar çıkışı</dt>
-                  <dd>{detail.warehouseOutboundId || '—'}</dd>
+                  <dd>{detail.warehouseOutboundDocumentNo || detail.warehouseOutboundId || '—'}</dd>
                 </div>
                 <div>
-                  <dt>Kota onayı</dt>
-                  <dd>{formatExcessApprovalStatus(detail.excessApprovalStatus)}</dd>
+                  <dt>Kaynak</dt>
+                  <dd>{detail.kkdRequestNo ? `Talep · ${detail.kkdRequestNo}` : 'Sipariş kanalı'}</dd>
                 </div>
                 <div>
-                  <dt>Oluşturma</dt>
+                  <dt>Netsis</dt>
                   <dd>
-                    {detail.createdDate ? new Date(detail.createdDate).toLocaleString('tr-TR') : '—'}
+                    {formatErpStatus(detail.erpStatus)}
+                    {detail.erpDocumentNo ? ` · ${detail.erpDocumentNo}` : ''}
+                  </dd>
+                </div>
+                {excessQty > 0 ? (
+                  <div>
+                    <dt>Kota onayı</dt>
+                    <dd>{formatExcessApprovalStatus(detail.excessApprovalStatus)}</dd>
+                  </div>
+                ) : null}
+                <div>
+                  <dt>Teslim tarihi</dt>
+                  <dd>
+                    {detail.completedAtUtc
+                      ? new Date(detail.completedAtUtc).toLocaleString('tr-TR')
+                      : detail.createdDate
+                        ? new Date(detail.createdDate).toLocaleString('tr-TR')
+                        : '—'}
                   </dd>
                 </div>
               </dl>
@@ -133,8 +155,8 @@ export function KkdDistributionReceiptDialog({
               </div>
 
               <div className="wms-ops-kkd-receipt__sign">
-                <div>Teslim eden (depo)</div>
-                <div>Teslim alan (personel)</div>
+                <div>Teslim eden (depo){detail.deliveredByName ? ` · ${detail.deliveredByName}` : ''}</div>
+                <div>Teslim alan (personel) · {detail.employeeName}</div>
               </div>
             </article>
           ) : (

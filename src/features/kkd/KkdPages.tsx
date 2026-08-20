@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BadgeCheck,
+  Ban,
   Boxes,
   Check,
   ClipboardCheck,
@@ -79,7 +80,9 @@ import { KkdImportTypeDialog } from './KkdImportTypeDialog';
 import { KkdSimpleMatrixImportDialog } from './KkdSimpleMatrixImportDialog';
 import {
   formatDistributionStatus,
+  formatErpStatus,
   formatExcessApprovalStatus,
+  isErpLocked,
   isExcessApprovalPending,
   KKD_QUOTA_FREQUENCY_HINT,
   KKD_QUOTA_FULL_MESSAGE,
@@ -1743,6 +1746,8 @@ export function KkdDistributionsPage(): ReactElement {
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [decisionTarget, setDecisionTarget] = useState<{ row: KkdDistribution; approve: boolean } | null>(null);
   const [decisionReason, setDecisionReason] = useState('');
+  const [cancelTarget, setCancelTarget] = useState<KkdDistribution | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setSearch(searchInput.trim());
@@ -1810,8 +1815,39 @@ export function KkdDistributionsPage(): ReactElement {
     },
     onError: (error) => toast.error(message(error)),
   });
+  /** Yarım kalmış teslim, talep satırındaki ayrılmış miktarı tutar; iptal onu serbest bırakır. */
+  const cancelDistribution = useMutation({
+    mutationFn: ({ row, reason }: { row: KkdDistribution; reason: string }) =>
+      kkdApi.cancelDistribution(row.id, reason, row.rowVersion || null),
+    onSuccess: async () => {
+      toast.success('Dağıtım iptal edildi; ayrılan miktar talebe geri döndü.');
+      await qc.invalidateQueries({ queryKey: ['kkd', 'distributions'] });
+      setCancelTarget(null);
+    },
+    onError: (error) => toast.error(message(error)),
+  });
   const canManageOverrides = can('WMS.KKD.OVERRIDES.MANAGE');
-  const columns = ['Belge', 'Personel', 'Depo', 'Toplam', 'Hak', 'Fazla', 'Kota aşım onayı', 'Durum', 'İşlemler'];
+  const canOperateDistribution = can('WMS.KKD.DISTRIBUTION.OPERATE');
+  const warehouseLabels = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const warehouse of warehousesQuery.data ?? [])
+      map.set(warehouse.id, `${warehouse.warehouseCode} · ${warehouse.warehouseName}`);
+    return map;
+  }, [warehousesQuery.data]);
+  const columns = [
+    'Belge',
+    'Kaynak',
+    'Personel',
+    'Depo',
+    'Toplam',
+    'Hak',
+    'Fazla',
+    'Kota aşım onayı',
+    'Ambar çıkışı',
+    'Netsis',
+    'Durum',
+    'İşlemler',
+  ];
   const openDecision = (row: KkdDistribution, approve: boolean) => {
     setDecisionReason('');
     setDecisionTarget({ row, approve });
@@ -1845,7 +1881,7 @@ export function KkdDistributionsPage(): ReactElement {
         code="KKD.DST"
         icon={<Boxes className="size-4" strokeWidth={1.75} />}
         title="Dağıtım kayıtları"
-        description="Kota aşımı bekleyen belgelerde “barkod okutma kotası dolmuştur” uyarısı görünür; fiziksel kontrol sonrası müdür onaylar."
+        description="Teslim edilen belgelerin defteri: kim ne aldı, hangi ambar çıkışıyla düştü, Netsis'e gitti mi. Kota onayı yalnızca hak dışı miktar içeren belgelerde görünür."
         bodyClassName="px-0 py-0 sm:px-0 sm:py-0"
       >
         <div className="grid gap-2 border-b border-[var(--wms-app-border)] p-3 sm:grid-cols-[minmax(0,1fr)_minmax(180px,240px)]">
@@ -1871,7 +1907,7 @@ export function KkdDistributionsPage(): ReactElement {
             Yalnızca {selectedWarehouseLabel ?? `depo #${warehouseFilter}`} kayıtları gösteriliyor.
           </div>
         ) : null}
-        <KkdTableShell minWidthClass="min-w-[1040px]" className="border-x-0 border-b-0">
+        <KkdTableShell minWidthClass="min-w-[1320px]" className="border-x-0 border-b-0">
           <thead className="sticky top-0 z-10">
             <tr>
               {columns.map((column) => (
@@ -1897,52 +1933,94 @@ export function KkdDistributionsPage(): ReactElement {
             ) : (
               pageRows.map((row) => {
                 const isPending = isExcessApprovalPending(row.excessApprovalStatus);
+                // Kota onayı yalnızca hak dışı miktar varsa anlamlıdır; talep kanalında kota kararı
+                // zaten toplamadan önce verildiği için burada her satırda göstermek gürültü yaratıyor.
+                const showQuota = row.excessQuantity > 0 || isPending;
+                const erpLocked = isErpLocked(row.erpStatus);
                 return (
                   <tr key={row.id}>
                     <td className={cn(KKD_CELL, 'font-mono font-black text-[var(--wms-brand-primary)]')}>
                       {row.documentNo}
                     </td>
                     <td className={KKD_CELL}>
+                      {row.kkdRequestNo ? (
+                        <>
+                          <strong className="block font-mono text-[0.78rem]">{row.kkdRequestNo}</strong>
+                          <span className="text-xs text-[var(--wms-app-text-muted)]">Talep</span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-[var(--wms-app-text-muted)]">Sipariş kanalı</span>
+                      )}
+                    </td>
+                    <td className={KKD_CELL}>
                       <strong className="block">{row.employeeCode}</strong>
                       <span className="text-xs text-[var(--wms-app-text-muted)]">{row.employeeName}</span>
                     </td>
-                    <td className={cn(KKD_CELL, 'font-mono')}>#{row.warehouseId}</td>
+                    <td className={KKD_CELL} title={warehouseLabels.get(row.warehouseId)}>
+                      {warehouseLabels.get(row.warehouseId) ?? `#${row.warehouseId}`}
+                    </td>
                     <td className={cn(KKD_CELL, 'text-right font-bold')}>{row.totalQuantity}</td>
                     <td className={cn(KKD_CELL, 'text-right text-emerald-500')}>{row.entitledQuantity}</td>
                     <td className={cn(KKD_CELL, 'text-right', row.excessQuantity > 0 && 'text-amber-500')}>
                       {row.excessQuantity}
                     </td>
                     <td className={KKD_CELL}>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <OpsStatusBadge
-                          tone={inferOpsStatusTone(row.excessApprovalStatus)}
-                          title={row.excessApprovalReason || (isPending ? KKD_QUOTA_FULL_MESSAGE : undefined)}
+                      {!showQuota ? (
+                        <span className="text-xs text-[var(--wms-app-text-muted)]">—</span>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <OpsStatusBadge
+                            tone={inferOpsStatusTone(row.excessApprovalStatus)}
+                            title={row.excessApprovalReason || (isPending ? KKD_QUOTA_FULL_MESSAGE : undefined)}
+                          >
+                            {formatExcessApprovalStatus(row.excessApprovalStatus)}
+                          </OpsStatusBadge>
+                          {canManageOverrides && isPending ? (
+                            <div className="wms-ops-row-actions">
+                              <button
+                                type="button"
+                                title="Onayla"
+                                aria-label="Onayla"
+                                className="wms-ops-grid-icon-btn wms-ops-grid-icon-btn--approve"
+                                onClick={() => openDecision(row, true)}
+                              >
+                                <Check className="size-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                title="Reddet"
+                                aria-label="Reddet"
+                                className="wms-ops-grid-icon-btn wms-ops-grid-icon-btn--danger"
+                                onClick={() => openDecision(row, false)}
+                              >
+                                <X className="size-3.5" />
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </td>
+                    <td className={KKD_CELL}>
+                      {row.warehouseOutboundId ? (
+                        <Link
+                          to={`/warehouse/warehouse-outbounds/${row.warehouseOutboundId}/operations`}
+                          className="font-mono text-[0.78rem] font-bold text-[var(--wms-ops-accent)] hover:underline"
                         >
-                          {formatExcessApprovalStatus(row.excessApprovalStatus)}
-                        </OpsStatusBadge>
-                        {canManageOverrides && isPending ? (
-                          <div className="wms-ops-row-actions">
-                            <button
-                              type="button"
-                              title="Onayla"
-                              aria-label="Onayla"
-                              className="wms-ops-grid-icon-btn wms-ops-grid-icon-btn--approve"
-                              onClick={() => openDecision(row, true)}
-                            >
-                              <Check className="size-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              title="Reddet"
-                              aria-label="Reddet"
-                              className="wms-ops-grid-icon-btn wms-ops-grid-icon-btn--danger"
-                              onClick={() => openDecision(row, false)}
-                            >
-                              <X className="size-3.5" />
-                            </button>
-                          </div>
-                        ) : null}
-                      </div>
+                          {row.warehouseOutboundDocumentNo || `#${row.warehouseOutboundId}`}
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-[var(--wms-app-text-muted)]">—</span>
+                      )}
+                    </td>
+                    <td className={KKD_CELL}>
+                      <OpsStatusBadge
+                        tone={row.erpStatus === 'CommitUncertain' ? 'quality' : inferOpsStatusTone(row.erpStatus)}
+                        title={row.erpStatus === 'CommitUncertain'
+                          ? 'Netsis sonucu doğrulanamadı; ambar çıkışı ekranından kontrol edin.'
+                          : undefined}
+                      >
+                        {formatErpStatus(row.erpStatus)}
+                      </OpsStatusBadge>
                     </td>
                     <td className={KKD_CELL}>
                       <OpsStatusBadge tone={inferOpsStatusTone(row.status)}>
@@ -1975,12 +2053,27 @@ export function KkdDistributionsPage(): ReactElement {
                         {row.warehouseOutboundId ? (
                           <Link
                             to={`/warehouse/warehouse-outbounds/${row.warehouseOutboundId}/operations`}
-                            title="Ambar çıkış operasyonu"
-                            aria-label="Ambar çıkış operasyonu"
+                            title="Ambar çıkış belgesi"
+                            aria-label="Ambar çıkış belgesi"
                             className="wms-ops-grid-icon-btn"
                           >
                             <PackageCheck className="size-3.5" />
                           </Link>
+                        ) : null}
+                        {/* Netsis'e aktarılmış teslim WMS'ten geri alınamaz; iptal ambar çıkışı ekranından yürür. */}
+                        {canOperateDistribution && !erpLocked && row.status !== 'Cancelled' ? (
+                          <button
+                            type="button"
+                            title="Teslimi iptal et ve ayrılan miktarı serbest bırak"
+                            aria-label="Teslimi iptal et"
+                            className="wms-ops-grid-icon-btn wms-ops-grid-icon-btn--danger"
+                            onClick={() => {
+                              setCancelReason('');
+                              setCancelTarget(row);
+                            }}
+                          >
+                            <Ban className="size-3.5" />
+                          </button>
                         ) : null}
                       </div>
                     </td>
@@ -2030,23 +2123,17 @@ export function KkdDistributionsPage(): ReactElement {
       >
         {decisionTarget ? (
           <div className="space-y-3 text-sm">
-            <div className="rounded-none border border-amber-500/35 bg-amber-500/10 p-3">
-              <strong className="block text-[0.82rem]">{KKD_QUOTA_FULL_TITLE}</strong>
-              <p className="mt-1 text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">{KKD_QUOTA_FULL_MESSAGE}</p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="rounded-none border border-[var(--wms-app-border)] p-2">
-                <span className="block text-[var(--wms-app-text-muted)]">Toplam</span>
-                <strong className="text-sm">{decisionTarget.row.totalQuantity}</strong>
-              </div>
-              <div className="rounded-none border border-[var(--wms-app-border)] p-2">
-                <span className="block text-[var(--wms-app-text-muted)]">Hak</span>
-                <strong className="text-sm text-emerald-500">{decisionTarget.row.entitledQuantity}</strong>
-              </div>
-              <div className="rounded-none border border-[var(--wms-app-border)] p-2">
-                <span className="block text-[var(--wms-app-text-muted)]">Fazla</span>
-                <strong className="text-sm text-amber-500">{decisionTarget.row.excessQuantity}</strong>
-              </div>
+            <KkdCallout
+              tone="warn"
+              icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}
+              title={KKD_QUOTA_FULL_TITLE}
+            >
+              {KKD_QUOTA_FULL_MESSAGE}
+            </KkdCallout>
+            <div className="grid grid-cols-3 gap-2">
+              <KkdMetric label="Toplam" value={decisionTarget.row.totalQuantity} />
+              <KkdMetric label="Hak" value={decisionTarget.row.entitledQuantity} />
+              <KkdMetric label="Fazla" value={decisionTarget.row.excessQuantity} />
             </div>
             {!decisionTarget.approve ? (
               <p className="text-[0.78rem] leading-5 text-[var(--wms-app-text-muted)]">{KKD_QUOTA_REJECT_HINT}</p>
@@ -2081,6 +2168,50 @@ export function KkdDistributionsPage(): ReactElement {
       </ResponsiveDialog>
 
       <ResponsiveDialog
+        open={Boolean(cancelTarget)}
+        onClose={() => setCancelTarget(null)}
+        title={cancelTarget ? `${cancelTarget.documentNo} · Teslimi iptal et` : ''}
+        description={cancelTarget ? `${cancelTarget.employeeCode} · ${cancelTarget.employeeName}` : undefined}
+        className="!max-w-lg"
+      >
+        {cancelTarget ? (
+          <div className="space-y-3 text-sm">
+            <KkdCallout
+              tone="warn"
+              icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}
+              title="Ayrılan miktar talebe geri döner"
+            >
+              Yarım kalan teslim, talep kalemindeki miktarı ayrılmış (kilitli) tutar ve yeni teslim
+              denemesinde &quot;hazırlanabilir miktar 0&quot; hatası verir. İptal, bu kilidi çözer; bağlı ambar
+              çıkışı
+              {cancelTarget.warehouseOutboundDocumentNo ? ` (${cancelTarget.warehouseOutboundDocumentNo})` : ''} ters
+              kaydedilir. Toplanan mal bekleme rafında kalır. Netsis&apos;e aktarılmış teslimler bu ekrandan iptal
+              edilemez.
+            </KkdCallout>
+            <AppInput
+              value={cancelReason}
+              onChange={(event) => setCancelReason(event.target.value)}
+              placeholder="İptal nedeni (zorunlu, en az 5 karakter)"
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <OpsActionButton variant="secondary" onClick={() => setCancelTarget(null)}>
+                Vazgeç
+              </OpsActionButton>
+              <OpsActionButton
+                variant="secondary"
+                className="!text-rose-500"
+                disabled={cancelDistribution.isPending || cancelReason.trim().length < 5}
+                onClick={() => cancelDistribution.mutate({ row: cancelTarget, reason: cancelReason.trim() })}
+              >
+                <Ban className="size-3.5 shrink-0" />
+                Teslimi iptal et
+              </OpsActionButton>
+            </div>
+          </div>
+        ) : null}
+      </ResponsiveDialog>
+
+      <ResponsiveDialog
         open={Boolean(selectedId)}
         onClose={() => setSelectedId(null)}
         title={detail.data?.documentNo || 'Dağıtım detayı'}
@@ -2089,7 +2220,15 @@ export function KkdDistributionsPage(): ReactElement {
       >
         {selectedId ? (
           <>
-            <div className="mb-3 flex justify-end">
+            <div className="mb-3 flex flex-wrap justify-end gap-2">
+              {detail.data?.warehouseOutboundId ? (
+                <OpsActionButton variant="secondary" asChild>
+                  <Link to={`/warehouse/warehouse-outbounds/${detail.data.warehouseOutboundId}/operations`}>
+                    <PackageCheck className="size-3.5" />
+                    Ambar çıkış belgesi
+                  </Link>
+                </OpsActionButton>
+              ) : null}
               <OpsActionButton variant="secondary" disabled={!detail.data} onClick={() => setReceiptOpen(true)}>
                 <Printer className="size-3.5" /> Teslim belgesi
               </OpsActionButton>
@@ -2098,15 +2237,25 @@ export function KkdDistributionsPage(): ReactElement {
               <OpsLoadingState code="DETAIL" message="Dağıtım detayı yükleniyor…" compact />
             ) : detail.data ? (
               <>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   <KkdMetric label="Personel" value={`${detail.data.employeeCode} · ${detail.data.employeeName}`} />
                   <KkdMetric label="Durum" value={formatDistributionStatus(detail.data.status)} />
                   <KkdMetric
-                    label="Kota onayı"
-                    value={formatExcessApprovalStatus(detail.data.excessApprovalStatus)}
+                    label="Kaynak"
+                    value={detail.data.kkdRequestNo ? `Talep · ${detail.data.kkdRequestNo}` : 'Sipariş kanalı'}
                   />
-                  <KkdMetric label="Depo" value={detail.data.warehouseId} />
-                  <KkdMetric label="Ambar çıkışı" value={detail.data.warehouseOutboundId || '—'} />
+                  <KkdMetric
+                    label="Depo"
+                    value={warehouseLabels.get(detail.data.warehouseId) ?? `#${detail.data.warehouseId}`}
+                  />
+                  <KkdMetric
+                    label="Ambar çıkışı"
+                    value={detail.data.warehouseOutboundDocumentNo || detail.data.warehouseOutboundId || '—'}
+                  />
+                  <KkdMetric
+                    label="Netsis"
+                    value={`${formatErpStatus(detail.data.erpStatus)}${detail.data.erpDocumentNo ? ` · ${detail.data.erpDocumentNo}` : ''}`}
+                  />
                 </div>
                 {isExcessApprovalPending(detail.data.excessApprovalStatus) ? (
                   <KkdCallout

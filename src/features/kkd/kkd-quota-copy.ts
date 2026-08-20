@@ -31,6 +31,33 @@ export function isExcessApprovalPending(status: string | null | undefined): bool
   return status === 'Pending';
 }
 
+export function formatErpStatus(status: string | null | undefined): string {
+  switch (status) {
+    case 'Pending':
+      return 'Gönderilmedi';
+    case 'Processing':
+      return 'Gönderiliyor';
+    case 'Succeeded':
+      return 'Gönderildi';
+    case 'Failed':
+      return 'Gönderilemedi';
+    case 'CommitUncertain':
+      return 'Sonuç belirsiz';
+    case 'NotRequired':
+      return 'Gerekmiyor';
+    default:
+      return status || '—';
+  }
+}
+
+/**
+ * ERP aktarımı başlamış veya tamamlanmışsa teslim WMS üzerinden geri alınamaz; iptal ancak ambar
+ * çıkışı ekranından ERP iptaliyle yürür. Sunucu da aynı kuralı uygular.
+ */
+export function isErpLocked(status: string | null | undefined): boolean {
+  return status === 'Processing' || status === 'Succeeded' || status === 'CommitUncertain';
+}
+
 export function formatDistributionStatus(status: string): string {
   switch (status) {
     case 'Draft':

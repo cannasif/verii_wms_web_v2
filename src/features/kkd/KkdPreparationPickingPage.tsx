@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, Barcode, CheckCircle2, HardHat, List, MapPinned, PackageCheck,
-  PlayCircle, RotateCcw, ScanBarcode, Search, TriangleAlert, Undo2, UserRound, Warehouse,
+  ArrowLeft, Barcode, CheckCircle2, HardHat, LayoutGrid, List, MapPinned, Package,
+  PackageCheck, PlayCircle, RotateCcw, ScanBarcode, Search, TriangleAlert, Undo2, UserRound, Warehouse,
 } from 'lucide-react';
 import { AppInput } from '@/components/shared/AppInput';
 import { OpsActionButton } from '@/components/shared/OpsActionButton';
@@ -13,7 +13,11 @@ import { OpsQrCaptureField } from '@/components/shared/OpsQrCaptureField';
 import { OpsSkinCheckbox } from '@/components/shared/OpsSkinCheckbox';
 import { ResponsiveDialog } from '@/components/shared/ResponsiveDialog';
 import { useTheme } from '@/components/theme-provider';
-import { warehouseOutboundApi, type ShipmentOperationLinePayload } from '@/features/warehouse-outbound/warehouseOutbound-api';
+import {
+  resolveStockImageUrl,
+  stockImagesApi,
+} from '@/features/erp-mirror/api/stock-images.api';
+import { warehouseOutboundApi } from '@/features/warehouse-outbound/warehouseOutbound-api';
 import {
   formatProjectNumber,
   formatProjectQuantity,
@@ -33,12 +37,32 @@ import {
   type KkdPreparationTaskLineLocationRow,
   type KkdPreparationTaskLineRow,
   type KkdPreparationTaskRow,
+  type KkdPhysicalDeliveryResult,
   type KkdQuotaDecision,
   type KkdStockLookup,
 } from './kkd-api';
 import { KkdDistributionReceiptDialog } from './KkdDistributionReceiptDialog';
 
 const BOARD_TABS = new Set(['pending', 'preparing', 'completed', 'cancelled', 'mine']);
+const PICK_VIEW_STORAGE_KEY = 'kkd-pick-view-mode';
+type PickViewMode = 'list' | 'grid';
+
+function readPickViewMode(): PickViewMode {
+  try {
+    const value = sessionStorage.getItem(PICK_VIEW_STORAGE_KEY);
+    return value === 'grid' ? 'grid' : 'list';
+  } catch {
+    return 'list';
+  }
+}
+
+function writePickViewMode(mode: PickViewMode): void {
+  try {
+    sessionStorage.setItem(PICK_VIEW_STORAGE_KEY, mode);
+  } catch {
+    /* private mode / quota — tercih kaybolabilir, akış bozulmaz */
+  }
+}
 
 function isPickAboveThresholdConfirmError(message: string): boolean {
   return message.includes('onay eşiğini');
@@ -90,6 +114,8 @@ type PickLine = {
   serialNo: string | null;
   /** Kota aşımı kararı — Pending/Rejected olduğu sürece bu görev başlatılamaz (bkz. StartAsync). */
   quotaDecision: KkdQuotaDecision;
+  /** Yanlış bedeni okutup geri aldıktan sonra kalemi doğru stoğa taşıyabilme izni (sunucu kararı). */
+  canChangeStock: boolean;
 };
 
 type PendingPick = {
@@ -192,6 +218,7 @@ function mapTaskToPickLines(task: KkdPreparationTaskRow): PickLine[] {
         lotNo: null,
         serialNo: null,
         quotaDecision: line.quotaDecision,
+        canChangeStock: line.canChangeStock ?? false,
       };
     });
 }
@@ -249,7 +276,20 @@ function PickLineIdentity({ line, onOpenStockList }: { line: PickLine; onOpenSto
       <>
         <strong className="font-mono text-[var(--wms-ops-shell-fg)]">{line.stockCode}</strong>
         <span className="mt-0.5 block text-[0.75rem] text-[var(--wms-app-text-muted)]">{line.stockName}</span>
-        <span className="mt-0.5 block text-[0.65rem] text-[var(--wms-app-text-muted)]">{line.groupCode}</span>
+        <span className="mt-0.5 flex items-center gap-1.5 text-[0.65rem] text-[var(--wms-app-text-muted)]">
+          {line.groupCode}
+          {line.canChangeStock ? (
+            <button
+              type="button"
+              className="wms-ops-grid-icon-btn !size-6"
+              title="Yanlış stok bağlandıysa değiştir"
+              aria-label="Stoğu değiştir"
+              onClick={(event) => { event.stopPropagation(); onOpenStockList(line); }}
+            >
+              <Search className="size-3" />
+            </button>
+          ) : null}
+        </span>
       </>
     );
   }
@@ -273,56 +313,208 @@ function PickLineIdentity({ line, onOpenStockList }: { line: PickLine; onOpenSto
   );
 }
 
-/** Raf sütunu: rezervasyon/toplama izini raf kodu + miktar çipleri olarak gösterir. Rota güncellemesi
- * artık satırı seçip üstteki (Production'daki gibi) "Rotayı güncelle" araç çubuğu butonundan yapılır. */
+/** Raf sütunu: rota rezervasyonu + toplanmış kaynak izleri. Toplanmış satırlar rota güncellemede
+ * silinmediği için (bkz. API SplitRoute) birden fazla çip görülebilir — hangisinin ne olduğu etiketlenir. */
 function LocationChips({ line }: { line: PickLine }): ReactElement {
   if (!line.stockId) return <span className="text-xs text-[var(--wms-app-text-muted)]">—</span>;
   if (line.locations.length === 0) return <span className="text-xs text-amber-700 dark:text-amber-400">Henüz raf atanmadı</span>;
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {line.locations.map((loc) => (
-        <span
-          key={`${loc.locationId}-${loc.serialNo ?? ''}`}
-          className="inline-flex items-center gap-1 rounded-full border border-[var(--wms-ops-card-border)] bg-[color-mix(in_oklab,var(--wms-ops-field-bg)_85%,transparent)] px-2 py-0.5 text-[0.68rem]"
-          title={`Rezerve: ${formatProjectNumber(loc.reservedQuantity)} · Toplanan: ${formatProjectNumber(loc.pickedQuantity)}`}
-        >
-          <MapPinned className="size-3 shrink-0 text-[var(--wms-ops-accent)]" />
-          {loc.locationCode}
-          {loc.serialNo ? <span className="text-[var(--wms-app-text-muted)]">#{loc.serialNo}</span> : null}
-        </span>
-      ))}
+      {line.locations.map((loc) => {
+        const picked = loc.pickedQuantity > 0;
+        const reserved = loc.reservedQuantity > 0;
+        const roleLabel = picked ? 'toplandı' : reserved ? 'rezerve' : null;
+        const role = picked && reserved
+          ? 'Kaynak · kısmen toplandı'
+          : picked
+            ? 'Kaynak · toplandı'
+            : reserved
+              ? 'Rezerve'
+              : 'Raf';
+        return (
+          <span
+            key={`${loc.locationId}-${loc.serialNo ?? ''}`}
+            className="wms-kkd-pick-shelf-chip inline-flex max-w-full items-center gap-1 border border-[var(--wms-ops-card-border)] bg-[color-mix(in_oklab,var(--wms-ops-field-bg)_85%,transparent)] px-2 py-0.5 text-[0.68rem]"
+            title={`${role} · Rezerve: ${formatProjectNumber(loc.reservedQuantity)} · Toplanan: ${formatProjectNumber(loc.pickedQuantity)}`}
+          >
+            <MapPinned className="size-3 shrink-0 text-[var(--wms-ops-accent)]" />
+            <span className="font-mono font-semibold">{loc.locationCode}</span>
+            {roleLabel ? (
+              <span className="truncate text-[0.62rem] text-[var(--wms-app-text-muted)]">{roleLabel}</span>
+            ) : null}
+            {loc.serialNo ? <span className="text-[var(--wms-app-text-muted)]">#{loc.serialNo}</span> : null}
+          </span>
+        );
+      })}
     </div>
   );
 }
 
-function PickContextChip({
+function truncateChipValue(value: string, max = 50): string {
+  const trimmed = value.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max)}...`;
+}
+
+function PickBackLink({ href }: { href: string }): ReactElement {
+  return (
+    <Link
+      to={href}
+      className={cn(
+        'wms-kkd-pick-back inline-flex items-center gap-1.5 border px-3 py-1.5 text-[0.82rem] font-semibold',
+        'border-[color-mix(in_oklab,var(--wms-ops-accent)_35%,var(--wms-ops-card-border))]',
+        'bg-[color-mix(in_oklab,var(--wms-ops-accent)_12%,var(--wms-ops-card-bg))]',
+        'text-[var(--wms-ops-accent)] transition-[background,opacity] hover:bg-[color-mix(in_oklab,var(--wms-ops-accent)_18%,var(--wms-ops-card-bg))]',
+      )}
+    >
+      <ArrowLeft className="size-3.5 shrink-0" aria-hidden />
+      Panoya dön
+    </Link>
+  );
+}
+
+/** "Talep eden · Depo · Hazırlayan" rozeti; tezgâh sayfası toplamadan önceki adımlarda da aynısını kullanır. */
+export function PickContextChip({
   icon,
   label,
   value,
-  compact,
 }: {
   icon: ReactElement;
   label: string;
   value: string;
-  compact?: boolean;
 }): ReactElement {
+  const display = truncateChipValue(value);
   return (
     <span
       className={cn(
-        'wms-kkd-pick-context-chip inline-flex min-w-0 max-w-full items-center gap-1.5 border border-[var(--wms-ops-card-border)]',
-        'bg-[color-mix(in_oklab,var(--wms-ops-field-bg)_88%,transparent)] text-[var(--wms-ops-shell-fg)]',
-        compact ? 'px-1.5 py-0.5' : 'px-2 py-1',
+        'wms-kkd-pick-context-chip inline-flex shrink-0 items-center gap-2 border border-[var(--wms-ops-card-border)]',
+        'bg-[color-mix(in_oklab,var(--wms-ops-field-bg)_88%,transparent)] px-2 py-1 text-[var(--wms-ops-shell-fg)]',
       )}
       title={`${label}: ${value}`}
     >
       <span className="shrink-0 text-[var(--wms-ops-accent)]" aria-hidden>{icon}</span>
-      {!compact ? (
-        <span className="hidden text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-[var(--wms-app-text-muted)] sm:inline">
+      <span>
+        <span className="block text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-[var(--wms-app-text-muted)]">
           {label}
         </span>
-      ) : null}
-      <span className={cn('min-w-0 truncate font-medium', compact ? 'text-[0.7rem]' : 'text-xs')}>{value}</span>
+        <span className="block whitespace-nowrap text-[0.78rem] font-medium leading-tight">{display}</span>
+      </span>
     </span>
+  );
+}
+
+function primaryShelfLabel(line: PickLine): { code: string; extra: number } {
+  const withPick = line.locations.find((loc) => loc.pickedQuantity > 0);
+  const withReserve = line.locations.find((loc) => loc.reservedQuantity > 0);
+  const primary = withPick ?? withReserve ?? line.locations[0];
+  return {
+    code: primary?.locationCode ?? '—',
+    extra: Math.max(0, line.locations.length - (primary ? 1 : 0)),
+  };
+}
+
+function StockThumb({ stockId, stockName }: { stockId: number | null; stockName?: string | null }): ReactElement {
+  const query = useQuery({
+    queryKey: ['stock-images', stockId],
+    queryFn: () => stockImagesApi.list(stockId!),
+    enabled: Boolean(stockId && stockId > 0),
+    staleTime: 5 * 60_000,
+  });
+  const image = query.data?.find((item) => item.isPrimary) ?? query.data?.[0] ?? null;
+  if (image) {
+    return (
+      <img
+        src={resolveStockImageUrl(image.url)}
+        alt={image.altText || stockName || ''}
+        className="h-full w-full object-cover"
+        loading="lazy"
+      />
+    );
+  }
+  return (
+    <span className="grid h-full w-full place-items-center text-[var(--wms-app-text-muted)]" aria-hidden>
+      <Package className="size-8 opacity-45" />
+    </span>
+  );
+}
+
+function PickGridCard({
+  line,
+  selected,
+  flashing,
+  onSelect,
+  onOpenStockList,
+}: {
+  line: PickLine;
+  selected: boolean;
+  flashing: boolean;
+  onSelect: () => void;
+  onOpenStockList: (line: PickLine) => void;
+}): ReactElement {
+  const state = linePickState(line);
+  const shelf = primaryShelfLabel(line);
+  return (
+    <article
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+      className={cn(
+        'wms-kkd-pick-grid-card cursor-pointer',
+        flashing && 'wms-kkd-pick-flash',
+        state === 'partial' && 'border-[color-mix(in_oklab,#f59e0b_40%,var(--wms-ops-card-border))]',
+        state === 'done' && 'border-[color-mix(in_oklab,#10b981_40%,var(--wms-ops-card-border))]',
+        selected && 'ring-2 ring-[var(--wms-ops-accent)]',
+      )}
+    >
+      <div className="wms-kkd-pick-grid-card__media">
+        <StockThumb stockId={line.stockId} stockName={line.stockName} />
+        <span
+          className="wms-kkd-pick-grid-card__shelf"
+          title={line.locations.map((loc) => {
+            const tag = loc.pickedQuantity > 0 ? 'toplandı' : loc.reservedQuantity > 0 ? 'rezerve' : 'raf';
+            return `${loc.locationCode} (${tag})`;
+          }).join(' · ') || `Raf: ${shelf.code}`}
+        >
+          <MapPinned className="size-3 shrink-0" />
+          {shelf.code}
+          {shelf.extra > 0 ? <span className="opacity-80">+{shelf.extra}</span> : null}
+        </span>
+        <span className="wms-kkd-pick-grid-card__status">
+          <PickStatusChip state={state} />
+        </span>
+      </div>
+      <div className="wms-kkd-pick-grid-card__body">
+        <div className="min-w-0">
+          <strong className="block truncate font-mono text-sm">
+            {line.stockCode || line.groupCode}
+          </strong>
+          <span className="mt-0.5 line-clamp-2 block text-[0.72rem] text-[var(--wms-app-text-muted)]">
+            {line.stockName || line.groupName || 'Stok grubu bağlanmamış'}
+          </span>
+        </div>
+        {line.canChangeStock ? (
+          <button
+            type="button"
+            className="wms-ops-grid-icon-btn !size-7 shrink-0"
+            title="Yanlış stok bağlandıysa değiştir"
+            aria-label="Stoğu değiştir"
+            onClick={(event) => { event.stopPropagation(); onOpenStockList(line); }}
+          >
+            <Search className="size-3.5" />
+          </button>
+        ) : null}
+      </div>
+      <div className="wms-kkd-pick-grid-card__footer">
+        <PickProgress line={line} />
+      </div>
+    </article>
   );
 }
 
@@ -332,20 +524,92 @@ function PickContextChip({
  * gerçek stok hareketi olarak postalanır) → istenirse "Rotayı güncelle" / "Stok listesi" / "Geri al" →
  * ayrı bir adım olarak "Fiziksel Teslim Onayı" (tam/eksik, o an ambar çıkışı + teslim belgesi oluşur).
  */
+/**
+ * Toplama ekranının çerçevesi. Tam sayfa açıldığında kendi başlığı ve "Panoya dön" linki olur; tezgâh
+ * (kiosk) akışına gömüldüğünde başlık kiosk sayfasınındır, rozetler içeriğin başına alınır.
+ */
+function PickShell({
+  embedded,
+  title,
+  description,
+  boardHref,
+  chips,
+  children,
+}: {
+  embedded: boolean;
+  title: string;
+  description: string;
+  boardHref: string;
+  chips?: ReactElement;
+  children: ReactNode;
+}): ReactElement {
+  if (embedded) {
+    return (
+      <div className="space-y-3 sm:space-y-4">
+        {chips ? <div className="flex justify-start sm:justify-end">{chips}</div> : null}
+        {children}
+      </div>
+    );
+  }
+  return (
+    <KkdPage
+      title={title}
+      description={description}
+      hintLabel="Bu sayfa ne yapar?"
+      hideEyebrow
+      topBar={<PickBackLink href={boardHref} />}
+      actions={chips}
+    >
+      {children}
+    </KkdPage>
+  );
+}
+
 export function KkdPreparationPickingPage(): ReactElement {
-  const { requestId: requestIdParam, taskId: taskIdParam } = useParams();
+  const { requestId, taskId } = useParams();
   const [searchParams] = useSearchParams();
-  const requestId = Number(requestIdParam);
-  const taskId = Number(taskIdParam);
+  return (
+    <KkdPreparationPickingView
+      requestId={Number(requestId)}
+      taskId={Number(taskId)}
+      boardHref={resolveBoardHref(searchParams.get('returnTab'))}
+    />
+  );
+}
+
+/**
+ * Barkodlu toplama ekranı. Rotadan bağımsızdır: hem "Açık KKD talepleri" üzerinden açılan tam sayfa
+ * toplama hem de tezgâh akışı aynı bileşeni çalıştırır; böylece iki kanalda iki ayrı toplama davranışı
+ * oluşmaz.
+ */
+export function KkdPreparationPickingView({
+  requestId,
+  taskId,
+  boardHref,
+  embedded = false,
+  closeTaskOnDelivery = false,
+  onFinished,
+}: {
+  requestId: number;
+  taskId: number;
+  /** Tam sayfa modunda "Panoya dön" hedefi. */
+  boardHref: string;
+  /** Kiosk gibi bir sayfanın içine gömülü render. Kendi başlığını ve geri linkini basmaz. */
+  embedded?: boolean;
+  /**
+   * Anlık (tezgâh) teslim: personel malı alıp gittiği için teslimde görev kapatılır ve okutulmayan kalan
+   * miktarın rezervasyonu serbest bırakılır. Açık talepler kanalında kapalıdır; orada yarım kalan iş açık
+   * durur ve kalanı sonra toplanır.
+   */
+  closeTaskOnDelivery?: boolean;
+  /** Gömülü modda teslim bittikten sonra "Sıradaki kişi" aksiyonu. */
+  onFinished?: () => void;
+}): ReactElement {
   const queryClient = useQueryClient();
   const { skin } = useTheme();
   const isPremium = skin === 'premium';
   const branchCode = useAuthStore((state) => state.branch?.code ?? '0');
   const currentUser = useAuthStore((state) => state.user);
-  const boardHref = useMemo(
-    () => resolveBoardHref(searchParams.get('returnTab')),
-    [searchParams],
-  );
 
   const [stage, setStage] = useState<Stage>('loading');
   const [errorMessage, setErrorMessage] = useState('');
@@ -370,7 +634,8 @@ export function KkdPreparationPickingPage(): ReactElement {
   const [quickStockPickerSearch, setQuickStockPickerSearch] = useState('');
   const [scansOpen, setScansOpen] = useState(false);
   const [deliveryOpen, setDeliveryOpen] = useState(false);
-  const [deliveryQuantities, setDeliveryQuantities] = useState<Record<number, string>>({});
+  const [deliveryResult, setDeliveryResult] = useState<KkdPhysicalDeliveryResult | null>(null);
+  const [viewMode, setViewMode] = useState<PickViewMode>(() => readPickViewMode());
   const barcodeRef = useRef<HTMLInputElement | null>(null);
   const flashTimerRef = useRef<number | null>(null);
 
@@ -384,7 +649,6 @@ export function KkdPreparationPickingPage(): ReactElement {
     queryFn: () => kkdApi.requestPreparationTasks(requestId),
     enabled: Number.isFinite(requestId) && requestId > 0,
   });
-  const seriesQuery = useQuery({ queryKey: ['kkd', 'distribution-series'], queryFn: kkdApi.distributionSeries });
   const receiptDetail = useQuery({
     queryKey: ['kkd', 'distributions', 'detail', distributionId],
     queryFn: () => kkdApi.distributionDetail(distributionId!),
@@ -512,6 +776,7 @@ export function KkdPreparationPickingPage(): ReactElement {
         lotNo: result.lotNo ?? line.lotNo,
         serialNo: result.serialNo ?? line.serialNo,
         requestLineRowVersion: taskLine?.requestLineRowVersion ?? line.requestLineRowVersion,
+        canChangeStock: taskLine?.canChangeStock ?? false,
       };
     }));
     setFlashLineId(result.requestLineId);
@@ -764,12 +1029,17 @@ export function KkdPreparationPickingPage(): ReactElement {
   const resolveFromStockList = async (stock: KkdStockLookup): Promise<void> => {
     if (!stockListLine || !requestQuery.data) return;
     try {
+      const rebinding = Boolean(stockListLine.stockId);
       await kkdApi.resolveRequestLine(requestId, stockListLine.requestLineId, {
         stockId: stock.id,
-        reason: 'Stok listesinden manuel bağlandı.',
+        reason: rebinding
+          ? `Toplama sırasında yanlış stok bağlanmıştı; ${stockListLine.stockCode} yerine ${stock.code} seçildi.`
+          : 'Stok listesinden manuel bağlandı.',
         expectedRowVersion: stockListLine.requestLineRowVersion,
       });
-      toast.success(`${stockListLine.groupCode} grubu ${stock.code} stoğuna bağlandı.`);
+      toast.success(rebinding
+        ? `Kalem ${stock.code} stoğuna taşındı.`
+        : `${stockListLine.groupCode} grubu ${stock.code} stoğuna bağlandı.`);
       setStockListLine(null);
       setStockListSearch('');
       void queryClient.invalidateQueries({ queryKey: ['kkd', 'requests', requestId, 'preparation-tasks'] });
@@ -800,6 +1070,10 @@ export function KkdPreparationPickingPage(): ReactElement {
   const toggleLineSelection = (line: PickLine): void => {
     setSelectedLineId((current) => (current === line.requestLineId ? null : line.requestLineId));
   };
+  const setPickViewMode = (mode: PickViewMode): void => {
+    setViewMode(mode);
+    writePickViewMode(mode);
+  };
   const resolvedLinesForQuickPick = lines.filter((line): line is PickLine & { stockId: number; stockCode: string } =>
     Boolean(line.stockId && line.stockCode));
   const quickPickSearch = quickStockPickerSearch.trim().toLocaleLowerCase('tr-TR');
@@ -814,120 +1088,29 @@ export function KkdPreparationPickingPage(): ReactElement {
     requestAnimationFrame(() => barcodeRef.current?.focus());
   };
 
-  const openDeliveryDialog = (): void => {
-    setDeliveryQuantities(
-      Object.fromEntries(deliverableLines.map((line) => [
-        line.requestLineId,
-        formatProjectQuantity(line.deliverable, line.unitCode || 'ADET'),
-      ])),
-    );
-    setDeliveryOpen(true);
-  };
+  const openDeliveryDialog = (): void => setDeliveryOpen(true);
 
+  /**
+   * Teslim tek sunucu çağrısıdır: miktar sorulmaz (teslim edilen, bekleme rafına okutulan kalemlerin
+   * kendisidir) ve dağıtım + ambar çıkışı + ERP gönderimi bir arada yürür. Böylece zincirin ortasında
+   * kalan bir adım, talep satırındaki ayrılmış miktarı kilitli bırakmaz.
+   */
   const confirmDelivery = async (): Promise<void> => {
-    if (!task || !requestQuery.data) return;
-    const toDeliver = deliverableLines
-      .map((line) => {
-        const parsed = parseLocalizedNumber(deliveryQuantities[line.requestLineId] ?? '');
-        const quantity = Number.isFinite(parsed) && parsed > 0
-          ? Math.min(parsed, line.deliverable)
-          : null;
-        return { line, quantity };
-      })
-      .filter((item) => item.quantity != null && item.quantity > 0) as Array<{ line: PickLine; quantity: number }>;
-    if (toDeliver.length === 0) {
-      toast.error('Teslim edilecek en az bir kalem için miktar girin.');
-      return;
-    }
-    const series = seriesQuery.data?.find((item) => item.isDefault) ?? seriesQuery.data?.[0];
-    if (!series) {
-      toast.error('Ambar çıkışı için belge serisi bulunamadı.');
-      return;
-    }
+    if (!task) return;
     setStage('finishing');
     setDeliveryOpen(false);
     try {
-      const linesWithTrackings = await Promise.all(toDeliver.map(async ({ line, quantity }) => {
-        const trackings = await kkdApi.preparationStagedTrackings(taskId, line.requestLineId);
-        const stagedTotal = trackings.reduce((sum, item) => sum + item.quantity, 0);
-        // Tam teslimde okutulan seri/lot/raf izini birebir kullan; kısmi teslimde sunucu kendi seçsin.
-        const useExplicitTrackings = trackings.length > 0 && Math.abs(stagedTotal - quantity) < 0.0001;
-        return {
-          stockId: line.stockId!,
-          yapCodeId: null,
-          quantity,
-          unitCode: line.unitCode,
-          sourceLocationId: useExplicitTrackings
-            ? line.sourceLocationId ?? trackings.find((item) => item.sourceLocationId)?.sourceLocationId ?? null
-            : null,
-          orderNumber: null,
-          orderLineId: null,
-          requireHandlingUnit: false,
-          description: null,
-          trackings: useExplicitTrackings
-            ? trackings.map((item) => ({
-                quantity: item.quantity,
-                lotNo: item.lotNo ?? null,
-                serialNo: item.serialNo ?? null,
-                handlingUnitNo: null,
-                manufacturingDate: null,
-                expirationDate: null,
-                sourceLocationId: item.sourceLocationId ?? null,
-              }))
-            : null,
-          kkdRequestLineId: line.requestLineId,
-        };
-      }));
-
-      const result = await kkdApi.createDistribution({
-        idempotencyKey: crypto.randomUUID(),
-        employeeId: requestQuery.data.employeeId,
-        warehouseId: task.warehouseId,
-        documentSeriesId: series.id,
-        documentDate: new Date().toISOString().slice(0, 10),
-        stagingLocationId: null,
-        loadingLocationId: null,
-        description: null,
-        createWarehouseTask: false,
-        assignedUserIds: null,
-        kkdRequestId: task.requestId,
-        lines: linesWithTrackings,
-      });
-      setDistributionId(result.id);
+      const result = await kkdApi.deliverPreparationTask(taskId, crypto.randomUUID(), closeTaskOnDelivery);
+      setDistributionId(result.distributionId);
+      setDeliveryResult(result);
+      void queryClient.invalidateQueries({ queryKey: ['kkd', 'requests', requestId] });
+      void queryClient.invalidateQueries({ queryKey: ['kkd', 'requests', requestId, 'preparation-tasks'] });
+      void queryClient.invalidateQueries({ queryKey: ['kkd', 'preparation-tasks', taskId, 'scans'] });
       if (result.excessApprovalStatus === 'Pending') {
         setStage('excess-pending');
         return;
       }
-
-      const outboundDetail = await warehouseOutboundApi.detail(result.warehouseOutboundId);
-      if (outboundDetail.header.status === 'Draft') {
-        try {
-          await warehouseOutboundApi.transition(result.warehouseOutboundId, 'release');
-        } catch {
-          await warehouseOutboundApi.transition(result.warehouseOutboundId, 'approve');
-          await warehouseOutboundApi.transition(result.warehouseOutboundId, 'release');
-        }
-      }
-      const payload: ShipmentOperationLinePayload[] = outboundDetail.lines.map((outboundLine) => {
-        const match = toDeliver.find(({ line }) => line.stockId === outboundLine.stockId);
-        const tracking = linesWithTrackings.find((line) => line.stockId === outboundLine.stockId)?.trackings?.[0];
-        return {
-          lineId: outboundLine.id,
-          quantity: match?.quantity ?? outboundLine.requestedQuantity,
-          sourceLocationId: match?.line.sourceLocationId ?? tracking?.sourceLocationId ?? null,
-          targetLocationId: null,
-          lotNo: match?.line.lotNo ?? tracking?.lotNo ?? null,
-          serialNo: match?.line.serialNo ?? tracking?.serialNo ?? null,
-          handlingUnitNo: null,
-        };
-      });
-      await warehouseOutboundApi.operate(result.warehouseOutboundId, 'pick', { lines: payload });
-      await warehouseOutboundApi.operate(result.warehouseOutboundId, 'pack', { lines: payload });
-      await warehouseOutboundApi.operate(result.warehouseOutboundId, 'load', { lines: payload });
-      await warehouseOutboundApi.operate(result.warehouseOutboundId, 'ship', { lines: payload });
-      toast.success('Fiziksel teslim onaylandı; ambar çıkışı ve ERP postalaması otomatik yapıldı.');
-      void queryClient.invalidateQueries({ queryKey: ['kkd', 'requests', requestId] });
-      void queryClient.invalidateQueries({ queryKey: ['kkd', 'requests', requestId, 'preparation-tasks'] });
+      toast.success(`Fiziksel teslim onaylandı. Ambar çıkışı: ${result.warehouseOutboundDocumentNo}`);
       setStage('done');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Teslim tamamlanamadı.');
@@ -937,43 +1120,31 @@ export function KkdPreparationPickingPage(): ReactElement {
 
   if (effectiveStage === 'loading') {
     return (
-      <KkdPage
+      <PickShell
+        embedded={embedded}
         title="Toplama"
         description="Hazırlama görevi yükleniyor…"
-        leading={
-          <OpsActionButton variant="secondary" asChild className="!h-9 !px-2.5 !text-xs">
-            <Link to={boardHref} aria-label="Panoya dön">
-              <ArrowLeft className="size-3.5 shrink-0" />
-              <span className="hidden sm:inline">Panoya dön</span>
-            </Link>
-          </OpsActionButton>
-        }
+        boardHref={boardHref}
       >
         <div className="grid min-h-60 place-items-center px-4">
           <OpsLoadingState code="PICK" message="Hazırlama görevi yükleniyor…" />
         </div>
-      </KkdPage>
+      </PickShell>
     );
   }
 
   if (effectiveStage === 'not-found') {
     return (
-      <KkdPage
+      <PickShell
+        embedded={embedded}
         title="Toplama"
         description="Hazırlama görevi bulunamadı."
-        leading={
-          <OpsActionButton variant="secondary" asChild className="!h-9 !px-2.5 !text-xs">
-            <Link to={boardHref} aria-label="Panoya dön">
-              <ArrowLeft className="size-3.5 shrink-0" />
-              <span className="hidden sm:inline">Panoya dön</span>
-            </Link>
-          </OpsActionButton>
-        }
+        boardHref={boardHref}
       >
         <KkdCallout tone="danger" icon={<TriangleAlert className="size-5" />} title="Görev bulunamadı">
           Bu görev artık mevcut değil ya da erişim yetkiniz yok.
         </KkdCallout>
-      </KkdPage>
+      </PickShell>
     );
   }
 
@@ -981,30 +1152,25 @@ export function KkdPreparationPickingPage(): ReactElement {
     ? lines.find((line) => line.requestLineId === pendingPick.resolved.requestLineId)
     : null;
 
+  const contextChips = (
+    <div className="wms-kkd-pick-context-row flex flex-nowrap items-center justify-start gap-1.5 overflow-x-auto sm:justify-end sm:gap-2">
+      <PickContextChip icon={<HardHat className="size-3.5" />} label="Talep eden" value={employeeLabel} />
+      <PickContextChip icon={<Warehouse className="size-3.5" />} label="Depo" value={warehouseLabel} />
+      <PickContextChip icon={<UserRound className="size-3.5" />} label="Hazırlayan" value={pickerLabel} />
+    </div>
+  );
+
   return (
-    <KkdPage
+    <PickShell
+      embedded={embedded}
       title={`Toplama · ${task!.taskNo}`}
       description={
         started
           ? "Barkod okutup hazırlama görevini toplar; hazır olanlar için Fiziksel Teslim Onayı ile ambar çıkışı oluşur."
           : "Toplamaya başlamak için önce “Bu işi yapıyorum” deyin — raf ataması ve rezervasyon o an yapılır."
       }
-      hintLabel="Bu sayfa ne yapar?"
-      leading={
-        <OpsActionButton variant="secondary" asChild className="!h-9 !px-2.5 !text-xs">
-          <Link to={boardHref} aria-label="Panoya dön">
-            <ArrowLeft className="size-3.5 shrink-0" />
-            <span className="hidden sm:inline">Panoya dön</span>
-          </Link>
-        </OpsActionButton>
-      }
-      subRow={
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <PickContextChip compact icon={<HardHat className="size-3" />} label="Personel" value={employeeLabel} />
-          <PickContextChip compact icon={<Warehouse className="size-3" />} label="Depo" value={warehouseLabel} />
-          <PickContextChip compact icon={<UserRound className="size-3" />} label="Toplayan" value={pickerLabel} />
-        </div>
-      }
+      boardHref={boardHref}
+      chips={contextChips}
     >
       {effectiveStage === 'excess-pending' ? (
         <KkdPanel title="Kota aşımı onayı bekleniyor" icon={<TriangleAlert className="size-4" />}>
@@ -1092,19 +1258,19 @@ export function KkdPreparationPickingPage(): ReactElement {
           </KkdPanel>
         </div>
       ) : (
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] xl:grid-cols-[minmax(20rem,24rem)_minmax(0,1fr)]">
-          {/* Sol / üst: barkod — Enter/Tab/dıt = Onayla (OpsQrCaptureField onCommit) */}
-          <div className="wms-kkd-pick-scan-sticky space-y-3">
+        <div className="grid items-start gap-3 sm:gap-4 lg:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)] xl:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)]">
+          {/* Sol / üst: barkod — Enter/Tab/el terminali Onayla (OpsQrCaptureField onCommit) */}
+          <div className="wms-kkd-pick-scan-sticky space-y-3 order-1">
             <KkdPanel
               title="Barkod okut"
               icon={<ScanBarcode className="size-4" />}
-              description="Enter, Tab veya el terminali bip’i Onayla gibidir."
+              description="Barkodu okutun veya yazıp Onayla’ya basın."
             >
               <div className="flex flex-col gap-2">
                 <div className="flex flex-wrap gap-2">
                   <OpsActionButton
                     variant="secondary"
-                    className="flex-1"
+                    className="min-h-11 flex-1 sm:min-h-9"
                     disabled={!working || !selectedLine?.stockId}
                     onClick={() => selectedLine && void openRouteDialog(selectedLine)}
                   >
@@ -1112,7 +1278,7 @@ export function KkdPreparationPickingPage(): ReactElement {
                   </OpsActionButton>
                   <OpsActionButton
                     variant="secondary"
-                    className="flex-1"
+                    className="min-h-11 flex-1 sm:min-h-9"
                     disabled={!working}
                     onClick={() => setQuickStockPickerOpen(true)}
                   >
@@ -1121,7 +1287,7 @@ export function KkdPreparationPickingPage(): ReactElement {
                 </div>
                 {!selectedLine ? (
                   <p className="text-[0.7rem] leading-4 text-[var(--wms-app-text-muted)]">
-                    Rotayı güncellemek için önce aşağıdaki listeden bir satır seçin.
+                    Rotayı güncellemek için sağdaki listeden bir kalem seçin.
                   </p>
                 ) : null}
                 <OpsQrCaptureField
@@ -1139,7 +1305,7 @@ export function KkdPreparationPickingPage(): ReactElement {
                 />
                 <OpsActionButton
                   variant="primary"
-                  className="w-full sm:w-auto"
+                  className="min-h-12 w-full sm:min-h-10 sm:w-auto"
                   loading={scanBusy}
                   disabled={!working || !barcode.trim() || Boolean(pendingPick)}
                   onClick={() => void resolveBarcode()}
@@ -1148,7 +1314,7 @@ export function KkdPreparationPickingPage(): ReactElement {
                   Onayla
                 </OpsActionButton>
                 <p className="text-[0.7rem] leading-4 text-[var(--wms-app-text-muted)]">
-                  Tek rafta eşik altı otomatik · birden fazla raf/seride önce kaynak seçilir · grup satırında beden okutunca bağlanır.
+                  Tek rafta otomatik toplanır · birden fazla raf/seride kaynak seçilir · grup satırında beden okutunca bağlanır.
                 </p>
               </div>
               {lastMatch ? (
@@ -1177,65 +1343,58 @@ export function KkdPreparationPickingPage(): ReactElement {
             </OpsActionButton>
           </div>
 
-          {/* Sağ / alt: liste */}
-          <div className="min-w-0 space-y-3">
-            <KkdPanel title="Toplama durumu" icon={<PackageCheck className="size-4" />}>
-              {/* Mobil / dar: kartlar */}
-              <div className="space-y-2 md:hidden">
-                {lines.map((line) => {
-                  const state = linePickState(line);
-                  const rowSelected = selectedLineId === line.requestLineId;
-                  return (
-                    <article
+          {/* Sağ / alt: liste veya grid */}
+          <div className="min-w-0 space-y-3 order-2">
+            <KkdPanel
+              title="Toplama durumu"
+              icon={<PackageCheck className="size-4" />}
+              actions={
+                <div className="wms-kkd-pick-view-toggle" role="group" aria-label="Görünüm">
+                  <button
+                    type="button"
+                    className={cn('wms-kkd-pick-view-toggle__btn', viewMode === 'list' && 'is-active')}
+                    aria-pressed={viewMode === 'list'}
+                    title="Liste görünümü"
+                    onClick={() => setPickViewMode('list')}
+                  >
+                    <List className="size-3.5" />
+                    <span className="hidden sm:inline">Liste</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={cn('wms-kkd-pick-view-toggle__btn', viewMode === 'grid' && 'is-active')}
+                    aria-pressed={viewMode === 'grid'}
+                    title="Kart görünümü"
+                    onClick={() => setPickViewMode('grid')}
+                  >
+                    <LayoutGrid className="size-3.5" />
+                    <span className="hidden sm:inline">Kart</span>
+                  </button>
+                </div>
+              }
+            >
+              {viewMode === 'grid' ? (
+                <div className="wms-kkd-pick-grid">
+                  {lines.map((line) => (
+                    <PickGridCard
                       key={line.requestLineId}
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={rowSelected}
-                      onClick={() => toggleLineSelection(line)}
-                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleLineSelection(line); } }}
-                      className={cn(
-                        'wms-kkd-pick-line-card cursor-pointer',
-                        flashLineId === line.requestLineId && 'wms-kkd-pick-flash',
-                        state === 'partial' && 'border-[color-mix(in_oklab,#f59e0b_35%,var(--wms-ops-card-border))]',
-                        state === 'done' && 'border-[color-mix(in_oklab,#10b981_35%,var(--wms-ops-card-border))]',
-                        rowSelected && 'ring-2 ring-[var(--wms-ops-accent)]',
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-2">
-                          <input type="radio" checked={rowSelected} readOnly aria-label="Satırı seç" className="mt-1 pointer-events-none" />
-                          <div className="min-w-0"><PickLineIdentity line={line} onOpenStockList={setStockListLine} /></div>
-                        </div>
-                        <PickStatusChip state={state} />
-                      </div>
-                      <p className="mt-2 text-[0.7rem] text-[var(--wms-app-text-muted)]">
-                        Seri / Lot: {line.serialNo || '—'} / {line.lotNo || '—'}
-                      </p>
-                      <div className="mt-2"><LocationChips line={line} /></div>
-                      <PickProgress line={line} />
-                    </article>
-                  );
-                })}
-              </div>
-
-              {/* Tablet+ : tablo */}
-              <div className="hidden md:block">
-                <KkdTableShell>
-                  <thead>
-                    <tr>
-                      <th className={cn(KKD_HEAD_CELL, 'w-8')} />
-                      <th className={KKD_HEAD_CELL}>Grup / Stok</th>
-                      <th className={KKD_HEAD_CELL}>Raf</th>
-                      <th className={KKD_HEAD_CELL}>İlerleme</th>
-                      <th className={KKD_HEAD_CELL}>Durum</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                      line={line}
+                      selected={selectedLineId === line.requestLineId}
+                      flashing={flashLineId === line.requestLineId}
+                      onSelect={() => toggleLineSelection(line)}
+                      onOpenStockList={setStockListLine}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {/* Telefon / el terminali: yoğun liste kartları */}
+                  <div className="space-y-2 md:hidden">
                     {lines.map((line) => {
                       const state = linePickState(line);
                       const rowSelected = selectedLineId === line.requestLineId;
                       return (
-                        <tr
+                        <article
                           key={line.requestLineId}
                           role="button"
                           tabIndex={0}
@@ -1243,40 +1402,91 @@ export function KkdPreparationPickingPage(): ReactElement {
                           onClick={() => toggleLineSelection(line)}
                           onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleLineSelection(line); } }}
                           className={cn(
-                            'cursor-pointer',
+                            'wms-kkd-pick-line-card cursor-pointer',
                             flashLineId === line.requestLineId && 'wms-kkd-pick-flash',
-                            state === 'partial' && 'bg-[color-mix(in_oklab,#f59e0b_6%,transparent)]',
-                            state === 'done' && 'bg-[color-mix(in_oklab,#10b981_6%,transparent)]',
-                            rowSelected && 'outline outline-2 -outline-offset-2 outline-[var(--wms-ops-accent)]',
+                            state === 'partial' && 'border-[color-mix(in_oklab,#f59e0b_35%,var(--wms-ops-card-border))]',
+                            state === 'done' && 'border-[color-mix(in_oklab,#10b981_35%,var(--wms-ops-card-border))]',
+                            rowSelected && 'ring-2 ring-[var(--wms-ops-accent)]',
                           )}
                         >
-                          <td className={KKD_CELL}>
-                            <input type="radio" checked={rowSelected} readOnly aria-label="Satırı seç" className="pointer-events-none" />
-                          </td>
-                          <td className={KKD_CELL}><PickLineIdentity line={line} onOpenStockList={setStockListLine} /></td>
-                          <td className={cn(KKD_CELL, 'min-w-[10rem]')}>
-                            <LocationChips line={line} />
-                          </td>
-                          <td className={cn(KKD_CELL, 'min-w-[9rem]')}>
-                            <PickProgress line={line} />
-                          </td>
-                          <td className={KKD_CELL}><PickStatusChip state={state} /></td>
-                        </tr>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 items-start gap-2">
+                              <input type="radio" checked={rowSelected} readOnly aria-label="Satırı seç" className="mt-1 pointer-events-none" />
+                              <div className="min-w-0"><PickLineIdentity line={line} onOpenStockList={setStockListLine} /></div>
+                            </div>
+                            <PickStatusChip state={state} />
+                          </div>
+                          <p className="mt-2 text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                            Seri / Lot: {line.serialNo || '—'} / {line.lotNo || '—'}
+                          </p>
+                          <div className="mt-2"><LocationChips line={line} /></div>
+                          <PickProgress line={line} />
+                        </article>
                       );
                     })}
-                  </tbody>
-                </KkdTableShell>
+                  </div>
 
-                {pendingLines.length > 0 ? (
-                  <p className="mt-3 text-xs text-[var(--wms-app-text-muted)]">
-                    {pendingLines.length} kalem açık — kısmen toplayıp kalanı sonraya bırakabilirsiniz.
-                  </p>
-                ) : (
-                  <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">
-                    Tüm kalemler tamam.
-                  </p>
-                )}
-              </div>
+                  {/* Tablet+ : tablo */}
+                  <div className="hidden md:block">
+                    <KkdTableShell>
+                      <thead>
+                        <tr>
+                          <th className={cn(KKD_HEAD_CELL, 'w-8')} />
+                          <th className={KKD_HEAD_CELL}>Grup / Stok</th>
+                          <th className={KKD_HEAD_CELL}>Raf</th>
+                          <th className={KKD_HEAD_CELL}>İlerleme</th>
+                          <th className={KKD_HEAD_CELL}>Durum</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lines.map((line) => {
+                          const state = linePickState(line);
+                          const rowSelected = selectedLineId === line.requestLineId;
+                          return (
+                            <tr
+                              key={line.requestLineId}
+                              role="button"
+                              tabIndex={0}
+                              aria-pressed={rowSelected}
+                              onClick={() => toggleLineSelection(line)}
+                              onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleLineSelection(line); } }}
+                              className={cn(
+                                'cursor-pointer',
+                                flashLineId === line.requestLineId && 'wms-kkd-pick-flash',
+                                state === 'partial' && 'bg-[color-mix(in_oklab,#f59e0b_6%,transparent)]',
+                                state === 'done' && 'bg-[color-mix(in_oklab,#10b981_6%,transparent)]',
+                                rowSelected && 'outline outline-2 -outline-offset-2 outline-[var(--wms-ops-accent)]',
+                              )}
+                            >
+                              <td className={KKD_CELL}>
+                                <input type="radio" checked={rowSelected} readOnly aria-label="Satırı seç" className="pointer-events-none" />
+                              </td>
+                              <td className={KKD_CELL}><PickLineIdentity line={line} onOpenStockList={setStockListLine} /></td>
+                              <td className={cn(KKD_CELL, 'min-w-[10rem]')}>
+                                <LocationChips line={line} />
+                              </td>
+                              <td className={cn(KKD_CELL, 'min-w-[9rem]')}>
+                                <PickProgress line={line} />
+                              </td>
+                              <td className={KKD_CELL}><PickStatusChip state={state} /></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </KkdTableShell>
+                  </div>
+                </>
+              )}
+
+              {pendingLines.length > 0 ? (
+                <p className="mt-3 text-xs text-[var(--wms-app-text-muted)]">
+                  {pendingLines.length} kalem açık — kısmen toplayıp kalanı sonraya bırakabilirsiniz.
+                </p>
+              ) : (
+                <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-400">
+                  Tüm kalemler tamam.
+                </p>
+              )}
             </KkdPanel>
 
             <div
@@ -1302,15 +1512,30 @@ export function KkdPreparationPickingPage(): ReactElement {
               </OpsActionButton>
             </div>
 
-            {effectiveStage === 'done' ? (
+            {effectiveStage === 'done' && deliveryResult ? (
               <KkdCallout tone="success" title="Teslim tamamlandı" icon={<CheckCircle2 className="size-5" />}
                 actions={
-                  <OpsActionButton variant="secondary" onClick={() => setReceiptOpen(true)}>
-                    Teslim belgesini görüntüle
-                  </OpsActionButton>
+                  <>
+                    <OpsActionButton variant="secondary" onClick={() => setReceiptOpen(true)}>
+                      Teslim fişi ({deliveryResult.receiptNo})
+                    </OpsActionButton>
+                    <OpsActionButton variant="secondary" asChild>
+                      <Link to={`/warehouse/warehouse-outbounds/${deliveryResult.warehouseOutboundId}/operations`}>
+                        Ambar çıkışı ({deliveryResult.warehouseOutboundDocumentNo})
+                      </Link>
+                    </OpsActionButton>
+                    {embedded && onFinished ? (
+                      <OpsActionButton variant="primary" onClick={onFinished}>
+                        Sıradaki kişi
+                      </OpsActionButton>
+                    ) : null}
+                  </>
                 }
               >
-                Ambar çıkışı ve ERP postalaması otomatik yapıldı.
+                {deliveryResult.recipientName} adına teslim edildi ve stok ambardan düşüldü.
+                {deliveryResult.erpStatus === 'Succeeded'
+                  ? ` Netsis belgesi oluştu${deliveryResult.erpDocumentNo ? `: ${deliveryResult.erpDocumentNo}` : ''}.`
+                  : ' Netsis gönderimi tamamlanmadı; ambar çıkışı ekranından tekrar gönderebilirsiniz.'}
               </KkdCallout>
             ) : null}
           </div>
@@ -1621,8 +1846,10 @@ export function KkdPreparationPickingPage(): ReactElement {
       {stockListLine ? (
         <ResponsiveDialog
           onClose={() => { setStockListLine(null); setStockListSearch(''); }}
-          title="Grubu stoğa bağla"
-          description={`${stockListLine.groupCode} grubu içinde ara ve bir stok/beden seçin.`}
+          title={stockListLine.stockId ? 'Stoğu değiştir' : 'Grubu stoğa bağla'}
+          description={stockListLine.stockId
+            ? `${stockListLine.stockCode} yerine ${stockListLine.groupCode} grubundan doğru stok/bedeni seçin.`
+            : `${stockListLine.groupCode} grubu içinde ara ve bir stok/beden seçin.`}
           className="!max-w-lg"
         >
           <div className="space-y-3">
@@ -1739,7 +1966,7 @@ export function KkdPreparationPickingPage(): ReactElement {
         <ResponsiveDialog
           onClose={() => setDeliveryOpen(false)}
           title="Fiziksel Teslim Onayı"
-          description="Talep sahibi malzemeyi alınca tam veya eksik teslimi onaylayın. Onaylanmayan miktar hazır bekler, sonra tekrar teslim edilebilir."
+          description="Aşağıdaki kalemler bekleme rafında hazır. Onaylarsanız ambar çıkışı ve teslim fişi bu miktarlarla oluşur; okutulmamış kalan miktar görevde açık kalır."
           className="!max-w-xl"
         >
           <div className="space-y-3">
@@ -1753,35 +1980,11 @@ export function KkdPreparationPickingPage(): ReactElement {
                   >
                     <span className="min-w-0 flex-1">
                       <strong className="block truncate font-mono text-sm">{line.stockCode}</strong>
-                      <span className="block text-[0.7rem] text-[var(--wms-app-text-muted)]">
-                        Hazır: {formatProjectQuantity(line.deliverable, unitCode)} {unitCode}
-                      </span>
+                      <span className="block text-[0.7rem] text-[var(--wms-app-text-muted)]">{line.stockName}</span>
                     </span>
-                    <div className="wms-kkd-route-qty">
-                      <AppInput
-                        className="wms-kkd-route-qty__input w-full text-right tabular-nums"
-                        inputMode="decimal"
-                        aria-label="Teslim miktarı"
-                        value={deliveryQuantities[line.requestLineId] ?? ''}
-                        onFocus={(event) => event.currentTarget.select()}
-                        onKeyDown={(event) => {
-                          if (event.ctrlKey || event.metaKey || event.altKey) return;
-                          if (event.key.length !== 1) return;
-                          if (isPieceUnit(unitCode) && !/\d/.test(event.key)) event.preventDefault();
-                          else if (!isPieceUnit(unitCode) && !/[\d.,]/.test(event.key)) event.preventDefault();
-                        }}
-                        onChange={(event) => {
-                          const field = event.currentTarget;
-                          const caret = field.selectionStart ?? field.value.length;
-                          const next = capRouteQuantity(field.value, unitCode, line.deliverable);
-                          const restoreAt = nextQuantityCaret(field.value, caret, next);
-                          setDeliveryQuantities((current) => ({ ...current, [line.requestLineId]: next }));
-                          requestAnimationFrame(() => {
-                            field.setSelectionRange(restoreAt, restoreAt);
-                          });
-                        }}
-                      />
-                    </div>
+                    <span className="shrink-0 text-sm font-semibold tabular-nums">
+                      {formatProjectQuantity(line.deliverable, unitCode)} {unitCode}
+                    </span>
                   </div>
                 );
               })}
@@ -1801,6 +2004,6 @@ export function KkdPreparationPickingPage(): ReactElement {
         onOpenChange={setReceiptOpen}
         detail={receiptDetail.data ?? null}
       />
-    </KkdPage>
+    </PickShell>
   );
 }

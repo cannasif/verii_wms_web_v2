@@ -8,6 +8,7 @@ import {
   CircleHelp,
   ClipboardList,
   Factory,
+  HardHat,
   MapPin,
   PackageCheck,
   Printer,
@@ -65,8 +66,15 @@ import {
   KkdTableShell,
   KkdTextarea,
 } from './kkd-ops-ui';
-import { kkdApi, type KkdDistributionCreateResult, type KkdOpenOrderLine, type KkdStockLookup } from './kkd-api';
+import {
+  kkdApi,
+  type KkdDistributionCreateResult,
+  type KkdOpenOrderLine,
+  type KkdOrderPickingStartResult,
+  type KkdStockLookup,
+} from './kkd-api';
 import { KkdDistributionReceiptDialog } from './KkdDistributionReceiptDialog';
+import { KkdPreparationPickingView, PickContextChip } from './KkdPreparationPickingPage';
 import {
   isExcessApprovalPending,
   KKD_QUOTA_FREQUENCY_HINT,
@@ -78,8 +86,29 @@ const KKD_REQUESTS_PATH = '/warehouse/kkd/requests';
 
 const FLOW_STEPS = [
   { id: 'select', label: 'Sipariş seçimi' },
-  { id: 'distribute', label: 'Teslim ve çıkış' },
+  { id: 'distribute', label: 'Toplama hazırlığı' },
 ] as const;
+
+/** Tezgâhta toplama ve teslim aynı sayfada olduğu için üçüncü bir adım görünür. */
+const KIOSK_FLOW_STEPS = [...FLOW_STEPS, { id: 'pick', label: 'Toplama ve teslim' }];
+
+/** Tezgâhta depo her seferinde sorulmasın diye son toplama deposu tarayıcıda hatırlanır. */
+const PICK_WAREHOUSE_STORAGE_KEY = 'wms.kkd.kiosk.pick-warehouse';
+const readRememberedPickWarehouse = (): string | null => {
+  try {
+    return window.localStorage.getItem(PICK_WAREHOUSE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+const rememberPickWarehouse = (value: string | null): void => {
+  try {
+    if (value) window.localStorage.setItem(PICK_WAREHOUSE_STORAGE_KEY, value);
+    else window.localStorage.removeItem(PICK_WAREHOUSE_STORAGE_KEY);
+  } catch {
+    // Depolama kapalıysa varsayılan getirme özelliği çalışmaz; akış etkilenmez.
+  }
+};
 
 const today = (): string => new Date().toLocaleDateString('en-CA');
 const lineKey = (line: KkdOpenOrderLine): string => `${line.orderNumber}|${line.orderLineId}`;
@@ -179,6 +208,12 @@ export function KkdDistributionCreatePage(): ReactElement {
     taskId: Number(searchParams.get('taskId') || 0),
   }));
   const requestMode = initialSelection.requestId > 0;
+  /**
+   * Tezgâh (kiosk): personel karşıda beklerken açık siparişinden toplama başlatılır. Teslim burada değil,
+   * toplama ekranındaki tek "Fiziksel teslim onayı" işleminde yapılır — bu yüzden raf, seri, belge serisi
+   * ve teslim tarihi gibi alanlar bu adımda sorulmaz.
+   */
+  const kioskMode = !requestMode;
   const startsOnDistribute =
     requestMode || (Boolean(initialSelection.employeeId) && initialSelection.orders.length > 0);
 
@@ -333,6 +368,17 @@ export function KkdDistributionCreatePage(): ReactElement {
     enabled: isDistributeStep,
     staleTime: 5 * 60 * 1000,
   });
+  /** Tezgâhta depo hazır gelmeli; seçilebilir depolar varsayılanı belirlemek için önden okunur. */
+  const pickWarehouses = useQuery({
+    queryKey: ['kkd', 'kiosk-warehouses', context.data?.branchCode],
+    queryFn: ({ signal }) =>
+      warehouseOutboundApi.warehouses(
+        { pageNumber: 1, pageSize: 200, search: '', signal },
+        context.data!.branchCode,
+      ),
+    enabled: kioskMode && isDistributeStep && Boolean(context.data?.branchCode),
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     if (previousEmployeeIdRef.current === activeEmployeeId) return;
@@ -367,15 +413,45 @@ export function KkdDistributionCreatePage(): ReactElement {
     if (currentUserOption) setAssignees([currentUserOption]);
   }, [isDistributeStep, currentUserOption]);
 
-  /** Kullanıcı yetkisi tek depoyla sınırlıysa kaynak depoyu otomatik seç. */
+  /**
+   * Kaynak depoyu hazır getir: yetki tek depoysa doğrudan o, değilse tezgâhta son kullanılan depo.
+   * Bir talep tek depodan toplanır; başka depodaki kalem için ayrı bir iş açılır.
+   */
   useEffect(() => {
     if (!isDistributeStep || warehouseValue) return;
     const access = warehouseAccess.data;
-    if (!access?.isRestricted) return;
-    if (access.warehouseIds.length === 1 && access.warehouseCodes.length === 1) {
+    if (access?.isRestricted && access.warehouseIds.length === 1 && access.warehouseCodes.length === 1) {
       setWarehouseValue(`${access.warehouseIds[0]}|${access.warehouseCodes[0]}`);
+      return;
     }
-  }, [isDistributeStep, warehouseAccess.data, warehouseValue]);
+    if (!kioskMode) return;
+    const options = (pickWarehouses.data?.items ?? []).filter(
+      (item) => !access?.isRestricted || access.warehouseIds.includes(Number(item.id)),
+    );
+    if (options.length === 0) return;
+    const remembered = readRememberedPickWarehouse();
+    const match = options.find((item) => `${item.id}|${item.warehouseCode}` === remembered) ?? options[0];
+    setWarehouseValue(`${match.id}|${match.warehouseCode}`);
+  }, [isDistributeStep, kioskMode, pickWarehouses.data, warehouseAccess.data, warehouseValue]);
+
+  /**
+   * Tezgâhta kalemler seçili ve miktarları taleptaki miktarla dolu gelir; depocu yalnızca vermeyeceği
+   * kalemin işaretini kaldırır. Bu miktar bir tavandır — gerçekte verilen, toplama sırasında okutulandır.
+   */
+  useEffect(() => {
+    if (!kioskMode || !isDistributeStep || effectiveLines.length === 0) return;
+    setEdits((current) => {
+      const next = { ...current };
+      let changed = false;
+      for (const line of effectiveLines) {
+        const key = lineKey(line);
+        if (next[key]) continue;
+        next[key] = { selected: true, quantity: line.remainingQuantity, lotNo: '', serials: '' };
+        changed = true;
+      }
+      return changed ? next : current;
+    });
+  }, [kioskMode, isDistributeStep, effectiveLines]);
 
   const pickEmployee = (nextEmployeeId: string): void => {
     setPickedEmployeeId(nextEmployeeId);
@@ -453,11 +529,57 @@ export function KkdDistributionCreatePage(): ReactElement {
     setFlowStep('distribute');
   };
 
+  /**
+   * Tezgâhta teslim bitince ekran bir sonraki kişiye hazırlanır: kart okutma adımına dönülür ve önceki
+   * kişinin seçimleri bırakılır. Yeni idempotency anahtarı üretilir, aksi halde bir sonraki "Toplamaya
+   * başla" biten işi tekrar oynatır.
+   */
+  const startNextPerson = (): void => {
+    setPickTarget(null);
+    setQuotaGate(null);
+    setQuotaReason('');
+    setEdits({});
+    setSelectedOrders([]);
+    setOrders([]);
+    setPickedEmployeeId('');
+    setActiveEmployeeId('');
+    setEmployeeId('');
+    setEmployeeQr('');
+    setWarehouseValue(null);
+    setDescription('');
+    setIdempotencyKey(crypto.randomUUID());
+    setFlowStep('select');
+  };
+
+  /**
+   * Tezgâhta hazırlık adımındayken personeli değiştirmek: açık siparişler kişiye bağlı olduğu için
+   * yeni kişinin siparişleri seçilmeden devam edilemez, bu yüzden sipariş seçimine dönülür.
+   */
+  const changeKioskEmployee = (nextEmployeeId: string): void => {
+    if (!nextEmployeeId || nextEmployeeId === employeeId) return;
+    setPickedEmployeeId(nextEmployeeId);
+    setActiveEmployeeId(nextEmployeeId);
+    setEmployeeId(nextEmployeeId);
+    setSelectedOrders([]);
+    setOrders([]);
+    setEdits({});
+    setQuotaGate(null);
+    setQuotaReason('');
+    setIdempotencyKey(crypto.randomUUID());
+    setFlowStep('select');
+    toast.info('Personel değişti; bu kişinin açık siparişlerini seçin.');
+  };
+
   const returnToSelect = (): void => {
     if (requestMode) return;
     setPickedEmployeeId(employeeId);
     setActiveEmployeeId(employeeId);
     setSelectedOrders(orders);
+    // Seçim değişebileceği için bekleyen tezgâh işi bırakılır ve yeni anahtar üretilir; aksi halde
+    // "Toplamaya başla" eski talebi tekrar oynatır.
+    setQuotaGate(null);
+    setQuotaReason('');
+    setIdempotencyKey(crypto.randomUUID());
     setFlowStep('select');
   };
 
@@ -495,7 +617,9 @@ export function KkdDistributionCreatePage(): ReactElement {
   }, [selected, edits]);
   useEffect(() => {
     const branchCode = context.data?.branchCode;
-    if (!branchCode || !selectedStockIdsKey) return;
+    // Tezgâhta lot/seri bu adımda sorulmaz — raf, seri ve miktar barkod okuturken belirlenir. Politikası
+    // tanımlı olmayan stokta bu istek 404 dönüp ekrana hata düşürüyordu; kanal bunu hiç sormamalı.
+    if (!branchCode || !selectedStockIdsKey || kioskMode) return;
     const stockIds = selectedStockIdsKey.split(',').map(Number);
     for (const stockId of stockIds) {
       if (!stockId || trackingPolicies[stockId] || trackingPolicyLoading[stockId]) continue;
@@ -548,8 +672,8 @@ export function KkdDistributionCreatePage(): ReactElement {
   }, [context.data?.preferredStocks, documentDate, edits, remainingEntitlements.data, selected]);
   const hasQuotaWarning = quotaWarnings.length > 0;
   const selectableLines = useMemo(
-    () => effectiveLines.filter((line) => line.isMapped),
-    [effectiveLines],
+    () => effectiveLines.filter((line) => kioskMode || line.isMapped),
+    [effectiveLines, kioskMode],
   );
   const allSelectableSelected =
     selectableLines.length > 0 && selectableLines.every((line) => edits[lineKey(line)]?.selected);
@@ -568,6 +692,83 @@ export function KkdDistributionCreatePage(): ReactElement {
       return next;
     });
   };
+
+  /** Toplaması başlamış tezgâh işi; barkod okutma ekranı bu sayfanın içinde açılır. */
+  const [pickTarget, setPickTarget] = useState<{ requestId: number; taskId: number } | null>(null);
+  /** Kota aşımı yüzünden toplaması başlamayan tezgâh işi; karar verilene kadar burada bekler. */
+  const [quotaGate, setQuotaGate] = useState<KkdOrderPickingStartResult | null>(null);
+  const [quotaReason, setQuotaReason] = useState('');
+  const quotaGateRequest = useQuery({
+    queryKey: ['kkd', 'requests', quotaGate?.requestId ?? 0],
+    queryFn: () => kkdApi.requestDetail(quotaGate!.requestId),
+    enabled: Boolean(quotaGate),
+  });
+  const quotaGateLines = useMemo(
+    () => (quotaGateRequest.data?.lines ?? []).filter(
+      (line) => line.quotaDecision === 'Pending' || line.quotaDecision === 'Rejected',
+    ),
+    [quotaGateRequest.data],
+  );
+  const decideQuota = useMutation({
+    mutationFn: async ({ lineId, approve }: { lineId: number; approve: boolean }) => {
+      if (quotaReason.trim().length < 3) throw new Error('Karar için en az 3 karakterlik gerekçe yazın.');
+      return kkdApi.decideQuota(lineId, { approve, reason: quotaReason.trim() });
+    },
+    onSuccess: async (_, variables) => {
+      toast.success(variables.approve ? 'Kota aşımı onaylandı.' : 'Kota aşımı reddedildi.');
+      await quotaGateRequest.refetch();
+      void queryClient.invalidateQueries({ queryKey: ['kkd', 'requests'] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Kota kararı kaydedilemedi.'),
+  });
+
+  /**
+   * Tezgâh akışının tek düğmesi. Burada teslim yapılmaz: seçilen sipariş kalemlerinden talep üretilir,
+   * hazırlama görevi depocunun üzerine alınır ve barkodlu toplama ekranına geçilir. Malın hangi raftan,
+   * kaç adet ve hangi seriyle çıktığı orada okutmayla belirlenir; teslim de oradan tek işlemde yapılır.
+   */
+  const startPicking = useMutation({
+    mutationFn: async () => {
+      if (!employeeNumber || !warehouseId || selected.length === 0)
+        throw new Error('Personel, toplama deposu ve en az bir sipariş kalemi zorunludur.');
+      const lines = selected.map((line) => {
+        const edit = edits[lineKey(line)];
+        const stockId = effectiveStockId(line, edit);
+        if (!stockId)
+          throw new Error(`${line.stockCode} için verilecek stok (beden) seçilmelidir.`);
+        if (edit.quantity <= 0 || edit.quantity > line.remainingQuantity)
+          throw new Error(`${line.stockCode} miktarı 0 ile ${line.remainingQuantity} arasında olmalıdır.`);
+        return {
+          orderNumber: line.orderNumber,
+          orderLineId: line.orderLineId,
+          stockId,
+          quantity: edit.quantity,
+        };
+      });
+      return kkdApi.startOrderPicking({
+        idempotencyKey,
+        employeeId: employeeNumber,
+        warehouseId,
+        description: description.trim() || null,
+        lines,
+      });
+    },
+    onSuccess: (response) => {
+      void queryClient.invalidateQueries({ queryKey: ['kkd', 'requests'] });
+      if (!response.pickingStarted) {
+        // Talep ve görev oluştu; eksik olan yalnızca müdür kararı. Aynı idempotency anahtarı korunur ki
+        // karar verildikten sonraki "Toplamaya devam et" yeni bir talep açmak yerine aynı işi başlatsın.
+        setQuotaGate(response);
+        toast.warning(`${response.requestNo}: kota aşımı var; toplama müdür kararından sonra başlar.`);
+        return;
+      }
+      setQuotaGate(null);
+      toast.success(`${response.requestNo} hazırlandı; barkod okutarak toplayabilirsiniz.`);
+      // Tezgâhta personel karşıda beklediği için başka sayfaya gidilmez; toplama ekranı aynı sayfada açılır.
+      setPickTarget({ requestId: response.requestId, taskId: response.taskId });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'Toplama başlatılamadı.'),
+  });
 
   const create = useMutation({
     mutationFn: async () => {
@@ -703,10 +904,53 @@ export function KkdDistributionCreatePage(): ReactElement {
     ? ['Talep / sıra', 'Stok', 'KKD grubu', 'Kalan miktar', 'Çözümleme']
     : ['Sipariş / sıra', 'Stok', 'Proje', 'Açık miktar', 'Eşleme'];
 
+  /**
+   * Tezgâhta kimin için, hangi depoda ve kimin topladığı her adımda görünür durmalı. Toplama adımında
+   * aynı rozetleri toplama ekranı kendisi basar; burada yalnızca ondan önceki adımlarda gösterilir.
+   */
+  const pickWarehouseOption = (pickWarehouses.data?.items ?? []).find(
+    (item) => `${item.id}|${item.warehouseCode}` === warehouseValue,
+  );
+  // Personel adı önce dağıtım bağlamından, o gelmediyse kart okutma adımındaki veriden ya da personel
+  // listesinden okunur; rozet, tek bir sorgu gecikirse/başarısız olursa boş kalmamalı.
+  const kioskEmployeeLabel = context.data
+    ? `${context.data.employeeName} (${context.data.employeeCode})`
+    : selectContext.data
+      ? `${selectContext.data.employeeName} (${selectContext.data.employeeCode})`
+      : (() => {
+          const match = employees.data?.find((item) => item.id === employeeNumber);
+          return match ? `${match.fullName} (${match.employeeCode})` : '—';
+        })();
+  const kioskContextChips = kioskMode && isDistributeStep && !pickTarget ? (
+    <div className="mb-3 flex flex-nowrap items-center gap-1.5 overflow-x-auto sm:gap-2">
+      <PickContextChip
+        icon={<HardHat className="size-3.5" />}
+        label="Talep eden"
+        value={kioskEmployeeLabel}
+      />
+      <PickContextChip
+        icon={<Warehouse className="size-3.5" />}
+        label="Depo"
+        value={
+          pickWarehouseOption
+            ? `${pickWarehouseOption.warehouseCode} · ${pickWarehouseOption.warehouseName}`
+            : warehouseValue
+              ? warehouseValue.split('|')[1]
+              : 'Seçilmedi'
+        }
+      />
+      <PickContextChip
+        icon={<UserRound className="size-3.5" />}
+        label="Hazırlayan"
+        value={currentUserOption ? `${currentUserOption.firstName} ${currentUserOption.lastName}`.trim() : '—'}
+      />
+    </div>
+  ) : null;
+
   return (
     <KkdPage
       title="KKD Malzeme Talep Siparişleri"
-      description="Personel kartından bağlı carinin canlı Netsis açık siparişlerini getirin; hak ve frekans uygunsa kalemleri seçip teslimi ve ambar çıkışını aynı sayfada tamamlayın."
+      description="Personel tezgâha geldiğinde kartını okutun, bağlı carinin canlı Netsis açık siparişlerinden toplanacak kalemleri seçin ve toplamayı başlatın. Barkod okutma, bekleme rafı ve fiziksel teslim toplama ekranından yürür."
       actions={
         !requestMode ? (
           <OpsActionButton variant="secondary" className="wms-ops-list-toolbar-btn" asChild>
@@ -722,11 +966,21 @@ export function KkdDistributionCreatePage(): ReactElement {
         !requestMode ? (
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <KkdFlowSteps
-              steps={[...FLOW_STEPS]}
-              currentId={isDistributeStep ? 'distribute' : 'select'}
+              steps={KIOSK_FLOW_STEPS}
+              currentId={pickTarget ? 'pick' : isDistributeStep ? 'distribute' : 'select'}
               className="min-w-0 flex-1"
             />
-            {isDistributeStep ? (
+            {pickTarget ? (
+              <OpsActionButton
+                variant="secondary"
+                className="w-full shrink-0 sm:w-auto"
+                type="button"
+                onClick={startNextPerson}
+              >
+                <UserRound className="size-3.5 shrink-0" />
+                Sıradaki kişi
+              </OpsActionButton>
+            ) : isDistributeStep ? (
               <OpsActionButton
                 variant="secondary"
                 className="w-full shrink-0 sm:w-auto"
@@ -763,8 +1017,23 @@ export function KkdDistributionCreatePage(): ReactElement {
         </div>
       ) : null}
 
+      {kioskContextChips}
+
+      {/* ——— TOPLAMA VE TESLİM (tezgâh) ———
+          Açık taleplerdeki toplama ekranının aynısı; ayrı sayfaya gitmek yerine burada gömülü çalışır. */}
+      {pickTarget ? (
+        <KkdPreparationPickingView
+          requestId={pickTarget.requestId}
+          taskId={pickTarget.taskId}
+          boardHref={KKD_REQUESTS_PATH}
+          embedded
+          closeTaskOnDelivery
+          onFinished={startNextPerson}
+        />
+      ) : null}
+
       {/* ——— SELECT STEP ——— */}
-      {!requestMode && !isDistributeStep ? (
+      {!pickTarget && !requestMode && !isDistributeStep ? (
         <>
           {configuration.isLoading ? (
             <KkdPanel
@@ -1035,7 +1304,7 @@ export function KkdDistributionCreatePage(): ReactElement {
       ) : null}
 
       {/* ——— DISTRIBUTE STEP ——— */}
-      {isDistributeStep && !result ? (
+      {isDistributeStep && !result && !pickTarget ? (
         <>
           <KkdCallout
             tone="info"
@@ -1050,11 +1319,111 @@ export function KkdDistributionCreatePage(): ReactElement {
             ) : (
               <>
                 Personel ve sipariş seçimi bu adımda kilitli. Değiştirmek için{' '}
-                <strong>Sipariş seçimine dön</strong> ile önceki adıma gidin; burada kalem, depo ve teslim bilgileri
-                girilir.
+                <strong>Sipariş seçimine dön</strong> ile önceki adıma gidin. Burada toplanacak kalemler, verilecek
+                stok ve miktar belirlenir; <strong>Toplamaya başla</strong> ile barkodlu toplama ekranına geçilir.
               </>
             )}
           </KkdCallout>
+
+          {quotaGate ? (
+            <KkdPanel
+              code="QTA_05"
+              icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}
+              title="Kota onayı bekleniyor"
+              description={`${quotaGate.requestNo} talebi oluşturuldu ve görev üzerinize alındı; kota aşan kalemler karara bağlanmadan toplama başlamaz.`}
+              actions={<OpsStatusBadge tone="pending">{quotaGateLines.length} kalem</OpsStatusBadge>}
+            >
+              <KkdCallout tone="warn" icon={<ShieldAlert className="size-4" strokeWidth={1.75} />}>
+                {KKD_QUOTA_FULL_MESSAGE}{' '}
+                {canManageOverrides
+                  ? 'Personel tezgâhta beklerken kararı buradan verip toplamaya devam edebilirsiniz.'
+                  : 'Karar depo müdüründe; onaylandığında bu ekrandan toplamaya devam edilebilir.'}
+              </KkdCallout>
+
+              <div className="mt-3 space-y-2">
+                {quotaGateLines.length === 0 ? (
+                  <OpsGridEmptyState message="Bekleyen kota kararı kalmadı; toplamaya devam edebilirsiniz." />
+                ) : (
+                  quotaGateLines.map((line) => (
+                    <article
+                      key={line.id}
+                      className="flex flex-wrap items-center justify-between gap-2 border border-[var(--wms-ops-card-border)] px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <strong className="block truncate text-[0.85rem]">
+                          {line.stockCode || line.groupCode} · {line.stockName || line.groupName || ''}
+                        </strong>
+                        <span className="text-xs text-[var(--wms-app-text-muted)]">
+                          {line.requestedQuantity} {line.unitCode}
+                          {line.quotaDecision === 'Rejected' ? ' · reddedildi' : ' · karar bekliyor'}
+                        </span>
+                      </div>
+                      {canManageOverrides ? (
+                        <div className="flex shrink-0 gap-1.5">
+                          <OpsActionButton
+                            variant="primary"
+                            className="wms-ops-list-toolbar-btn"
+                            disabled={decideQuota.isPending}
+                            onClick={() => decideQuota.mutate({ lineId: line.id, approve: true })}
+                          >
+                            <ShieldCheck className="size-3.5 shrink-0" />
+                            Onayla
+                          </OpsActionButton>
+                          <OpsActionButton
+                            variant="secondary"
+                            className="wms-ops-list-toolbar-btn"
+                            disabled={decideQuota.isPending || line.quotaDecision === 'Rejected'}
+                            onClick={() => decideQuota.mutate({ lineId: line.id, approve: false })}
+                          >
+                            <X className="size-3.5 shrink-0" />
+                            Reddet
+                          </OpsActionButton>
+                        </div>
+                      ) : (
+                        <OpsStatusBadge tone="pending">Müdür kararı bekleniyor</OpsStatusBadge>
+                      )}
+                    </article>
+                  ))
+                )}
+              </div>
+
+              {canManageOverrides && quotaGateLines.length > 0 ? (
+                <KkdField label="Karar gerekçesi" className="mt-3">
+                  <AppInput
+                    value={quotaReason}
+                    placeholder="Ör. eski ayakkabı yıprandı, fiziksel kontrol yapıldı"
+                    onChange={(event) => setQuotaReason(event.target.value)}
+                  />
+                </KkdField>
+              ) : null}
+
+              <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+                <OpsActionButton
+                  variant="secondary"
+                  className="wms-ops-list-toolbar-btn"
+                  onClick={() => void quotaGateRequest.refetch()}
+                >
+                  <ArrowRight className="size-3.5 shrink-0" />
+                  Durumu yenile
+                </OpsActionButton>
+                <OpsActionButton
+                  variant="primary"
+                  disabled={quotaGateLines.length > 0}
+                  loading={startPicking.isPending}
+                  loadingLabel={
+                    <>
+                      <ScanLine className="size-3.5 shrink-0" />
+                      Toplama hazırlanıyor…
+                    </>
+                  }
+                  onClick={() => startPicking.mutate()}
+                >
+                  <ScanLine className="size-3.5 shrink-0" />
+                  Toplamaya devam et
+                </OpsActionButton>
+              </div>
+            </KkdPanel>
+          ) : null}
 
           <KkdPanel
             code="EMP_01"
@@ -1179,7 +1548,8 @@ export function KkdDistributionCreatePage(): ReactElement {
             </KkdPanel>
           ) : null}
 
-          {sortedOrders.length > 0 || requestMode ? (
+          {/* Tezgâhta kalemler tek tabloda (seçim + beden + miktar) toplanır; ayrı önizleme listesi yok. */}
+          {!kioskMode && (sortedOrders.length > 0 || requestMode) ? (
             <KkdPanel
               code="LIN_03"
               icon={<ClipboardList className="size-4" strokeWidth={1.75} />}
@@ -1232,7 +1602,8 @@ export function KkdDistributionCreatePage(): ReactElement {
                         <td className={cn(KKD_CELL, 'text-center')}>
                           <KkdRowCheckbox
                             checked={edits[lineKey(line)]?.selected || false}
-                            disabled={!line.isMapped}
+                            /* Tezgâhta siparişteki kod bir grup olabilir; kesin stok aşağıda seçilir. */
+                            disabled={!kioskMode && !line.isMapped}
                             onCheckedChange={(checked) => patch(line, { selected: checked })}
                             ariaLabel={`${line.stockCode} kalemini seç`}
                           />
@@ -1251,6 +1622,10 @@ export function KkdDistributionCreatePage(): ReactElement {
                         <td className={KKD_CELL}>
                           {line.isMapped ? (
                             <OpsStatusBadge tone="done">WMS ile eşleşti</OpsStatusBadge>
+                          ) : kioskMode ? (
+                            <OpsStatusBadge tone="pending" title={line.mappingMessage}>
+                              Toplamada stok seçilecek
+                            </OpsStatusBadge>
                           ) : (
                             <span className="inline-flex items-start gap-2 text-rose-500">
                               <ShieldAlert className="mt-0.5 size-4 shrink-0" />
@@ -1266,16 +1641,34 @@ export function KkdDistributionCreatePage(): ReactElement {
             </KkdPanel>
           ) : null}
 
-          {selected.length > 0 ? (
+          {(kioskMode ? effectiveLines.length > 0 : selected.length > 0) ? (
             <KkdPanel
               code="OUT_04"
               icon={<Warehouse className="size-4" strokeWidth={1.75} />}
-              title="Teslim ve stok çıkış ayrıntıları"
-              description="Kaynak depo, belge serisi ve satır bazında raf/seri bilgisi ambar çıkışını oluşturur."
+              title={kioskMode ? 'Toplama hazırlığı' : 'Teslim ve stok çıkış ayrıntıları'}
+              description={
+                kioskMode
+                  ? 'Kalemler taleptaki miktarla seçili gelir; vermeyeceğiniz varsa işaretini kaldırın. Buradaki miktar bir tavandır, gerçekte verilen barkod okuturken belirlenir. Stoğu belirsiz (grup) kalemlerde beden seçilir.'
+                  : 'Kaynak depo, belge serisi ve satır bazında raf/seri bilgisi ambar çıkışını oluşturur.'
+              }
             >
-              <div className="wms-ops-kkd-header-fields wms-ops-kkd-header-fields--with-assignees">
+              <div
+                className={cn(
+                  'wms-ops-kkd-header-fields',
+                  !kioskMode && 'wms-ops-kkd-header-fields--with-assignees',
+                )}
+              >
+                {kioskMode ? (
+                  /* Kartı okutulan personel dolu gelir; yanlış kişiyse buradan değiştirilir. Açık siparişler
+                     kişiye bağlı olduğu için değişiklik sipariş seçimine döndürür. */
+                  <KkdEmployeeLookupField
+                    value={employeeId}
+                    employees={employees.data}
+                    onChange={changeKioskEmployee}
+                  />
+                ) : null}
                 <KkdField
-                  label="Kaynak depo"
+                  label={kioskMode ? 'Toplama deposu' : 'Kaynak depo'}
                   className="w-full"
                   hint={warehouseAccess.data?.isRestricted ? 'Sadece yetkili olduğunuz depolar listelenir.' : undefined}
                 >
@@ -1297,6 +1690,7 @@ export function KkdDistributionCreatePage(): ReactElement {
                       value={warehouseValue}
                       onValueChange={(value) => {
                         setWarehouseValue(value);
+                        if (kioskMode) rememberPickWarehouse(value);
                         setEdits((current) =>
                           Object.fromEntries(
                             Object.entries(current).map(([key, item]) => [
@@ -1318,6 +1712,8 @@ export function KkdDistributionCreatePage(): ReactElement {
                     />
                   </div>
                 </KkdField>
+                {kioskMode ? null : (
+                  <>
                 <KkdField label="Ambar çıkış belge serisi" className="w-full">
                   <div className="wms-ops-field-shell w-full min-w-0">
                     <OpsSelect
@@ -1416,8 +1812,140 @@ export function KkdDistributionCreatePage(): ReactElement {
                     </div>
                   ) : null}
                 </KkdField>
+                  </>
+                )}
               </div>
 
+              {kioskMode ? (
+                <div className="mt-3 overflow-hidden border border-[var(--wms-ops-card-border)]">
+                  <KkdTableShell minWidthClass="min-w-[760px]" className="border-x-0 border-b-0">
+                    <thead className="sticky top-0 z-10">
+                      <tr>
+                        <th className={cn(KKD_HEAD_CELL, 'w-[3.25rem] text-center')} title="Tümünü seç">
+                          <span className="inline-flex items-center justify-center">
+                            <KkdRowCheckbox
+                              checked={allSelectableSelected}
+                              indeterminate={someSelectableSelected}
+                              disabled={selectableLines.length === 0}
+                              onCheckedChange={toggleAllSelectableLines}
+                              ariaLabel="Tüm kalemleri seç"
+                            />
+                          </span>
+                        </th>
+                        <th className={KKD_HEAD_CELL}>Sipariş / sıra</th>
+                        <th className={KKD_HEAD_CELL}>Verilecek stok</th>
+                        <th className={cn(KKD_HEAD_CELL, 'w-40')} title="Toplama sırasında bu miktar aşılamaz.">
+                          Talep miktarı
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {effectiveLines.map((line) => {
+                        const key = lineKey(line);
+                        const edit = edits[key];
+                        const isSelected = Boolean(edit?.selected);
+                        const quotaHit = quotaWarnings.find((item) => item.key === key);
+                        const substituteGroupCode =
+                          context.data?.preferredStocks.find((pref) => pref.stockId === line.stockId)?.groupCode ??
+                          remainingEntitlements.data?.find((row) => row.stockId === line.stockId)?.groupCode;
+                        const chosenStockId = effectiveStockId(line, edit);
+                        return (
+                          <tr key={key}>
+                            <td className={cn(KKD_CELL, 'text-center')}>
+                              <KkdRowCheckbox
+                                checked={isSelected}
+                                onCheckedChange={(checked) => patch(line, { selected: checked })}
+                                ariaLabel={`${line.stockCode} kalemini seç`}
+                              />
+                            </td>
+                            <td className={cn(KKD_CELL, 'font-mono text-[0.78rem] text-[var(--wms-brand-primary)]')}>
+                              {line.orderNumber} / {line.orderLineSequence}
+                              {quotaHit ? (
+                                <OpsStatusBadge tone="danger" className="ml-1.5" title={KKD_QUOTA_FULL_TITLE}>
+                                  Kota dolu
+                                </OpsStatusBadge>
+                              ) : null}
+                            </td>
+                            <td className={KKD_CELL}>
+                              {/* Beden yalnızca gerektiğinde sorulur: stok netse kod okunur, değiştirmek isteyen
+                                  yine aynı düğmeden listeye ulaşır. */}
+                              <PagedLookupDialog<KkdStockLookup>
+                                variant="ops"
+                                triggerMode="button"
+                                open={stockLookupKey === key}
+                                onOpenChange={(open) => setStockLookupKey(open ? key : null)}
+                                title="Verilecek stoğu seç"
+                                description={
+                                  substituteGroupCode
+                                    ? `Grup ${substituteGroupCode} içinden stok seçin. Grup koduyla çıkış yapılamaz; yalnızca stok kodu kullanılır.`
+                                    : 'Personele verilecek kesin stoğu (ör. bedeni) seçin.'
+                                }
+                                value={
+                                  edit?.issuedStockLabel ??
+                                  (line.isMapped ? `${line.stockCode} · ${line.stockName}` : '')
+                                }
+                                placeholder="Beden / stok seçin"
+                                searchPlaceholder="Stok ara"
+                                emptyText="Stok bulunamadı."
+                                triggerClassName="h-7 w-full truncate"
+                                queryKey={['kkd-stock-substitute', key, substituteGroupCode || 'all']}
+                                fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                                  toPagedResponse(
+                                    await kkdApi.stocksPaged(
+                                      {
+                                        pageNumber,
+                                        pageSize,
+                                        search,
+                                        sortBy: 'code',
+                                        sortDirection: 'asc',
+                                        signal: signal ?? new AbortController().signal,
+                                      },
+                                      substituteGroupCode,
+                                    ),
+                                  )
+                                }
+                                getKey={(item) => String(item.id)}
+                                getLabel={stockOptionLabel}
+                                onSelect={(stock) => {
+                                  patch(line, {
+                                    selected: true,
+                                    issuedStockId: stock.id,
+                                    issuedStockLabel: stockOptionLabel(stock),
+                                  });
+                                }}
+                              />
+                              {isSelected && !chosenStockId ? (
+                                <span className="mt-1 block text-[0.68rem] leading-4 text-amber-600 dark:text-amber-400">
+                                  Siparişteki kod bir gruba işaret ediyor; toplamadan önce bedeni seçin.
+                                </span>
+                              ) : null}
+                            </td>
+                            <td className={KKD_CELL}>
+                              <div className="flex items-center gap-1.5">
+                                <AppInput
+                                  type="number"
+                                  className="h-7 w-20"
+                                  min="0.000001"
+                                  max={line.remainingQuantity}
+                                  step="any"
+                                  disabled={!isSelected}
+                                  value={edit?.quantity ?? line.remainingQuantity}
+                                  onChange={(event) => patch(line, { quantity: Number(event.target.value) })}
+                                />
+                                <span className="whitespace-nowrap text-[0.7rem] text-[var(--wms-app-text-muted)]">
+                                  / {line.remainingQuantity} {line.unitCode || 'ADET'}
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </KkdTableShell>
+                </div>
+              ) : null}
+
+              {kioskMode ? null : (
               <div className="mt-3 space-y-2">
                 {selected.map((line) => {
                   const key = lineKey(line);
@@ -1453,7 +1981,7 @@ export function KkdDistributionCreatePage(): ReactElement {
                       <div className="wms-ops-kkd-delivery-row__head">
                         <div className="min-w-0">
                           <div className="wms-ops-kkd-delivery-row__title">
-                            {substituted ? edit.issuedStockLabel : `${line.stockCode} · ${line.stockName}`}
+                            {edit.issuedStockLabel ?? `${line.stockCode} · ${line.stockName}`}
                           </div>
                           <div className="wms-ops-kkd-delivery-row__meta">
                             {line.orderNumber} / sıra {line.orderLineSequence} · en fazla {line.remainingQuantity}
@@ -1482,22 +2010,32 @@ export function KkdDistributionCreatePage(): ReactElement {
                           <OpsStatusBadge tone="active">{line.unitCode || 'ADET'}</OpsStatusBadge>
                         </div>
                       </div>
-                      {!requestMode ? (
+                      {kioskMode ? (
                         <div className="mb-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                          <KkdField label="Çıkış stoğu">
+                          <KkdField
+                            label={effStockId ? 'Verilecek stok' : 'Verilecek stok (zorunlu)'}
+                            hint={
+                              effStockId
+                                ? undefined
+                                : 'Siparişteki kod bir gruba işaret ediyor; personele verilecek kesin stoğu (ör. bedeni) seçin.'
+                            }
+                          >
                             <PagedLookupDialog<KkdStockLookup>
                               variant="ops"
                               triggerMode="button"
                               open={stockLookupKey === key}
                               onOpenChange={(open) => setStockLookupKey(open ? key : null)}
-                              title="Çıkış stoğu seç"
+                              title="Verilecek stoğu seç"
                               description={
                                 substituteGroupCode
                                   ? `Grup ${substituteGroupCode} içinden stok seçin. Grup koduyla çıkış yapılamaz; yalnızca stok kodu kullanılır.`
-                                  : 'Uymayan ürün için alternatif stok seçin. Çıkış stok koduyla yapılır.'
+                                  : 'Personele verilecek kesin stoğu (ör. bedeni) seçin. Çıkış stok koduyla yapılır.'
                               }
-                              value={edit.issuedStockLabel ?? `${line.stockCode} · ${line.stockName}`}
-                              placeholder="Stok değiştir"
+                              value={
+                                edit.issuedStockLabel ??
+                                (line.isMapped ? `${line.stockCode} · ${line.stockName}` : '')
+                              }
+                              placeholder={line.isMapped ? 'Stok değiştir' : 'Stok seçin'}
                               searchPlaceholder="Stok ara"
                               emptyText="Stok bulunamadı."
                               triggerClassName="h-7 truncate"
@@ -1527,21 +2065,23 @@ export function KkdDistributionCreatePage(): ReactElement {
                               }}
                             />
                           </KkdField>
-                          {substituted ? (
+                          {substituted && line.isMapped ? (
                             <OpsActionButton
                               variant="secondary"
                               className="wms-ops-list-toolbar-btn"
                               onClick={() => patch(line, { issuedStockId: undefined, issuedStockLabel: undefined })}
                             >
                               <X className="size-3.5 shrink-0" />
-                              Talebe dön
+                              Siparişteki stoğa dön
                             </OpsActionButton>
                           ) : null}
                         </div>
                       ) : null}
                       <div className="wms-ops-kkd-delivery-row__fields">
                         <div className="wms-ops-kkd-delivery-row__field">
-                          <span className="wms-ops-entry-label">Miktar</span>
+                          <span className="wms-ops-entry-label">
+                            {kioskMode ? 'Toplanacak miktar' : 'Miktar'}
+                          </span>
                           <AppInput
                             type="number"
                             min="0.000001"
@@ -1551,6 +2091,8 @@ export function KkdDistributionCreatePage(): ReactElement {
                             onChange={(event) => patch(line, { quantity: Number(event.target.value) })}
                           />
                         </div>
+                        {kioskMode ? null : (
+                          <>
                         <div className="wms-ops-kkd-delivery-row__field">
                           <span className="wms-ops-entry-label">Kaynak raf</span>
                           <PagedLookupDialog<LocationOption>
@@ -1647,12 +2189,17 @@ export function KkdDistributionCreatePage(): ReactElement {
                             onChange={(event) => patch(line, { serials: event.target.value })}
                           />
                         </div>
+                          </>
+                        )}
                       </div>
-                      <StockTrackingPolicyField policy={linePolicy} loading={linePolicyLoading} compact />
+                      {kioskMode ? null : (
+                        <StockTrackingPolicyField policy={linePolicy} loading={linePolicyLoading} compact />
+                      )}
                     </article>
                   );
                 })}
               </div>
+              )}
 
               {hasQuotaWarning ? (
                 <KkdCallout
@@ -1673,7 +2220,12 @@ export function KkdDistributionCreatePage(): ReactElement {
                       </li>
                     ))}
                   </ul>
-                  {context.data?.policy.requireManagerApprovalForExcess ? (
+                  {kioskMode ? (
+                    <p className="mt-2 text-[0.72rem] text-[var(--wms-app-text-muted)]">
+                      Toplamaya başlanabilir; kota aşan kalem için önce müdür kararı beklenir, karar verilince
+                      aynı görevden toplamaya devam edilir.
+                    </p>
+                  ) : context.data?.policy.requireManagerApprovalForExcess ? (
                     <p className="mt-2 text-[0.72rem] text-[var(--wms-app-text-muted)]">
                       Belge yine oluşturulabilir; kota aşımı için müdür onayı bekleyen kayda düşer.
                     </p>
@@ -1691,20 +2243,39 @@ export function KkdDistributionCreatePage(): ReactElement {
               </KkdField>
 
               <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
-                <OpsActionButton
-                  variant="primary"
-                  loading={create.isPending}
-                  loadingLabel={
-                    <>
-                      <PackageCheck className="size-3.5 shrink-0" />
-                      Teslim ediliyor…
-                    </>
-                  }
-                  onClick={() => create.mutate()}
-                >
-                  <PackageCheck className="size-3.5 shrink-0" />
-                  Teslimi tamamla ve ambar çıkışını başlat
-                </OpsActionButton>
+                {kioskMode ? (
+                  quotaGate ? null : (
+                  <OpsActionButton
+                    variant="primary"
+                    loading={startPicking.isPending}
+                    loadingLabel={
+                      <>
+                        <ScanLine className="size-3.5 shrink-0" />
+                        Toplama hazırlanıyor…
+                      </>
+                    }
+                    onClick={() => startPicking.mutate()}
+                  >
+                    <ScanLine className="size-3.5 shrink-0" />
+                    Toplamaya başla
+                  </OpsActionButton>
+                  )
+                ) : (
+                  <OpsActionButton
+                    variant="primary"
+                    loading={create.isPending}
+                    loadingLabel={
+                      <>
+                        <PackageCheck className="size-3.5 shrink-0" />
+                        Teslim ediliyor…
+                      </>
+                    }
+                    onClick={() => create.mutate()}
+                  >
+                    <PackageCheck className="size-3.5 shrink-0" />
+                    Teslimi tamamla ve ambar çıkışını başlat
+                  </OpsActionButton>
+                )}
               </div>
             </KkdPanel>
           ) : null}

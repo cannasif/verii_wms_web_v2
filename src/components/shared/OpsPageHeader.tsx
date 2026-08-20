@@ -24,6 +24,8 @@ export function OpsPageHeader({
   leading,
   actions,
   subRow,
+  hideEyebrow = false,
+  topBar,
   className,
 }: {
   title: ReactNode;
@@ -34,6 +36,10 @@ export function OpsPageHeader({
   actions?: ReactNode;
   /** Başlık kartına bitişik, sağa yaslı ikinci satır. */
   subRow?: ReactNode;
+  /** Toplama gibi odaklı işlem ekranlarında nav breadcrumb'ını gizler. */
+  hideEyebrow?: boolean;
+  /** Kartın üstünde (dışında) zarif geri linki vb. */
+  topBar?: ReactNode;
   className?: string;
 }): ReactElement {
   const { skin } = useTheme();
@@ -43,8 +49,9 @@ export function OpsPageHeader({
   const eyebrow = buildTerminalEyebrowFromNav(pathname, t, i18n.resolvedLanguage ?? i18n.language) ?? 'VERII WMS';
 
   return (
-    <div className={cn('wms-ops-list wms-ops-form space-y-4', className)}>
-      {isPremium ? (
+    <div className={cn('wms-ops-list wms-ops-form space-y-3 sm:space-y-4', className)}>
+      {topBar ? <div className="wms-ops-page-topbar px-0.5">{topBar}</div> : null}
+      {hideEyebrow ? null : isPremium ? (
         <PremiumEyebrow eyebrow={eyebrow} />
       ) : (
         <div className="wms-ops-eyebrow font-mono text-[11px] font-semibold uppercase tracking-[0.18em]">
@@ -73,7 +80,9 @@ export function OpsPageHeader({
             </div>
           </div>
           {actions ? (
-            <div className="wms-ops-card-toolbar-actions w-full sm:w-auto sm:shrink-0">{actions}</div>
+            <div className="wms-ops-card-toolbar-actions w-full min-w-0 sm:w-auto sm:max-w-none sm:shrink-0">
+              {actions}
+            </div>
           ) : null}
         </div>
         {subRow ? (

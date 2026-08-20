@@ -27,6 +27,8 @@ export function KkdPage({
   leading,
   actions,
   subRow,
+  hideEyebrow = false,
+  topBar,
   children,
   className,
 }: {
@@ -37,6 +39,10 @@ export function KkdPage({
   actions?: ReactNode;
   /** Başlık kartına bitişik ikinci satır (sekme / filtre şeridi). */
   subRow?: ReactNode;
+  /** Odaklı işlem ekranlarında nav breadcrumb'ını gizler. */
+  hideEyebrow?: boolean;
+  /** Kartın üstünde (dışında) geri linki vb. */
+  topBar?: ReactNode;
   children: ReactNode;
   className?: string;
 }): ReactElement {
@@ -56,6 +62,8 @@ export function KkdPage({
         leading={leading}
         actions={actions}
         subRow={subRow}
+        hideEyebrow={hideEyebrow}
+        topBar={topBar}
       />
       {children}
     </section>

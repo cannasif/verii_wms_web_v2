@@ -54,7 +54,12 @@ export type KkdDistribution = {
   employeeName: string; warehouseId: number; warehouseOutboundId?: number; totalQuantity: number;
   entitledQuantity: number; excessQuantity: number; excessApprovalStatus: string;
   excessApprovalReason?: string; excessApprovedBy?: number; excessApprovedAtUtc?: string;
-  createdDate?: string; completedAtUtc?: string;
+  createdDate?: string; completedAtUtc?: string; rowVersion?: string;
+  warehouseOutboundDocumentNo?: string | null; warehouseOutboundStatus?: string | null;
+  /** Ambar çıkışının ERP durumu. Aktarım başlamışsa teslim artık WMS'ten geri alınamaz. */
+  erpStatus?: string | null;
+  /** Dolu ise kayıt talep kanalından, boş ise doğrudan sipariş kanalından gelmiştir. */
+  kkdRequestId?: number | null; kkdRequestNo?: string | null;
 };
 export type KkdDistributionContext = {
   employeeId: number; employeeCode: string; employeeName: string; branchCode: string;
@@ -115,6 +120,37 @@ export type KkdDistributionDetail = {
     groupCode: string; quantity: number; entitledQuantity: number; excessQuantity: number;
     sourceLocationId: number; lotNo?: string | null; serialNo?: string | null;
     openOrderNo?: string | null; openOrderLineId?: string | null }>;
+  warehouseOutboundDocumentNo?: string | null;
+  /** Teslim fişindeki "teslim eden"; fiş ayrı numara serisi almaz, dağıtım belge numarasını kullanır. */
+  deliveredByName?: string | null;
+  warehouseOutboundStatus?: string | null;
+  erpStatus?: string | null; erpDocumentNo?: string | null;
+  kkdRequestId?: number | null; kkdRequestNo?: string | null;
+};
+
+export type KkdOrderPickingStartPayload = {
+  idempotencyKey: string; employeeId: number; warehouseId: number; description: string | null;
+  lines: Array<{ orderNumber: string; orderLineId: number; stockId: number; quantity: number }>;
+};
+
+/** Tezgâhta "Toplamaya başla" sonucu: üretilen talep ve üzerine alınan hazırlama görevi. */
+export type KkdOrderPickingStartResult = {
+  requestId: number; requestNo: string; taskId: number; taskNo: string;
+  /** False ise kota kararı bekleniyor; rezervasyon yapılmadı, barkod okutulamaz. */
+  pickingStarted: boolean; quotaPendingLineCount: number; replayed: boolean;
+};
+
+/** Fiziksel teslim onayının tek çağrılık sonucu: dağıtım + ambar çıkışı + ERP durumu. */
+export type KkdPhysicalDeliveryResult = {
+  distributionId: number; distributionDocumentNo: string; distributionStatus: string;
+  warehouseOutboundId: number; warehouseOutboundDocumentNo: string; warehouseOutboundStatus: string;
+  excessApprovalStatus: string;
+  erpStatus: string; erpDocumentNo?: string | null; erpErrorMessage?: string | null;
+  receiptNo: string; receiptDateUtc?: string | null;
+  recipientCode: string; recipientName: string; deliveredByName: string;
+  lines: Array<{ stockCode: string; stockName: string; quantity: number; unitCode: string;
+    lotNo?: string | null; serialNo?: string | null }>;
+  replayed: boolean;
 };
 export type KkdRemainingEntitlement = {
   employeeId: number; employeeCode: string; employeeName: string; groupCode: string; groupName: string;
@@ -204,6 +240,9 @@ export type KkdPreparationTaskLineRow = {
   stockId?: number | null; stockCode?: string | null; stockName?: string | null; unitCode: string;
   quantity: number; preparedQuantity: number; deliveredQuantity: number; lineStatus: string;
   requestLineRowVersion: string; quotaDecision: KkdQuotaDecision; locations: KkdPreparationTaskLineLocationRow[];
+  /** Sunucu kuralı: gruptan gelip toplama sırasında bağlanmış ve henüz hiç toplanmamış kalemde yanlış
+   * bağlanan stok (ör. yanlış beden) değiştirilebilir. Ekran kuralı tekrar etmez, bu bayrağa bakar. */
+  canChangeStock?: boolean;
 };
 
 export type KkdPreparationTaskRow = {
@@ -495,6 +534,29 @@ export const kkdApi = {
     unwrap(await api.get<Envelope<KkdPreparationScanTracking[]>>(
       `/api/kkd/preparation-tasks/${taskId}/lines/${requestLineId}/staged-trackings`,
     )),
+  /**
+   * Tezgâh akışı: seçilen açık sipariş kalemlerinden talep üretir, hazırlama görevini okutan depocunun
+   * üzerine alır ve toplamayı başlatır. Kota aşan kalem varsa toplama başlamaz, müdür kararı beklenir.
+   */
+  startOrderPicking: async (payload: KkdOrderPickingStartPayload) =>
+    unwrap(await api.post<Envelope<KkdOrderPickingStartResult>>(
+      '/api/kkd/material-requests/start-picking',
+      payload,
+    )),
+  /**
+   * Fiziksel teslim onayı. Miktar gönderilmez: teslim edilen, bekleme rafına okutulan kalemlerin
+   * kendisidir. Ambar çıkışı, teslim fişi ve ERP gönderimi tek sunucu işleminde yapılır.
+   */
+  deliverPreparationTask: async (
+    taskId: number,
+    idempotencyKey: string,
+    /** Tezgâh teslimi: personel malı alıp gittiği için görev kapanır, okutulmayan kalanın rezervasyonu bırakılır. */
+    closeTaskAfterDelivery = false,
+  ) =>
+    unwrap(await api.post<Envelope<KkdPhysicalDeliveryResult>>(
+      `/api/kkd/preparation-tasks/${taskId}/deliver`,
+      { idempotencyKey, closeTaskAfterDelivery },
+    )),
   /** "Bu işi yapıyorum": havuz görevinde üzerine alır, stoğu bilinen satırlara raf ataması + gerçek rezervasyon yapar. */
   startPreparationTask: async (taskId: number) =>
     unwrap(await api.post<Envelope<KkdPreparationTaskRow>>(`/api/kkd/preparation-tasks/${taskId}/start`, {
@@ -536,6 +598,11 @@ export const kkdApi = {
     unwrap(await api.get<Envelope<Array<{ id:number; code:string; name:string; previewDocumentNumber:string; isDefault:boolean }>>>('/api/document-series/lookup?documentType=WarehouseIssue')),
   createDistribution: async (payload: KkdDistributionCreatePayload) =>
     unwrap(await api.post<Envelope<KkdDistributionCreateResult>>('/api/kkd/distributions', payload)),
+  /** Yarım kalmış teslimi geri alır: talep satırında ayrılmış (kilitli) miktar serbest bırakılır. */
+  cancelDistribution: async (id: number, reason: string, expectedRowVersion?: string | null) =>
+    unwrap(await api.post<Envelope<unknown>>(`/api/kkd/distributions/${id}/cancel`, {
+      idempotencyKey: crypto.randomUUID(), reason, expectedRowVersion,
+    })),
   saveDepartment: async (payload: { code: string; name: string; isActive: boolean }) =>
     unwrap(await api.post<Envelope<number>>('/api/kkd/departments', payload)),
   saveRole: async (payload: { departmentId?: number; code: string; name: string; isActive: boolean }) =>
