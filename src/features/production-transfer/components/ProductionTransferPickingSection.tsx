@@ -47,6 +47,7 @@ import {
   isProductionTransferPickingRowPending,
   type ProductionTransferPickTab as PickTab,
 } from '../production-transfer-picking-view';
+import { isProductionTransferUnpickTargetLocation } from '../production-transfer-unpick-locations';
 
 type TableSection =
   | { type: 'flat'; row: ProductionTransferPickingRow }
@@ -660,16 +661,28 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
   const unpickExcludedLocationIds = useMemo(() => {
     const ids = new Set<number>();
     if (execution.waitingLocationId) ids.add(execution.waitingLocationId);
-    if (sourceWarehouseReturnSetting?.defaultProductionTransferLocationId) {
-      ids.add(sourceWarehouseReturnSetting.defaultProductionTransferLocationId);
+    if (sourceWarehouseReturnSetting?.productionPickingStagingLocationId) {
+      ids.add(sourceWarehouseReturnSetting.productionPickingStagingLocationId);
     }
-    for (const locationId of execution.excludedSourceLocationIds ?? []) ids.add(locationId);
+    for (const locationId of execution.excludedSourceLocationIds ?? []) {
+      if (locationId === sourceWarehouseReturnSetting?.defaultProductionTransferLocationId) continue;
+      ids.add(locationId);
+    }
     return ids;
   }, [
     execution.excludedSourceLocationIds,
     execution.waitingLocationId,
     sourceWarehouseReturnSetting?.defaultProductionTransferLocationId,
+    sourceWarehouseReturnSetting?.productionPickingStagingLocationId,
   ]);
+
+  const unpickAllowedLocationIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (sourceWarehouseReturnSetting?.defaultProductionTransferLocationId) {
+      ids.add(sourceWarehouseReturnSetting.defaultProductionTransferLocationId);
+    }
+    return ids;
+  }, [sourceWarehouseReturnSetting?.defaultProductionTransferLocationId]);
 
   useEffect(() => {
     if (execution.sourceWarehouseId <= 0) {
@@ -699,9 +712,12 @@ export function ProductionTransferPickingSection({ transferId, execution, onExec
     const page = await warehouseTransferApi.locations(request, execution.sourceWarehouseId);
     return {
       ...page,
-      items: page.items.filter((item) => !unpickExcludedLocationIds.has(item.id)),
+      items: page.items.filter((item) => isProductionTransferUnpickTargetLocation(item, {
+        excludedIds: unpickExcludedLocationIds,
+        allowedIds: unpickAllowedLocationIds,
+      })),
     };
-  }, [execution.sourceWarehouseId, unpickExcludedLocationIds]);
+  }, [execution.sourceWarehouseId, unpickAllowedLocationIds, unpickExcludedLocationIds]);
 
   const isSourceRackless = Boolean(board?.sourceIsRackless || execution.sourceIsRackless);
 
