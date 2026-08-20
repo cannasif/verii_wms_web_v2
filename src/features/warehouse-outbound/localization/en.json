@@ -127,7 +127,12 @@
       "status": "Status",
       "approval": "Approval",
       "approve": "Approve",
-      "release": "Release"
+      "release": "Release",
+      "erp": "Netsis",
+      "erpRetry": "Retry Netsis posting",
+      "erpRetried": "Netsis posting retried.",
+      "erpHint": "The shipment is complete in WMS but no Netsis document exists yet; posting can be retried.",
+      "closedHint": "This document is closed; picking, packing, loading and shipping are no longer possible. The page is read-only."
     },
     "fields": {
       "operation": "Operation",

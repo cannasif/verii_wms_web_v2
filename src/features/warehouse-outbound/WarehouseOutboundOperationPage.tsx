@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { CheckCircle2, Loader2, PackageCheck, PlayCircle, ShieldCheck, Truck } from 'lucide-react';
+import { CheckCircle2, Loader2, PackageCheck, PlayCircle, RefreshCw, ShieldCheck, Truck } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppDropdown } from '@/components/shared/AppDropdown';
@@ -63,6 +63,17 @@ export function WarehouseOutboundOperationPage() {
   const patch = (lineId: number, value: Partial<EditLine>) =>
     setLines((current) => current.map((line) => line.lineId === lineId ? { ...line, ...value } : line));
 
+  /** Sevk WMS'te kapandıysa ERP gönderimi ayrı bir işlemdir; başarısızsa mal kabuldeki gibi tekrar denenir. */
+  const retryErp = async () => {
+    setBusy(true);
+    try {
+      const result = await warehouseOutboundApi.postErp(id);
+      if (result.status === 'Succeeded') toast.success(`${t('operation.documentGates.erpRetried')} ${result.erpDocumentNo ?? ''}`.trim());
+      else toast.error(result.errorMessage || localizeEnumValue(result.status));
+      await load();
+    } catch (error) { toast.error(error instanceof Error ? error.message : t('operation.errors.operationFailed')); }
+    finally { setBusy(false); }
+  };
   const transition = async (action: 'approve' | 'release') => {
     setBusy(true);
     try { const result = await warehouseOutboundApi.transition(id, action, reason); toast.success(`${result.documentNo}: ${localizeEnumValue(result.status)}`); await load(); }
@@ -112,15 +123,29 @@ export function WarehouseOutboundOperationPage() {
   if (loadError) return <OperationLoadError message={loadError} />;
   if (!detail || !totals) return <div className="grid min-h-80 place-items-center"><Loader2 className="size-7 animate-spin text-cyan-500" /></div>;
 
+  // Kapanmış belgede operasyon yapılamaz; sunucu da reddediyor. Sayfa bu durumda salt görüntülemedir
+  // (KKD fiziksel tesliminde belge sevkedilmiş olarak doğar ve buraya yalnızca bakmak için gelinir).
+  const isClosed = detail.header.status === 'Shipped' || detail.header.status === 'Cancelled' || detail.header.status === 'Completed';
+  const canApprove = !isClosed && detail.header.approvalStatus === 'Pending';
+  const canRelease = detail.header.status === 'Draft';
+
   return <section className="space-y-5">
     <header className="rounded-2xl border bg-gradient-to-r from-cyan-500/10 via-[var(--wms-app-panel)] to-violet-500/10 p-6">
       <div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-cyan-500">{t('operation.eyebrow')}</p><h1 className="text-2xl font-black">{detail.header.documentNo}</h1><p className="text-sm text-slate-500">{detail.header.customerCode} · {detail.header.customerName} · {detail.header.sourceWarehouseName}</p></div><Link to="/warehouse/warehouse-outbounds/list" className="rounded-xl border px-4 py-2 text-sm">{t('operation.backToRecords')}</Link></div>
       <div className="mt-4 grid gap-2 sm:grid-cols-5"><Metric label={t('operation.metrics.plan')} value={totals.requested} /><Metric label={t('operation.metrics.picked')} value={totals.picked} /><Metric label={t('operation.metrics.packed')} value={totals.packed} /><Metric label={t('operation.metrics.loaded')} value={totals.loaded} /><Metric label={t('operation.metrics.shipped')} value={totals.shipped} /></div>
     </header>
     <section className="rounded-2xl border bg-[var(--wms-app-panel)] p-5">
-      <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{t('operation.documentGates.title')}</h2><p className="text-xs text-slate-500">{t('operation.documentGates.status')}: {localizeEnumValue(detail.header.status)} · {t('operation.documentGates.approval')}: {localizeEnumValue(detail.header.approvalStatus)}</p></div><div className="flex gap-2"><button disabled={busy} onClick={() => void transition('approve')} className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 px-4 py-2 text-emerald-500"><ShieldCheck className="size-4" />{t('operation.documentGates.approve')}</button><button disabled={busy} onClick={() => void transition('release')} className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-white"><PlayCircle className="size-4" />{t('operation.documentGates.release')}</button></div></div>
+      <div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{t('operation.documentGates.title')}</h2><p className="text-xs text-slate-500">{t('operation.documentGates.status')}: {localizeEnumValue(detail.header.status)} · {t('operation.documentGates.approval')}: {localizeEnumValue(detail.header.approvalStatus)} · {t('operation.documentGates.erp')}: {localizeEnumValue(detail.header.erpIntegrationStatus)}</p></div><div className="flex gap-2">{canApprove ? <button disabled={busy} onClick={() => void transition('approve')} className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 px-4 py-2 text-emerald-500"><ShieldCheck className="size-4" />{t('operation.documentGates.approve')}</button> : null}{canRelease ? <button disabled={busy} onClick={() => void transition('release')} className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2 text-white"><PlayCircle className="size-4" />{t('operation.documentGates.release')}</button> : null}</div></div>
+      {detail.header.status === 'Shipped' && detail.header.erpIntegrationStatus !== 'Succeeded' ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
+          <p className="text-xs text-amber-700 dark:text-amber-400">{t('operation.documentGates.erpHint')}</p>
+          <button disabled={busy} onClick={() => void retryErp()} className="inline-flex items-center gap-2 rounded-xl border border-amber-500 px-4 py-2 text-sm text-amber-600">
+            <RefreshCw className={busy ? 'size-4 animate-spin' : 'size-4'} />{t('operation.documentGates.erpRetry')}
+          </button>
+        </div>
+      ) : null}
     </section>
-    <section className="rounded-2xl border bg-[var(--wms-app-panel)] p-5">
+    {isClosed ? <section className="rounded-2xl border bg-[var(--wms-app-panel)] p-5 text-sm text-slate-500">{t('operation.documentGates.closedHint')}</section> : <section className="rounded-2xl border bg-[var(--wms-app-panel)] p-5">
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6"><Field label={t('operation.fields.operation')}><AppDropdown value={phase} onValueChange={(value) => setPhase(value as Phase)} options={phases} /></Field><Field label={t('operation.fields.vehiclePlate')}><input className="input" value={vehiclePlate} onChange={(e) => setVehiclePlate(e.target.value)} /></Field><Field label={t('operation.fields.driver')}><input className="input" value={driverName} onChange={(e) => setDriverName(e.target.value)} /></Field><Field label={t('operation.fields.waybill')}><input className="input" maxLength={15} value={waybillNo} onChange={(e) => setWaybillNo(normalizeGoodsReceiptDocumentNo(e.target.value))} onBlur={() => setWaybillNo(completeGoodsReceiptDocumentNo(waybillNo))} /></Field><Field label={t('operation.fields.trackingNo')}><input className="input" value={trackingNo} onChange={(e) => setTrackingNo(e.target.value)} /></Field><Field label={t('operation.fields.note')}><input className="input" value={reason} onChange={(e) => setReason(e.target.value)} /></Field></div>
       <div className="mt-5">
         <WarehouseBarcodeScanner
@@ -152,7 +177,7 @@ export function WarehouseOutboundOperationPage() {
       </div>
       <div className="mt-5 space-y-3">{detail.lines.map((line) => { const edit = lines.find((x) => x.lineId === line.id); const available = remaining(line); return <div key={line.id} className={`rounded-xl border p-4 ${available <= 0 ? 'opacity-50' : ''}`}><div className="mb-3 flex justify-between"><div><strong>#{line.lineNo} · {line.stockCode}</strong><p className="text-xs text-slate-500">{line.stockName} · {t('operation.lineAvailable')} {formatProjectNumber(Math.max(0, available))}</p></div><CheckCircle2 className={`size-5 ${available <= 0 ? 'text-emerald-500' : 'text-slate-500'}`} /></div>{edit && <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6"><Field label={t('operation.fields.quantity')}><input className="input" type="number" min="0.000001" max={available} step="0.000001" value={edit.quantity} onChange={(e) => patch(line.id, { quantity: Number(e.target.value) })} /></Field>{phase !== 'pack' && <Field label={t('operation.fields.sourceLocation')}><PagedAppDropdown queryKey={['sh-op-source', phase, line.id, detail.header.sourceWarehouseId]} fetchPage={(request) => warehouseOutboundApi.locations(request, detail.header.sourceWarehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })} value={edit.sourceValue} onValueChange={(value) => patch(line.id, { sourceValue: value, sourceLocationId: Number(value) })} searchable /></Field>}{phase !== 'pack' && phase !== 'ship' && <Field label={t('operation.fields.targetLocation')}><PagedAppDropdown queryKey={['sh-op-target', phase, line.id, detail.header.sourceWarehouseId]} fetchPage={(request) => warehouseOutboundApi.locations(request, detail.header.sourceWarehouseId)} toOption={(x) => ({ value: String(x.id), label: `${x.code} · ${x.name}` })} value={edit.targetValue} onValueChange={(value) => patch(line.id, { targetValue: value, targetLocationId: Number(value) })} searchable /></Field>}<Field label={t('operation.fields.lot')}><input className="input" value={edit.lotNo ?? ''} onChange={(e) => patch(line.id, { lotNo: e.target.value || null })} /></Field><Field label={t('operation.fields.serial')}><input className="input" value={edit.serialNo ?? ''} onChange={(e) => patch(line.id, { serialNo: e.target.value || null })} /></Field><Field label={t('operation.fields.handlingUnit')}><input className="input" value={edit.handlingUnitNo ?? ''} onChange={(e) => patch(line.id, { handlingUnitNo: e.target.value || null })} /></Field></div>}</div>; })}</div>
       <div className="mt-5 flex justify-end"><button disabled={busy || !lines.length} onClick={() => void execute()} className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-bold text-white disabled:opacity-50">{busy ? <Loader2 className="size-4 animate-spin" /> : phase === 'ship' ? <Truck className="size-4" /> : <PackageCheck className="size-4" />}{t('operation.processOperation')}</button></div>
-    </section>
+    </section>}
   </section>;
 }
 function Metric({ label, value }: { label: string; value: number }) { return <div className="rounded-xl border bg-[var(--wms-app-panel)] p-3"><p className="text-xs text-slate-500">{label}</p><strong>{formatProjectNumber(value)}</strong></div>; }

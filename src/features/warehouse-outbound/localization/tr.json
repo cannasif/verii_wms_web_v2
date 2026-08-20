@@ -127,7 +127,12 @@
       "status": "Durum",
       "approval": "Onay",
       "approve": "Onayla",
-      "release": "Serbest bırak"
+      "release": "Serbest bırak",
+      "erp": "Netsis",
+      "erpRetry": "Netsis'e tekrar gönder",
+      "erpRetried": "Netsis gönderimi tekrar denendi.",
+      "erpHint": "Sevk WMS'te tamamlandı; Netsis belgesi oluşmadığı için tekrar gönderilebilir.",
+      "closedHint": "Bu belge kapanmıştır; üzerinde toplama, paketleme, yükleme veya sevk işlemi yapılamaz. Sayfa yalnızca görüntüleme amaçlıdır."
     },
     "fields": {
       "operation": "Operasyon",

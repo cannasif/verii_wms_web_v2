@@ -135,7 +135,12 @@
       "status": "Statut",
       "approval": "Approbation",
       "approve": "Approuver",
-      "release": "Libérer"
+      "release": "Libérer",
+      "erp": "Netsis",
+      "erpRetry": "Relancer l'envoi Netsis",
+      "erpRetried": "Envoi Netsis relancé.",
+      "erpHint": "L'expédition est terminée dans le WMS mais aucun document Netsis n'existe encore ; l'envoi peut être relancé.",
+      "closedHint": "Ce document est clôturé ; la préparation, l'emballage, le chargement et l'expédition ne sont plus possibles. La page est en lecture seule."
     },
     "fields": {
       "operation": "Opération",

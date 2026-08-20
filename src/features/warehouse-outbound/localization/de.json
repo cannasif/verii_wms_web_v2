@@ -135,7 +135,12 @@
       "status": "Status",
       "approval": "Genehmigung",
       "approve": "Genehmigen",
-      "release": "Freigeben"
+      "release": "Freigeben",
+      "erp": "Netsis",
+      "erpRetry": "Netsis-Buchung wiederholen",
+      "erpRetried": "Netsis-Buchung erneut versucht.",
+      "erpHint": "Die Lieferung ist im WMS abgeschlossen, aber es existiert noch kein Netsis-Beleg; die Buchung kann wiederholt werden.",
+      "closedHint": "Dieser Beleg ist abgeschlossen; Kommissionieren, Verpacken, Verladen und Versenden sind nicht mehr möglich. Die Seite dient nur der Ansicht."
     },
     "fields": {
       "operation": "Vorgang",
