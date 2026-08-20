@@ -135,6 +135,7 @@ export function KkdRequestsPage(): ReactElement {
   const authUser = useAuthStore((state) => state.user);
   const currentUserOption = useMemo(() => (authUser ? toActiveUserOption(authUser) : null), [authUser]);
   const canResolve = can('WMS.KKD.REQUESTS.RESOLVE');
+  const canAssign = can('WMS.KKD.REQUESTS.ASSIGN');
   const canPrepare = can('WMS.KKD.DISTRIBUTION.OPERATE');
   const canCancel = can('WMS.KKD.REQUESTS.CANCEL');
   /** Kota onayı bekleyenler sekmesi ve Ata diyaloğundaki gerçek onay/red — ek hak tanımlama yetkisiyle aynı. */
@@ -236,11 +237,11 @@ export function KkdRequestsPage(): ReactElement {
     .sort((a, b) => a.warehouseCode - b.warehouseCode)
     .map((item) => ({ value: String(item.id), label: `${item.warehouseCode} · ${item.warehouseName}` })), [warehouses.data]);
   /**
-   * Müdür / kısıtsız kullanıcı: kalem bazlı ata.
+   * Başkasına / havuza atama ve görev devri ASSIGN iznidir; claim RESOLVE ile kalır.
    * warehouse-access mal kabul yetkisi/şube header yüzünden düşse bile ata kaybolmasın —
-   * sadece açıkça isRestricted=true ise gizlenir. Claim (üzerime al) her RESOLVE yetkilisinde kalır.
+   * sadece açıkça isRestricted=true ise gizlenir.
    */
-  const canAssignToOthers = canResolve && warehouseAccess.data?.isRestricted !== true;
+  const canAssignToOthers = canAssign && warehouseAccess.data?.isRestricted !== true;
   const canClaimSelf = canResolve;
   const openPrepare = useCallback((target: PrepTarget) => setPrepTarget(target), []);
 
@@ -527,7 +528,7 @@ export function KkdRequestsPage(): ReactElement {
       render: (row) => {
         const open = !CLOSED.has(row.status);
         const hasUnassigned = row.unassignedLineCount > 0;
-        const canManageMyTask = canResolve && open && Boolean(row.myActiveTaskId);
+        const canManageMyTask = canAssign && open && Boolean(row.myActiveTaskId);
         const quotaQueue = activeTab === QUOTA_TAB;
         return (
           <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
@@ -624,7 +625,7 @@ export function KkdRequestsPage(): ReactElement {
         );
       },
     },
-  ], [activeTab, canAssignToOthers, canCancel, canClaimSelf, canPrepare, canResolve, claimPool, claimSelf, enumText, erpRetry, expandedQuotaId, formatDateTime, formatQuantity, openHandoffFromRow, openPrepare, prepare, reactivateRequest, t, toggleQuotaExpand, warehouseFilterOptions, warehouseLabel]);
+  ], [activeTab, canAssign, canAssignToOthers, canCancel, canClaimSelf, canPrepare, canResolve, claimPool, claimSelf, enumText, erpRetry, expandedQuotaId, formatDateTime, formatQuantity, openHandoffFromRow, openPrepare, prepare, reactivateRequest, t, toggleQuotaExpand, warehouseFilterOptions, warehouseLabel]);
 
   const createRequest = useMutation({
     mutationFn: async () => {
@@ -2462,7 +2463,7 @@ function KkdRequestDetailDialog({
                                       <PlayCircle className="size-3.5" />
                                     </Link>
                                   ) : null}
-                                  {canResolve && active && !isPool ? (
+                                  {canAssign && active && !isPool ? (
                                     <button type="button" className="wms-ops-grid-icon-btn" title={t('actions.handoff')} aria-label={t('actions.handoff')} onClick={() => onHandoff(task)}>
                                       <ArrowRightLeft className="size-3.5" />
                                     </button>
@@ -2471,7 +2472,7 @@ function KkdRequestDetailDialog({
                                     (canClaim && active && isPool)
                                     || (canPrepare && active && mine)
                                     || task.warehouseOutboundId
-                                    || (canResolve && active && !isPool)
+                                    || (canAssign && active && !isPool)
                                   ) ? (
                                     <span className="text-[var(--wms-app-text-muted)]">—</span>
                                   ) : null}
