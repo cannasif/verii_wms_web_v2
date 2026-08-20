@@ -414,6 +414,7 @@
       "lineDuplicateSerial": "{{name}}: aynı seri birden fazla kullanılamaz.",
       "orderNumberRequired": "Sipariş numarasını girin.",
       "selectCustomerFirst": "Önce tedarikçi seçin.",
+      "selectImportFileFirst": "Önce açık bir ithalat dosyası seçin.",
       "enterQuantityFirst": "Önce miktar girin.",
       "noLinesToConfirm": "Onaylanacak miktarı olan kalem yok.",
       "confirmedLinesRequired": "Devam etmek için en az bir kalem hazır olarak işaretlenmelidir.",

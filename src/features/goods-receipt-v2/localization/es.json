@@ -369,6 +369,7 @@
       "lineDuplicateSerial": "{{name}}: la misma serie no se puede usar más de una vez.",
       "orderNumberRequired": "Introduzca un número de pedido.",
       "selectCustomerFirst": "Seleccione primero un proveedor.",
+      "selectImportFileFirst": "Seleccione primero un expediente de importación abierto.",
       "enterQuantityFirst": "Introduzca primero una cantidad.",
       "noLinesToConfirm": "No hay líneas con cantidad disponible para confirmar.",
       "confirmedLinesRequired": "Marque al menos una línea como lista antes de continuar.",

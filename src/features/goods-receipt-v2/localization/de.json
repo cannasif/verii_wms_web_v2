@@ -369,6 +369,7 @@
       "lineDuplicateSerial": "{{name}}: Dieselbe Seriennummer kann nicht mehrfach verwendet werden.",
       "orderNumberRequired": "Geben Sie eine Bestellnummer ein.",
       "selectCustomerFirst": "Wählen Sie zuerst einen Lieferanten aus.",
+      "selectImportFileFirst": "Wählen Sie zuerst eine offene Importdatei aus.",
       "enterQuantityFirst": "Geben Sie zuerst eine Menge ein.",
       "noLinesToConfirm": "Keine Positionen mit verfügbarer Menge zum Bestätigen vorhanden.",
       "confirmedLinesRequired": "Markieren Sie mindestens eine Position als bereit, bevor Sie fortfahren.",

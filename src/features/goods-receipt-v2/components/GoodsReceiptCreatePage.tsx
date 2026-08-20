@@ -85,6 +85,7 @@ import type {
   ActiveUserOption,
   CreateGoodsReceiptResult,
   CustomerOption,
+  ImportOpenFile,
   LocationOption,
   ManualGoodsReceiptResult,
   OpenOrderHeader,
@@ -291,6 +292,7 @@ function warehouseNamesFromOptions(
 interface GoodsReceiptDirectDraft {
   step: number;
   selectedCustomer: CustomerOption | null;
+  selectedImportFile: ImportOpenFile | null;
   projectCodeFilter: string;
   warehouseCodeFilter: string;
   searchTokens: string[];
@@ -316,6 +318,7 @@ const CUSTOMER_LOOKUP_MIN_LEN = 2;
 const hasGoodsReceiptDirectDraft = (draft: GoodsReceiptDirectDraft): boolean =>
   Boolean(
     draft.selectedCustomer ||
+    draft.selectedImportFile ||
     draft.receiptNo ||
     draft.orderNumberSearch.trim() ||
     draft.selectedOrders.length ||
@@ -325,6 +328,14 @@ const hasGoodsReceiptDirectDraft = (draft: GoodsReceiptDirectDraft): boolean =>
 
 function customerLookupLabel(customer: CustomerOption): string {
   return `${customer.customerName} (${customer.customerCode})`;
+}
+
+function importFileLookupLabel(file: ImportOpenFile): string {
+  const customerName = file.customerName?.trim();
+  const customer = customerName
+    ? `${customerName} (${file.customerCode})`
+    : file.customerCode;
+  return `${file.fileNumber} · ${customer}`;
 }
 
 function extractCustomerLookupQuery(raw: string): string {
@@ -465,6 +476,8 @@ export function GoodsReceiptCreatePage({
   const [showFieldErrors, setShowFieldErrors] = useState(false);
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerOption | null>(null);
+  const [selectedImportFile, setSelectedImportFile] =
+    useState<ImportOpenFile | null>(null);
   const [customerLookupText, setCustomerLookupText] = useState("");
   const [customerLookupOpen, setCustomerLookupOpen] = useState(false);
   const [projectCodeFilter, setProjectCodeFilter] = useState("");
@@ -593,6 +606,9 @@ export function GoodsReceiptCreatePage({
   const customerDisplay = selectedCustomer
     ? customerLookupLabel(selectedCustomer)
     : "";
+  const importFileDisplay = selectedImportFile
+    ? importFileLookupLabel(selectedImportFile)
+    : "";
   const supplierSummary = selectedCustomer
     ? `${selectedCustomer.customerName} · ${selectedCustomer.customerCode}`
     : customer?.code ?? "—";
@@ -715,6 +731,7 @@ export function GoodsReceiptCreatePage({
   const draftPayload = useMemo<GoodsReceiptDirectDraft>(() => ({
     step,
     selectedCustomer,
+    selectedImportFile,
     projectCodeFilter,
     warehouseCodeFilter,
     searchTokens,
@@ -736,15 +753,20 @@ export function GoodsReceiptCreatePage({
   }), [
     confirmedLineOrder, directOrderLines, documentDate, isElectronicReceipt,
     labelStrategy, lines, orderNumberSearch, orders, plannedArrival, priority,
-    projectCodeFilter, receiptNo, searchTokens, selectedCustomer,
+    projectCodeFilter, receiptNo, searchTokens, selectedCustomer, selectedImportFile,
     selectedDirectLineKeys, selectedOrders, seriesValue, step,
     warehouseCodeFilter, waybillDate,
   ]);
   const restoreDraftPayload = useCallback((draft: GoodsReceiptDirectDraft): void => {
     setStep(Math.min(1, Math.max(0, draft.step ?? 0)));
     setSelectedCustomer(draft.selectedCustomer ?? null);
+    setSelectedImportFile(draft.selectedImportFile ?? null);
     setCustomerLookupText(
-      draft.selectedCustomer ? customerLookupLabel(draft.selectedCustomer) : "",
+      draft.selectedImportFile
+        ? importFileLookupLabel(draft.selectedImportFile)
+        : draft.selectedCustomer
+          ? customerLookupLabel(draft.selectedCustomer)
+          : "",
     );
     setProjectCodeFilter(draft.projectCodeFilter ?? "");
     setWarehouseCodeFilter(draft.warehouseCodeFilter ?? "");
@@ -948,7 +970,7 @@ export function GoodsReceiptCreatePage({
 
   const applySelectedCustomer = (item: CustomerOption): void => {
     setSelectedCustomer(item);
-    setCustomerLookupText(customerLookupLabel(item));
+    if (!importReceipt) setCustomerLookupText(customerLookupLabel(item));
   };
 
   const findCustomerByCode = async (customerCode: string): Promise<CustomerOption> => {
@@ -1060,7 +1082,61 @@ export function GoodsReceiptCreatePage({
       .catch((cause: Error) => setError(cause.message));
   }, [branchCode]);
 
+  const loadImportOrders = async (): Promise<void> => {
+    if (loadOrdersLockRef.current || busyAction === "orders") return;
+    if (!selectedImportFile) {
+      toast.error(t("createFlow.validation.selectImportFileFirst"));
+      return;
+    }
+    loadOrdersLockRef.current = true;
+    setBusyAction("orders");
+    setError(null);
+    try {
+      const result = await importGoodsReceiptApi.openOrders(
+        selectedImportFile.fileNumber,
+        branchCode,
+        showAllocatedOpenOrderLines,
+      );
+      const resolvedCustomer = await findCustomerByCode(result.importFile.customerCode);
+      applySelectedCustomer(resolvedCustomer);
+      setSelectedImportFile(result.importFile);
+      setCustomerLookupText(importFileLookupLabel(result.importFile));
+
+      const fetchedLines = result.lines;
+      setDirectOrderLines(fetchedLines);
+      setSelectedDirectLineKeys([]);
+      setLines([]);
+      setConfirmedLineOrder([]);
+      setProjectCodeFilter("");
+      setWarehouseCodeFilter("");
+      setSearchTokens([]);
+      setSearchDraft("");
+      const importOrders = groupOrderLines(fetchedLines);
+      setOrders(importOrders);
+      setOrdersLoaded(true);
+      setWarehouseByCode(await resolveWarehousesByCode(
+        fetchedLines,
+        resolvedCustomer.branchCode,
+      ));
+      setSelectedOrders(
+        importOrders.length === 1 &&
+          canUseOrderWarehouse(importOrders[0].targetWarehouseCode)
+          ? [importOrders[0].siparisNo]
+          : [],
+      );
+    } catch (cause) {
+      report(cause, t("createFlow.errors.ordersLoadFailed"));
+    } finally {
+      loadOrdersLockRef.current = false;
+      setBusyAction(null);
+    }
+  };
+
   const loadOrders = async (lookupTextOverride?: string): Promise<void> => {
+    if (importReceipt) {
+      await loadImportOrders();
+      return;
+    }
     if (loadOrdersLockRef.current || busyAction === "orders") return;
     const raw = (lookupTextOverride ?? customerLookupText).trim();
     let resolvedCustomer = selectedCustomer;
@@ -1777,6 +1853,7 @@ export function GoodsReceiptCreatePage({
   const create = async (): Promise<void> => {
     if (
       !customer ||
+      (importReceipt && !selectedImportFile) ||
       !primaryLine?.targetWarehouseId ||
       !primaryLine.receivingLocationId ||
       !seriesValue
@@ -1824,7 +1901,13 @@ export function GoodsReceiptCreatePage({
       const created = direct
         ? await (importReceipt ? importGoodsReceiptApi : goodsReceiptV2Api).createDirect({
           ...commonPayload,
-          executionMode: labelStrategy === "SupplierLabel" ? "SupplierLabel" : "Manual",
+          executionMode: importReceipt
+            ? "Import"
+            : labelStrategy === "SupplierLabel"
+              ? "SupplierLabel"
+              : "Manual",
+          tradeType: importReceipt ? "Foreign" : "Domestic",
+          importFileNumber: importReceipt ? selectedImportFile?.fileNumber : null,
           deviceId: null,
           lines: plannedLines.flatMap((line) => {
             const trackings = line.trackings.length > 0 ? line.trackings : [{
@@ -2131,54 +2214,92 @@ export function GoodsReceiptCreatePage({
                 </label>
                 <div className="wms-ops-order-lookup__row">
                   <div className="wms-ops-order-lookup__field min-w-0 flex-1">
-                    <PagedLookupDialog<CustomerOption>
-                      variant="ops"
-                      triggerMode="combobox"
-                      autoSearchMinLength={CUSTOMER_LOOKUP_MIN_LEN}
-                      open={customerLookupOpen}
-                      onOpenChange={setCustomerLookupOpen}
-                      title={t(importReceipt ? "createFlow.importSelectCustomer" : "selectCustomer")}
-                      value={customerDisplay}
-                      placeholder={t(importReceipt ? "createFlow.importSelectCustomer" : "selectCustomer")}
-                      searchPlaceholder={t(importReceipt ? "createFlow.importSearchCustomer" : "searchCustomer")}
-                      emptyText={t(importReceipt ? "createFlow.importCustomerEmpty" : "customerEmpty")}
-                      triggerClassName={OPS_FIELD_CLASS}
-                      queryKey={["gr-customers-lookup", branchCode]}
-                      fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
-                        toPagedResponse(
-                          await goodsReceiptV2Api.customers(
-                            {
-                              pageNumber,
-                              pageSize,
-                              search,
-                              sortBy: "customerCode",
-                              sortDirection: "asc",
-                              signal: signal ?? new AbortController().signal,
-                            },
-                            branchCode,
-                          ),
-                        )
-                      }
-                      getKey={(item) => String(item.id)}
-                      getLabel={(item) => customerLookupLabel(item)}
-                      getPrimaryLabel={(item) => item.customerName}
-                      getSecondaryLabel={(item) => item.customerCode}
-                      onSelect={(item) => {
-                        const sameCustomer = selectedCustomer?.id === item.id;
-                        applySelectedCustomer(item);
-                        if (sameCustomer) return;
-                        setOrderNumberSearch("");
-                        clearCustomerDependent();
-                      }}
-                      onComboboxTextChange={(text) => {
-                        setCustomerLookupText(text);
-                      }}
-                      onCommitText={(text) => {
-                        if (customerLookupOpen) return;
-                        setCustomerLookupText(text);
-                        return loadOrders(text);
-                      }}
-                    />
+                    {importReceipt ? (
+                      <PagedLookupDialog<ImportOpenFile>
+                        variant="ops"
+                        triggerMode="combobox"
+                        autoSearchMinLength={0}
+                        open={customerLookupOpen}
+                        onOpenChange={setCustomerLookupOpen}
+                        title={t("createFlow.importSelectCustomer")}
+                        value={importFileDisplay}
+                        placeholder={t("createFlow.importSelectCustomer")}
+                        searchPlaceholder={t("createFlow.importSearchCustomer")}
+                        emptyText={t("createFlow.importCustomerEmpty")}
+                        triggerClassName={OPS_FIELD_CLASS}
+                        queryKey={["gr-import-open-files-lookup"]}
+                        fetchPage={async (request) => toPagedResponse(
+                          await importGoodsReceiptApi.openFiles({
+                            ...request,
+                            signal: request.signal ?? new AbortController().signal,
+                          }),
+                        )}
+                        getKey={(item) => item.fileNumber}
+                        getLabel={(item) => importFileLookupLabel(item)}
+                        getPrimaryLabel={(item) => item.fileNumber}
+                        getSecondaryLabel={(item) => [
+                          item.customerName,
+                          item.customerCode,
+                        ].filter(Boolean).join(" · ")}
+                        onSelect={(item) => {
+                          const sameFile = selectedImportFile?.fileNumber === item.fileNumber;
+                          setSelectedImportFile(item);
+                          setCustomerLookupText(importFileLookupLabel(item));
+                          if (sameFile) return;
+                          setSelectedCustomer(null);
+                          setOrderNumberSearch("");
+                          clearCustomerDependent();
+                        }}
+                        onComboboxTextChange={setCustomerLookupText}
+                      />
+                    ) : (
+                      <PagedLookupDialog<CustomerOption>
+                        variant="ops"
+                        triggerMode="combobox"
+                        autoSearchMinLength={CUSTOMER_LOOKUP_MIN_LEN}
+                        open={customerLookupOpen}
+                        onOpenChange={setCustomerLookupOpen}
+                        title={t("selectCustomer")}
+                        value={customerDisplay}
+                        placeholder={t("selectCustomer")}
+                        searchPlaceholder={t("searchCustomer")}
+                        emptyText={t("customerEmpty")}
+                        triggerClassName={OPS_FIELD_CLASS}
+                        queryKey={["gr-customers-lookup", branchCode]}
+                        fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                          toPagedResponse(
+                            await goodsReceiptV2Api.customers(
+                              {
+                                pageNumber,
+                                pageSize,
+                                search,
+                                sortBy: "customerCode",
+                                sortDirection: "asc",
+                                signal: signal ?? new AbortController().signal,
+                              },
+                              branchCode,
+                            ),
+                          )
+                        }
+                        getKey={(item) => String(item.id)}
+                        getLabel={(item) => customerLookupLabel(item)}
+                        getPrimaryLabel={(item) => item.customerName}
+                        getSecondaryLabel={(item) => item.customerCode}
+                        onSelect={(item) => {
+                          const sameCustomer = selectedCustomer?.id === item.id;
+                          applySelectedCustomer(item);
+                          if (sameCustomer) return;
+                          setOrderNumberSearch("");
+                          clearCustomerDependent();
+                        }}
+                        onComboboxTextChange={setCustomerLookupText}
+                        onCommitText={(text) => {
+                          if (customerLookupOpen) return;
+                          setCustomerLookupText(text);
+                          return loadOrders(text);
+                        }}
+                      />
+                    )}
                   </div>
                   <OpsActionButton
                     type="button"
@@ -3161,6 +3282,11 @@ export function GoodsReceiptCreatePage({
                 onNew={() => {
                   setResult(null);
                   setStep(0);
+                  if (importReceipt) {
+                    setSelectedImportFile(null);
+                    setSelectedCustomer(null);
+                    setCustomerLookupText("");
+                  }
                   setLines([]);
                   setSelectedOrders([]);
                   setOrders([]);
@@ -3218,6 +3344,11 @@ export function GoodsReceiptCreatePage({
                           {selectedCustomer?.customerCode || customer?.code || "—"}
                         </strong>
                       </div>
+                      {importReceipt && selectedImportFile ? (
+                        <div className="wms-ops-gr-review__hero-meta">
+                          {t("createFlow.importCustomer")}: {selectedImportFile.fileNumber}
+                        </div>
+                      ) : null}
                       <div className="wms-ops-gr-review__supplier-details">
                         <div className="wms-ops-gr-review__supplier-band">
                           <div className="wms-ops-gr-review__supplier-field">

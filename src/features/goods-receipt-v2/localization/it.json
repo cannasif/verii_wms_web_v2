@@ -369,6 +369,7 @@
       "lineDuplicateSerial": "{{name}}: lo stesso seriale non può essere utilizzato più di una volta.",
       "orderNumberRequired": "Inserisci un numero d'ordine.",
       "selectCustomerFirst": "Seleziona prima un fornitore.",
+      "selectImportFileFirst": "Seleziona prima un file di importazione aperto.",
       "enterQuantityFirst": "Inserisci prima una quantità.",
       "noLinesToConfirm": "Nessuna riga con quantità disponibile da confermare.",
       "confirmedLinesRequired": "Contrassegna almeno una riga come pronta prima di continuare.",

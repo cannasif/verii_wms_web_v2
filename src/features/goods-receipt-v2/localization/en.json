@@ -414,6 +414,7 @@
       "lineDuplicateSerial": "{{name}}: the same serial cannot be used more than once.",
       "orderNumberRequired": "Enter an order number.",
       "selectCustomerFirst": "Select a supplier first.",
+      "selectImportFileFirst": "Select an open import file first.",
       "enterQuantityFirst": "Enter a quantity first.",
       "noLinesToConfirm": "No lines with quantity available to confirm.",
       "confirmedLinesRequired": "Mark at least one line as ready before continuing.",
