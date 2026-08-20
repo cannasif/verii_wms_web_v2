@@ -168,7 +168,7 @@
     "sameWarehouseNotice": "Alle Ziele liegen im Wareneingangslager. Es wird keine Lagerumlagerung erstellt; nur Lagerplatz und Bestandsstatus werden intern gebucht.",
     "datSeries": {
       "title": "Eine Lagerumlagerung wird erstellt",
-      "description": "Mindestens ein Qualitätsziel unterscheidet sich vom Wareneingangslager {{sourceWarehouse}}. Wählen Sie die Belegserie für den Umlagerungsentwurf.",
+      "description": "Mindestens ein Qualitätsziel unterscheidet sich vom Quelllager {{sourceWarehouse}}. Wählen Sie die Belegserie für die mit dieser Entscheidung erstellte Umlagerung.",
       "placeholder": "Belegserie für Umlagerung wählen",
       "defaultDescription": "Standardserie · Nächster Beleg: {{preview}}",
       "notConfigured": "Für diese Niederlassung ist keine aktive Belegserie für Lagerumlagerungen vorhanden. Definieren Sie zuerst eine unter Belegserien."

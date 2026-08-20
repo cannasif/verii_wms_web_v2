@@ -55,7 +55,10 @@ import {
   type QualityInspectionCreatedPeriod,
 } from "../utils/quality-inspection-list-filters";
 import { localizeQualityInspectionStatus } from "../utils/quality-inspection-status-label";
-import { requiresQualityDat } from "../utils/quality-dat-routing";
+import {
+  requiresQualityDat,
+  resolveQualityInventorySourceWarehouseId,
+} from "../utils/quality-dat-routing";
 import {
   canToggleQualityInspectionPriority,
   qualityInspectionPriorityRowClass,
@@ -1838,9 +1841,18 @@ function InspectionDetailPanel({
     const targets = actionable.flatMap((line) => {
       const draft = drafts[line.id];
       if (!draft?.decision && !draft?.dispositions?.length) return [];
+      const sourceWarehouseId = resolveQualityInventorySourceWarehouseId({
+        lineDecision: line.decision,
+        quarantineLocationId: line.quarantineLocationId,
+        dispositions: detail.dispositions ?? [],
+        lineId: line.id,
+        quarantineDestinations,
+        fallbackWarehouseId: detail.header.warehouseId,
+      });
       if (draft.dispositions?.length) {
         return draft.dispositions.map((part) => ({
           decision: part.decision,
+          sourceWarehouseId,
           targetWarehouseId: part.targetWarehouseId ?? defaultWarehouseForDecision(
             part.decision,
             defaultAcceptedWarehouseId,
@@ -1851,6 +1863,7 @@ function InspectionDetailPanel({
       }
       const targetsForLine = [{
         decision: draft.decision,
+        sourceWarehouseId,
         targetWarehouseId: draft.targetWarehouseId ?? defaultWarehouseForDecision(
           draft.decision,
           defaultAcceptedWarehouseId,
@@ -1864,6 +1877,7 @@ function InspectionDetailPanel({
           && actionableQuantity(line) - quantity > QTY_EPS) {
         targetsForLine.push({
           decision: draft.remainderDecision,
+          sourceWarehouseId,
           targetWarehouseId: defaultWarehouseForDecision(
             draft.remainderDecision,
             defaultAcceptedWarehouseId,
@@ -1880,8 +1894,48 @@ function InspectionDetailPanel({
     configuredDefaultQuarantineWarehouseId,
     defaultAcceptedWarehouseId,
     defaultRejectedWarehouseId,
+    detail.dispositions,
     detail.header.warehouseId,
     drafts,
+    quarantineDestinations,
+  ]);
+
+  const datSourceWarehouseLabel = useMemo(() => {
+    const quarantineSource = actionable
+      .map((line) => resolveQualityInventorySourceWarehouseId({
+        lineDecision: line.decision,
+        quarantineLocationId: line.quarantineLocationId,
+        dispositions: detail.dispositions ?? [],
+        lineId: line.id,
+        quarantineDestinations,
+        fallbackWarehouseId: detail.header.warehouseId,
+      }))
+      .find((warehouseId) => warehouseId !== detail.header.warehouseId);
+    if (quarantineSource) {
+      const destination = quarantineDestinations.find(
+        (item) => item.warehouseId === quarantineSource,
+      );
+      if (destination) {
+        return destination.warehouseName
+          || String(destination.warehouseCode)
+          || String(quarantineSource);
+      }
+      const history = (detail.dispositions ?? []).find(
+        (item) => item.targetWarehouseId === quarantineSource,
+      );
+      if (history?.targetWarehouseCode) return history.targetWarehouseCode;
+      return String(quarantineSource);
+    }
+    return detail.header.warehouseName
+      || detail.header.warehouseCode
+      || detail.header.warehouseId;
+  }, [
+    actionable,
+    detail.dispositions,
+    detail.header.warehouseCode,
+    detail.header.warehouseId,
+    detail.header.warehouseName,
+    quarantineDestinations,
   ]);
 
   useEffect(() => {
@@ -3224,9 +3278,7 @@ function InspectionDetailPanel({
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">
                     {t("applyConfirm.datSeries.description", {
-                      sourceWarehouse: detail.header.warehouseName
-                        || detail.header.warehouseCode
-                        || detail.header.warehouseId,
+                      sourceWarehouse: datSourceWarehouseLabel,
                     })}
                   </p>
                 </div>

@@ -168,7 +168,7 @@
     "sameWarehouseNotice": "All selected targets are in the receiving warehouse. No inter-warehouse transfer is created; only an internal location and stock-status movement is posted.",
     "datSeries": {
       "title": "An inter-warehouse transfer will be created",
-      "description": "At least one quality destination differs from receiving warehouse {{sourceWarehouse}}. Select the document series for the transfer draft created with this decision.",
+      "description": "At least one quality destination differs from source warehouse {{sourceWarehouse}}. Select the document series for the transfer created with this decision.",
       "placeholder": "Select transfer document series",
       "defaultDescription": "Default series · Next document: {{preview}}",
       "notConfigured": "No active inter-warehouse transfer document series exists for this branch. Define one on the Document Series page first."

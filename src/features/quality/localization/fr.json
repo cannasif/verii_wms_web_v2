@@ -168,7 +168,7 @@
     "sameWarehouseNotice": "Toutes les destinations se trouvent dans l'entrepôt de réception. Aucun transfert inter-entrepôts n'est créé ; seul le mouvement interne d'emplacement et de statut est enregistré.",
     "datSeries": {
       "title": "Un transfert inter-entrepôts sera créé",
-      "description": "Au moins une destination qualité diffère de l'entrepôt de réception {{sourceWarehouse}}. Sélectionnez la série du brouillon de transfert.",
+      "description": "Au moins une destination qualité diffère de l'entrepôt source {{sourceWarehouse}}. Sélectionnez la série du transfert créé avec cette décision.",
       "placeholder": "Sélectionner la série de transfert",
       "defaultDescription": "Série par défaut · Prochain document : {{preview}}",
       "notConfigured": "Aucune série active de transfert inter-entrepôts n'existe pour cette agence. Définissez-en une dans Séries de documents."

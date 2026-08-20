@@ -168,7 +168,7 @@
     "sameWarehouseNotice": "Tutte le destinazioni sono nel magazzino di ricevimento. Non viene creato alcun trasferimento tra magazzini; viene registrato solo il movimento interno di ubicazione e stato.",
     "datSeries": {
       "title": "Verrà creato un trasferimento tra magazzini",
-      "description": "Almeno una destinazione qualità è diversa dal magazzino di ricevimento {{sourceWarehouse}}. Seleziona la serie per la bozza di trasferimento.",
+      "description": "Almeno una destinazione qualità è diversa dal magazzino di origine {{sourceWarehouse}}. Seleziona la serie per il trasferimento creato con questa decisione.",
       "placeholder": "Seleziona la serie di trasferimento",
       "defaultDescription": "Serie predefinita · Prossimo documento: {{preview}}",
       "notConfigured": "Non esiste una serie attiva per i trasferimenti tra magazzini in questa filiale. Definiscila prima nella pagina Serie documenti."

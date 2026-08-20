@@ -168,7 +168,7 @@
     "sameWarehouseNotice": "Seçilen hedefler mal kabul deposundadır. DAT oluşmaz; yalnızca depo içi raf ve stok statüsü hareketi kaydedilir.",
     "datSeries": {
       "title": "Depolar arası transfer oluşturulacak",
-      "description": "En az bir GKK hedefi {{sourceWarehouse}} mal kabul deposundan farklıdır. Kalite kararıyla birlikte DAT taslağı oluşturulacağı için belge serisini seçin.",
+      "description": "En az bir GKK hedefi {{sourceWarehouse}} kaynak deposundan farklıdır. Kalite kararıyla birlikte DAT oluşturulacağı için belge serisini seçin.",
       "placeholder": "DAT belge serisini seçin",
       "defaultDescription": "Varsayılan seri · Sıradaki belge: {{preview}}",
       "notConfigured": "Bu şube için aktif Depolar Arası Transfer belge serisi yok. Önce Belge Serileri ekranından tanımlayın."

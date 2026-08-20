@@ -168,7 +168,7 @@
     "sameWarehouseNotice": "Todos los destinos están en el almacén de recepción. No se crea una transferencia entre almacenes; solo se registra el movimiento interno de ubicación y estado.",
     "datSeries": {
       "title": "Se creará una transferencia entre almacenes",
-      "description": "Al menos un destino de calidad difiere del almacén de recepción {{sourceWarehouse}}. Seleccione la serie para el borrador de transferencia.",
+      "description": "Al menos un destino de calidad difiere del almacén de origen {{sourceWarehouse}}. Seleccione la serie para la transferencia creada con esta decisión.",
       "placeholder": "Seleccione la serie de transferencia",
       "defaultDescription": "Serie predeterminada · Siguiente documento: {{preview}}",
       "notConfigured": "No existe una serie activa de transferencia entre almacenes para esta sucursal. Defínala primero en Series de documentos."
