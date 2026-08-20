@@ -1,41 +1,68 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'vitest';
-import { importGoodsReceiptApi } from './import-goods-receipt.api';
+import { pageImportOpenFiles } from './import-goods-receipt.api';
+import type { ImportOpenFile } from '../types/goods-receipt.types';
 
-describe('importGoodsReceiptApi.createDirect', () => {
-  it('does not persist and returns a visual-only completed result', async () => {
-    const result = await importGoodsReceiptApi.createDirect({
-      electronicWaybillNo: 'ITH202600000001',
-      requireQualityControl: false,
-      lines: [{ quantity: 4 }, { quantity: 6 }],
+const files: ImportOpenFile[] = [
+  {
+    fileNumber: 'ITH-10',
+    customerCode: '320.002',
+    customerName: 'Çelik İthalat',
+    deliveryCustomerCode: null,
+    deliveryCustomerName: null,
+  },
+  {
+    fileNumber: 'ITH-2-PEN-KOLU',
+    customerCode: '320.001',
+    customerName: 'Acme Dış Ticaret',
+    deliveryCustomerCode: '120.001',
+    deliveryCustomerName: 'İstanbul Teslim',
+  },
+];
+
+describe('pageImportOpenFiles', () => {
+  it('searches the full web query with Turkish character folding', () => {
+    const page = pageImportOpenFiles(files, {
+      pageNumber: 1,
+      pageSize: 20,
+      search: 'celik ithalat',
     });
 
-    assert.equal(result.id, 0);
-    assert.equal(result.documentNo, 'ITH202600000001');
-    assert.equal(result.initiationMode, 'Direct');
-    assert.equal(result.status, 'Completed');
-    assert.equal(result.lineCount, 2);
-    assert.equal(result.quantity, 10);
-    assert.equal(result.replayed, false);
-    assert.equal(result.qualityInspectionId, undefined);
+    assert.deepEqual(page.items.map((file) => file.fileNumber), ['ITH-10']);
   });
 
-  it('marks quality routing when requireQualityControl is true', async () => {
-    const result = await importGoodsReceiptApi.createDirect({
-      waybillNo: 'WAYBILL-1',
-      requireQualityControl: true,
-      lines: [{ quantity: 1 }],
+  it('does not split a hyphenated query into independent terms', () => {
+    const exactPhrase = pageImportOpenFiles(files, {
+      pageNumber: 1,
+      pageSize: 20,
+      search: 'pen-kolu',
+    });
+    const rewrittenPhrase = pageImportOpenFiles(files, {
+      pageNumber: 1,
+      pageSize: 20,
+      search: 'pen kolu',
     });
 
-    assert.equal(result.status, 'AwaitingQuality');
-    assert.equal(result.qualityInspectionId, 0);
-    assert.equal(result.documentNo, 'WAYBILL-1');
+    assert.deepEqual(exactPhrase.items.map((file) => file.fileNumber), ['ITH-2-PEN-KOLU']);
+    assert.equal(rewrittenPhrase.totalCount, 0);
   });
 
-  it('falls back to a pending document no when waybill fields are empty', async () => {
-    const result = await importGoodsReceiptApi.createDirect({});
-    assert.equal(result.documentNo, 'ITH-PENDING');
-    assert.equal(result.lineCount, 0);
-    assert.equal(result.quantity, 0);
+  it('sorts naturally and pages the ERP result deterministically', () => {
+    const first = pageImportOpenFiles(files, {
+      pageNumber: 1,
+      pageSize: 1,
+      search: '',
+    });
+    const second = pageImportOpenFiles(files, {
+      pageNumber: 2,
+      pageSize: 1,
+      search: '',
+    });
+
+    assert.equal(first.items[0]?.fileNumber, 'ITH-2-PEN-KOLU');
+    assert.equal(second.items[0]?.fileNumber, 'ITH-10');
+    assert.equal(first.totalCount, 2);
+    assert.equal(first.hasNextPage, true);
+    assert.equal(second.hasNextPage, false);
   });
 });

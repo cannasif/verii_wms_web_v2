@@ -70,6 +70,8 @@ export interface PutawayLocationSuggestion extends LocationOption {
 export interface SeriesOption { id: number; code: string; name: string; previewDocumentNumber: string; isDefault: boolean }
 export interface OpenOrderHeader { siparisNo: string; customerCode?: string; customerName?: string; branchCode?: number; targetWarehouseCode?: number; orderDate?: string; projectCode?: string; orderedQuantity?: number; deliveredQuantity?: number; remainingQuantity?: number; plannedQuantity?: number; availableQuantity?: number }
 export interface OpenOrderLine { siparisNo: string; orderId: number; stockCode?: string; stockName?: string; unitCode?: string; yapCode?: string; yapDescription?: string; customerCode?: string; customerName?: string; branchCode?: number; targetWarehouseCode?: number; orderDate?: string; projectCode?: string; orderedQuantity?: number; deliveredQuantity?: number; remainingQuantity?: number; plannedQuantity?: number; availableQuantity?: number }
+export interface ImportOpenFile { fileNumber: string; customerCode: string; customerName?: string | null; deliveryCustomerCode?: string | null; deliveryCustomerName?: string | null }
+export interface ImportOpenOrders { importFile: ImportOpenFile; lines: OpenOrderLine[] }
 export type StockTrackingType = 'None' | 'Lot' | 'Serial' | 'LotAndSerial';
 export interface PlannedReceiptTracking { localId: string; quantity: number; lotNo?: string; serialNo?: string; manufacturingDate?: string; expirationDate?: string; description?: string }
 export interface SelectedReceiptLine extends OpenOrderLine {
