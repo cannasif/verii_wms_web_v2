@@ -75,6 +75,8 @@ import {
 import { KkdMatrixManager } from './KkdMatrixManager';
 import { KkdOverrideManager } from './KkdOverrideManager';
 import { KkdDistributionReceiptDialog } from './KkdDistributionReceiptDialog';
+import { KkdImportTypeDialog } from './KkdImportTypeDialog';
+import { KkdSimpleMatrixImportDialog } from './KkdSimpleMatrixImportDialog';
 import {
   formatDistributionStatus,
   formatExcessApprovalStatus,
@@ -545,6 +547,8 @@ export function KkdDefinitionsPage(): ReactElement {
   const { can } = usePermissionAccess();
   const [tab, setTab] = useState<DefinitionTab>('department');
   const [workbookOpen, setWorkbookOpen] = useState(false);
+  const [simpleWorkbookOpen, setSimpleWorkbookOpen] = useState(false);
+  const [detailedWorkbookOpen, setDetailedWorkbookOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [listSearch, setListSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<DefinitionStatusFilter>('all');
@@ -567,6 +571,10 @@ export function KkdDefinitionsPage(): ReactElement {
   const canManageWorkbook =
     can('WMS.KKD.DEFINITIONS.MANAGE') &&
     can('WMS.KKD.EMPLOYEES.MANAGE') &&
+    can('WMS.KKD.MATRICES.MANAGE');
+  const canManageSimpleWorkbook =
+    can('WMS.KKD.DEFINITIONS.VIEW') &&
+    can('WMS.KKD.MATRICES.VIEW') &&
     can('WMS.KKD.MATRICES.MANAGE');
 
   const clearError = (key: string): void =>
@@ -834,7 +842,7 @@ export function KkdDefinitionsPage(): ReactElement {
     <KkdPage
       title="KKD Tanımları"
       description="Departman, rol ve personel tanımlarını oluşturun; hak matrisi ile personel ek haklarını buradan yönetin."
-      actions={canManageWorkbook ? (
+      actions={canManageWorkbook || canManageSimpleWorkbook ? (
         <OpsActionButton variant="secondary" onClick={() => setWorkbookOpen(true)}>
           <FileSpreadsheet className="size-3.5 shrink-0" />
           Excel ile toplu yönet
@@ -1214,9 +1222,24 @@ export function KkdDefinitionsPage(): ReactElement {
           </div>
         ) : null}
       </ResponsiveDialog>
-      <InitialExcelImportDialog<KkdDefinitionWorkbookImportResult>
+      <KkdImportTypeDialog
         open={workbookOpen}
         onOpenChange={setWorkbookOpen}
+        allowSimple={canManageSimpleWorkbook}
+        allowDetailed={canManageWorkbook}
+        onSimple={() => { setWorkbookOpen(false); setSimpleWorkbookOpen(true); }}
+        onDetailed={() => { setWorkbookOpen(false); setDetailedWorkbookOpen(true); }}
+      />
+      <KkdSimpleMatrixImportDialog
+        open={simpleWorkbookOpen}
+        onOpenChange={setSimpleWorkbookOpen}
+        onImported={async () => {
+          await qc.invalidateQueries({ queryKey: ['kkd'] });
+        }}
+      />
+      <InitialExcelImportDialog<KkdDefinitionWorkbookImportResult>
+        open={detailedWorkbookOpen}
+        onOpenChange={setDetailedWorkbookOpen}
         title="KKD tanımlarını tek Excel ile yönet"
         description="Departman, rol, personel ve hak matrislerini mevcut kayıtlarla dolu tek dosyada düzenleyin."
         warningTitle="Güvenli güncelleme kuralı"
