@@ -1007,6 +1007,7 @@ export function ProductionWorkOrdersPage(): ReactElement {
           setTransferRefreshKeys((current) => ({
             ...current,
             picking: (current.picking ?? 0) + 1,
+            mine: (current.mine ?? 0) + 1,
           }));
         }}
         canCreateTransfer={can('WMS.PRODUCTION_TRANSFER.CREATE')}

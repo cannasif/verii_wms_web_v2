@@ -262,6 +262,7 @@
       "title": "Quality distribution history",
       "description": "Shows the decision and warehouse/location route for every quantity portion.",
       "datReference": "DAT record #{{id}}",
+      "decisionCode": "Decision code",
       "images": "Distribution images"
     },
     "controlHistory": {

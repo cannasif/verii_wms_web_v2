@@ -231,6 +231,7 @@
       "title": "Historique de répartition qualité",
       "description": "Affiche la décision et le trajet entrepôt/emplacement pour chaque quantité.",
       "datReference": "Enregistrement DAT #{{id}}",
+      "decisionCode": "Code de décision",
       "images": "Images de répartition"
     },
     "controlHistory": {

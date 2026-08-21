@@ -262,6 +262,7 @@
       "title": "Kalite dağıtım geçmişi",
       "description": "Her miktarın hangi karar ile hangi depo ve rafa yönlendirildiğini gösterir.",
       "datReference": "DAT kaydı #{{id}}",
+      "decisionCode": "Karar kodu",
       "images": "Dağıtım görselleri"
     },
     "controlHistory": {

@@ -4,7 +4,7 @@ import type { ProductionSourceWorkOrder } from './types';
 
 type WorkOrderRecipeIdentity = Pick<
   ProductionSourceWorkOrder,
-  'workOrderNumber' | 'sourceType' | 'sourceSystemCode' | 'listingKind' | 'transferId' | 'kalanTaskId'
+  'workOrderNumber' | 'sourceType' | 'sourceSystemCode' | 'listingKind' | 'transferId' | 'kalanTaskId' | 'cancellationId'
 >;
 
 export const productionWorkOrderRecipeQueryKey = (row: WorkOrderRecipeIdentity) => [
@@ -16,6 +16,7 @@ export const productionWorkOrderRecipeQueryKey = (row: WorkOrderRecipeIdentity) 
   row.listingKind,
   row.transferId ?? null,
   row.kalanTaskId ?? null,
+  row.cancellationId ?? null,
 ] as const;
 
 export const productionWorkOrderListQueryOptions = (
@@ -45,7 +46,11 @@ export const productionWorkOrderListQueryOptions = (
  */
 export const productionWorkOrderRecipeQueryOptions = (row: WorkOrderRecipeIdentity) => queryOptions({
   queryKey: productionWorkOrderRecipeQueryKey(row),
-  queryFn: () => productionApi.prepareSourceWorkOrder(row),
+  queryFn: () => (
+    row.listingKind === 'ManagerCancelledAssignment' && (row.cancellationId ?? 0) > 0
+      ? productionApi.cancelledWorkOrderAssignmentDetail(row.cancellationId!)
+      : productionApi.prepareSourceWorkOrder(row)
+  ),
   staleTime: 5 * 60 * 1000,
   gcTime: 15 * 60 * 1000,
   retry: 1,

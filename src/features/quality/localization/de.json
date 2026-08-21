@@ -231,6 +231,7 @@
       "title": "Qualitätsverteilungsverlauf",
       "description": "Zeigt Entscheidung und Lagerplatzroute für jeden Mengenteil.",
       "datReference": "DAT-Beleg #{{id}}",
+      "decisionCode": "Entscheidungscode",
       "images": "Verteilungsbilder"
     },
     "controlHistory": {

@@ -39,6 +39,9 @@ export const productionApi = {
     unwrap(await api.get<Envelope<ProductionSourceWorkOrder[]>>('/api/production/work-orders/cancelled-assignments', {
       params: { search: search?.trim() || undefined, take: 200 },
     })),
+  cancelledWorkOrderAssignmentDetail: async (cancellationId: number): Promise<PreparedNetsisProductionWorkOrder> =>
+    unwrap(await api.get<Envelope<PreparedNetsisProductionWorkOrder>>(
+      `/api/production/work-orders/cancelled-assignments/${cancellationId}`)),
   cancelWorkOrderAssignment: async (payload: CancelProductionWorkOrderAssignmentRequest): Promise<ProductionWorkOrderAssignmentCancellationResult> =>
     unwrap(await api.post<Envelope<ProductionWorkOrderAssignmentCancellationResult>>('/api/production/work-orders/cancel-assignment', payload)),
   restoreWorkOrderAssignment: async (payload: RestoreProductionWorkOrderAssignmentRequest): Promise<ProductionWorkOrderAssignmentCancellationResult> =>

@@ -231,6 +231,7 @@
       "title": "سجل توزيع الجودة",
       "description": "يعرض القرار ومسار المستودع والموقع لكل جزء من الكمية.",
       "datReference": "سجل DAT رقم {{id}}",
+      "decisionCode": "رمز القرار",
       "images": "صور التوزيع"
     },
     "controlHistory": {

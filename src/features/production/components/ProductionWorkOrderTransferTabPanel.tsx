@@ -61,6 +61,7 @@ import { filterLocalGridPage } from '../production-work-order-transfer-grid.util
 import { productionApi } from '../api';
 import type { ProductionSourceWorkOrder } from '../types';
 import { ProductionWorkOrderAssignmentRestoreDialog } from './ProductionWorkOrderAssignmentDialogs';
+import { ProductionWorkOrderDetailDialog } from './ProductionWorkOrderDetailDialog';
 import { TransferPickingProgressRing } from './TransferPickingProgressRing';
 
 const TRANSFER_TAB_GRID_PAGE_KEY = 'production-work-order-transfers-v4';
@@ -110,7 +111,7 @@ function TransferHandoffAction({
   const queryClient = useQueryClient();
   const canAssign = can('WMS.PRODUCTION_TRANSFER.ASSIGN');
   const boardQueryKey = ['production-transfer', 'board', transferId] as const;
-  const showHandoff = tab === 'Picking' && canAssign && transferId > 0;
+  const showHandoff = (tab === 'Picking' || tab === 'MyAssignments') && canAssign && transferId > 0;
   const boardQuery = useQuery({
     queryKey: boardQueryKey,
     queryFn: () => productionTransferApi.taskBoard(transferId),
@@ -185,7 +186,8 @@ function TransferHandoffAction({
       setHandoffUser(null);
       setHandoffReason('');
       onCompleted();
-      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', `${TRANSFER_TAB_GRID_PAGE_KEY}-${tab}`] });
+      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', `${TRANSFER_TAB_GRID_PAGE_KEY}-Picking`] });
+      await queryClient.invalidateQueries({ queryKey: ['advanced-grid', `${TRANSFER_TAB_GRID_PAGE_KEY}-MyAssignments`] });
       await queryClient.invalidateQueries({ queryKey: ['production-work-order-transfer-tasks', transferId] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Devir başarısız.');
@@ -201,7 +203,6 @@ function TransferHandoffAction({
     handoffUser,
     onCompleted,
     queryClient,
-    tab,
     transferId,
   ]);
 
@@ -367,7 +368,7 @@ function canShowTransferOperations(
   tab: ProductionWorkOrderTransferTab,
 ): boolean {
   if (row.status === 'Cancelled') return false;
-  if (tab === 'MyAssignments') return true;
+  if (tab === 'MyAssignments') return !row.hasPoolTask || Boolean(row.hasMyAssignment);
   if (tab === 'Picking') return Boolean(row.hasMyAssignment) && row.status !== 'Draft';
   return row.status !== 'Draft';
 }
@@ -503,6 +504,7 @@ export function ProductionWorkOrderTransferTabPanel({
   const gridLanguage = i18n.resolvedLanguage ?? i18n.language;
   const queryClient = useQueryClient();
   const [detailTarget, setDetailTarget] = useState<ProductionWorkOrderTransferHeaderRow | null>(null);
+  const [workOrderDetailTarget, setWorkOrderDetailTarget] = useState<ProductionSourceWorkOrder | null>(null);
   const [withdrawTarget, setWithdrawTarget] = useState<ProductionWorkOrderTransferHeaderRow | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<ProductionSourceWorkOrder | null>(null);
   const {
@@ -535,19 +537,26 @@ export function ProductionWorkOrderTransferTabPanel({
     }
 
     const rows = await productionTransferApi.workOrderTransferGroups(tab);
-    if (tab === 'Picking') {
-      const [myAssignments, poolRows] = await Promise.all([
-        productionTransferApi.workOrderTransferGroups('MyAssignments'),
+    if (tab === 'Picking' || tab === 'MyAssignments') {
+      const [myAssignedRows, poolRows] = await Promise.all([
+        tab === 'Picking'
+          ? productionTransferApi.workOrderTransferGroups('MyAssignments')
+          : Promise.resolve(rows),
         productionTransferApi.taskPool(),
       ]);
-      const myAssignmentIds = new Set(myAssignments.map((row) => row.transferId));
       const poolTaskIdsByTransferId = buildPoolTaskIdsByTransferId(poolRows);
+      const myAssignmentIds = new Set(
+        myAssignedRows
+          .filter((row) => !poolTaskIdsByTransferId.has(row.transferId))
+          .map((row) => row.transferId),
+      );
       return filterLocalGridPage(
         rows.map((row) => {
           const poolTaskId = poolTaskIdsByTransferId.get(row.transferId);
+          const hasMyAssignment = myAssignmentIds.has(row.transferId);
           return {
             ...toGridRow(row),
-            hasMyAssignment: myAssignmentIds.has(row.transferId),
+            hasMyAssignment,
             hasPoolTask: poolTaskId != null,
             poolTaskId,
           };
@@ -558,10 +567,7 @@ export function ProductionWorkOrderTransferTabPanel({
     }
 
     return filterLocalGridPage(
-      rows.map((row) => ({
-        ...toGridRow(row),
-        hasMyAssignment: tab === 'MyAssignments' ? true : undefined,
-      })).filter(matchesPeriod),
+      rows.map((row) => toGridRow(row)).filter(matchesPeriod),
       request,
       SEARCHABLE_KEYS,
     );
@@ -580,10 +586,13 @@ export function ProductionWorkOrderTransferTabPanel({
   const claimPool = useMutation({
     mutationFn: async (payload: { transferId: number; taskId: number }) =>
       productionTransferApi.claimTask(payload.transferId, payload.taskId),
-    onSuccess: () => {
+    onSuccess: (_board, payload) => {
       refreshAllTransferGrids();
       onAfterPoolClaim?.();
       toast.success('Görev depo havuzundan üzerinize alındı.');
+      if (isMyAssignmentsTab) {
+        navigate(`${transferBaseUrl}/${payload.transferId}/operations`);
+      }
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : 'Görev üzerine alınamadı.'),
   });
@@ -593,13 +602,20 @@ export function ProductionWorkOrderTransferTabPanel({
   };
 
   const handleRowDoubleClick = useCallback((row: ProductionWorkOrderTransferGridRow) => {
-    if (isCancelledWorkOrderAssignmentRow(row)) return;
+    if (isCancelledWorkOrderAssignmentRow(row)) {
+      setWorkOrderDetailTarget(row.cancelledWorkOrder);
+      return;
+    }
     if (isMyAssignmentsTab) {
+      if (row.hasPoolTask && row.poolTaskId && !row.hasMyAssignment) {
+        claimPool.mutate({ transferId: row.id, taskId: row.poolTaskId });
+        return;
+      }
       navigate(`${transferBaseUrl}/${row.id}/operations`);
       return;
     }
     openDetail(row.source);
-  }, [isMyAssignmentsTab, navigate]);
+  }, [claimPool, isMyAssignmentsTab, navigate]);
 
   const openWithdrawDraft = (row: ProductionWorkOrderTransferHeaderRow) => {
     setWithdrawTarget(row);
@@ -694,6 +710,14 @@ export function ProductionWorkOrderTransferTabPanel({
         return (
         <>
           <strong className="font-mono font-semibold text-[var(--wms-brand-primary)]">{row.documentNo}</strong>
+          {row.hasPoolTask && !row.hasMyAssignment ? (
+            <div className="mt-1">
+              <span className="inline-flex items-center gap-1 rounded-full bg-cyan-500/10 px-2.5 py-1 text-xs font-semibold text-cyan-600">
+                <Users className="size-3" aria-hidden />
+                Depo havuzu
+              </span>
+            </div>
+          ) : null}
           {row.source.isResidualHeader ? (
             <div className="mt-1">
               <OpsStatusBadge tone="pending">Kalan transfer</OpsStatusBadge>
@@ -778,21 +802,32 @@ export function ProductionWorkOrderTransferTabPanel({
       key: 'actions',
       label: tc(`${G}.actions`),
       ...requiredActionColumn,
-      width: tab === 'Picking' ? 280 : tab === 'MyAssignments' ? 200 : 220,
+      width: tab === 'Picking' || tab === 'MyAssignments' ? 280 : 220,
       render: (row) => (
         <div className="wms-ops-row-actions" onClick={(event) => event.stopPropagation()}>
           {isCancelledWorkOrderAssignmentRow(row) ? (
-            can('WMS.PRODUCTION_TRANSFER.CREATE') ? (
+            <>
               <button
                 type="button"
-                title="İş emrini geri getir"
-                aria-label="İş emrini geri getir"
-                onClick={() => setRestoreTarget(row.cancelledWorkOrder)}
+                title="Detayı göster"
+                aria-label="Detayı göster"
+                onClick={() => setWorkOrderDetailTarget(row.cancelledWorkOrder)}
                 className="wms-ops-grid-icon-btn"
               >
-                <RotateCcw className="size-3.5" aria-hidden />
+                <Eye className="size-3.5" aria-hidden />
               </button>
-            ) : null
+              {can('WMS.PRODUCTION_TRANSFER.CREATE') ? (
+                <button
+                  type="button"
+                  title="İş emrini geri getir"
+                  aria-label="İş emrini geri getir"
+                  onClick={() => setRestoreTarget(row.cancelledWorkOrder)}
+                  className="wms-ops-grid-icon-btn"
+                >
+                  <RotateCcw className="size-3.5" aria-hidden />
+                </button>
+              ) : null}
+            </>
           ) : (
           <>
           <button
@@ -810,7 +845,7 @@ export function ProductionWorkOrderTransferTabPanel({
             tab={tab}
             onCompleted={refreshGroups}
           />
-          {tab === 'Picking'
+          {(tab === 'Picking' || tab === 'MyAssignments')
             && can('WMS.PRODUCTION_TRANSFER.OPERATE')
             && row.hasPoolTask
             && row.poolTaskId
@@ -924,6 +959,17 @@ export function ProductionWorkOrderTransferTabPanel({
           transferId={detailTarget.transferId}
           summary={detailTarget}
           onClose={() => setDetailTarget(null)}
+        />
+      ) : null}
+
+      {workOrderDetailTarget ? (
+        <ProductionWorkOrderDetailDialog
+          row={workOrderDetailTarget}
+          canCreateTransfer={false}
+          canCancel={false}
+          onClose={() => setWorkOrderDetailTarget(null)}
+          onOpenAssignment={() => undefined}
+          onCancel={() => undefined}
         />
       ) : null}
 

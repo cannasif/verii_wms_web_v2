@@ -231,6 +231,7 @@
       "title": "Historial de distribución de calidad",
       "description": "Muestra la decisión y la ruta de almacén/ubicación de cada cantidad.",
       "datReference": "Registro DAT #{{id}}",
+      "decisionCode": "Código de decisión",
       "images": "Imágenes de distribución"
     },
     "controlHistory": {

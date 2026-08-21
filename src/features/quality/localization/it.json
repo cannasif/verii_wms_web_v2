@@ -231,6 +231,7 @@
       "title": "Cronologia distribuzione qualità",
       "description": "Mostra la decisione e il percorso magazzino/ubicazione per ogni quantità.",
       "datReference": "Registrazione DAT #{{id}}",
+      "decisionCode": "Codice decisione",
       "images": "Immagini di distribuzione"
     },
     "controlHistory": {

@@ -93,8 +93,9 @@ export function ProductionWorkOrderDetailDialog({
 
   const assignedCount = row.assignedRecipeLineCount ?? 0;
   const recipeTotal = row.recipeLineCount || preparedQuery.data?.materials.length || 0;
-  const showAssign = canCreateTransfer && !row.isClosed;
-  const showCancel = canCancel && !row.isClosed;
+  const isCancelledAssignment = row.listingKind === 'ManagerCancelledAssignment';
+  const showAssign = canCreateTransfer && !row.isClosed && !isCancelledAssignment;
+  const showCancel = canCancel && !row.isClosed && !isCancelledAssignment;
   const hasLifecycle = showAssign || showCancel;
   const mainTabIndex = mainTab === 'info' ? 0 : 1;
   const value = preparedQuery.data ?? null;
@@ -140,7 +141,7 @@ export function ProductionWorkOrderDetailDialog({
                 <OpsStatusBadge tone="danger">
                   {value.mappingErrors.length} eşleme hatası
                 </OpsStatusBadge>
-              ) : value ? (
+              ) : value && !isCancelledAssignment ? (
                 <OpsStatusBadge tone="done">Eşlemeler hazır</OpsStatusBadge>
               ) : null}
               {value?.existingProductionOrderId ? (
@@ -199,7 +200,7 @@ export function ProductionWorkOrderDetailDialog({
                     Bilgi
                   </TabsTrigger>
                   <TabsTrigger value="content" className="wms-ops-detail-main-tab">
-                    Reçete
+                    {isCancelledAssignment ? 'İptal kalemleri' : 'Reçete'}
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -243,13 +244,15 @@ export function ProductionWorkOrderDetailDialog({
                         {value.targetWarehouseCode}
                         {value.targetWarehouseName ? ` · ${value.targetWarehouseName}` : ''}
                       </DetailField>
-                      <DetailField label="Reçete satırı">
-                        {recipeTotal > 0
-                          ? `${assignedCount} / ${recipeTotal} atandı`
-                          : `${value.materials.length} bileşen`}
+                      <DetailField label={isCancelledAssignment ? 'İptal kalemi' : 'Reçete satırı'}>
+                        {isCancelledAssignment
+                          ? `${value.materials.length} kalem`
+                          : recipeTotal > 0
+                            ? `${assignedCount} / ${recipeTotal} atandı`
+                            : `${value.materials.length} bileşen`}
                       </DetailField>
                       {value.description?.trim() ? (
-                        <DetailField label={t('detail.description')} wide>
+                        <DetailField label={isCancelledAssignment ? 'İptal nedeni' : t('detail.description')} wide>
                           <span className="whitespace-pre-wrap">{value.description.trim()}</span>
                         </DetailField>
                       ) : null}
@@ -277,7 +280,11 @@ export function ProductionWorkOrderDetailDialog({
                 {!value.materials.length ? (
                   <div className="wms-ops-detail-empty flex flex-col items-center gap-2 border border-dashed border-[var(--wms-app-border)] p-8 text-center">
                     <ClipboardList className="size-8 opacity-40" aria-hidden />
-                    <p className="text-sm text-slate-500">Bu iş emrine bağlı reçete bileşeni bulunamadı.</p>
+                    <p className="text-sm text-slate-500">
+                      {isCancelledAssignment
+                        ? 'Bu iptal kaydına bağlı kalem bulunamadı.'
+                        : 'Bu iş emrine bağlı reçete bileşeni bulunamadı.'}
+                    </p>
                   </div>
                 ) : (
                   <div className="wms-ops-gr-detail-lines-wrap min-h-0 flex-1 overflow-auto">
@@ -288,9 +295,15 @@ export function ProductionWorkOrderDetailDialog({
                           <th>Stok</th>
                           <th>Birim</th>
                           <th>Operasyon</th>
-                          <th className="wms-ops-gr-detail-lines-table__num">Reçete</th>
-                          <th className="wms-ops-gr-detail-lines-table__num">Fire</th>
-                          <th className="wms-ops-gr-detail-lines-table__num">Toplam ihtiyaç</th>
+                          {isCancelledAssignment ? (
+                            <th className="wms-ops-gr-detail-lines-table__num">İptal miktarı</th>
+                          ) : (
+                            <>
+                              <th className="wms-ops-gr-detail-lines-table__num">Reçete</th>
+                              <th className="wms-ops-gr-detail-lines-table__num">Fire</th>
+                              <th className="wms-ops-gr-detail-lines-table__num">Toplam ihtiyaç</th>
+                            </>
+                          )}
                           <th>Eşleme</th>
                         </tr>
                       </thead>
@@ -306,14 +319,24 @@ export function ProductionWorkOrderDetailDialog({
                             </td>
                             <td>{material.unitCode}</td>
                             <td>{material.operationNumber}</td>
-                            <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(material.recipeQuantity)}</td>
-                            <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(material.wasteQuantity)}</td>
-                            <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
-                              {formatProjectNumber(material.requiredQuantity)}
-                            </td>
+                            {isCancelledAssignment ? (
+                              <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
+                                {formatProjectNumber(material.requiredQuantity)}
+                              </td>
+                            ) : (
+                              <>
+                                <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(material.recipeQuantity)}</td>
+                                <td className="wms-ops-gr-detail-lines-table__num">{formatProjectNumber(material.wasteQuantity)}</td>
+                                <td className="wms-ops-gr-detail-lines-table__num wms-ops-gr-detail-lines-table__accent">
+                                  {formatProjectNumber(material.requiredQuantity)}
+                                </td>
+                              </>
+                            )}
                             <td>
                               {material.mappingError ? (
                                 <span className="text-amber-600">{material.mappingError}</span>
+                              ) : isCancelledAssignment ? (
+                                <span className="text-emerald-600">İptal kaydı</span>
                               ) : (
                                 <span className="text-emerald-600">Hazır</span>
                               )}

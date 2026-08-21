@@ -148,6 +148,10 @@ type DispositionDraft = {
   quantity: string;
   targetLocationId: number | null;
   targetWarehouseId?: number | null;
+  decisionCodeId?: string;
+  reasonCode?: string;
+  decisionCodeRequiresNote?: boolean;
+  reasonNote?: string;
 };
 
 type DispositionDraftImages = Record<number, Record<string, File[]>>;
@@ -503,6 +507,22 @@ function ensureStagedDispositionKey(
   return stagedKeys[slot];
 }
 
+function decisionRequiresReasonCode(decision: string): boolean {
+  return decision === "Rejected" || decision === "Quarantined" || decision === "Returned";
+}
+
+function emptyDispositionDecisionCode(): Pick<
+  DispositionDraft,
+  "decisionCodeId" | "reasonCode" | "decisionCodeRequiresNote" | "reasonNote"
+> {
+  return {
+    decisionCodeId: "",
+    reasonCode: "",
+    decisionCodeRequiresNote: false,
+    reasonNote: "",
+  };
+}
+
 function dispositionDraft(
   decision = "Accepted",
   quantity = 0,
@@ -515,7 +535,30 @@ function dispositionDraft(
     quantity: quantity > 0 ? String(roundQty(quantity)) : "",
     targetLocationId,
     targetWarehouseId,
+    ...emptyDispositionDecisionCode(),
   };
+}
+
+function resolveDispositionDecisionCodeId(part: DispositionDraft, draft: LineDraft): number | undefined {
+  if (!decisionRequiresReasonCode(part.decision)) return undefined;
+  if (draft.dispositions?.length) {
+    return Number(part.decisionCodeId) || undefined;
+  }
+  return Number(draft.decisionCodeId) || undefined;
+}
+
+function resolveDispositionDecisionNote(part: DispositionDraft, draft: LineDraft): string | undefined {
+  if (draft.dispositions?.length) {
+    const partNote = part.reasonNote?.trim();
+    if (partNote) return partNote;
+  }
+  return draft.reasonNote.trim() || undefined;
+}
+
+function dispositionPartRequiresNote(part: DispositionDraft, draft: LineDraft): boolean {
+  if (!decisionRequiresReasonCode(part.decision)) return false;
+  if (draft.dispositions?.length) return Boolean(part.decisionCodeRequiresNote);
+  return draft.decisionCodeRequiresNote;
 }
 
 function draftDispositions(
@@ -728,10 +771,10 @@ function buildDispositionRequests(
   if (returned.length > 0 && parsed.length !== 1) {
     throw new Error(t("errors.returnedFullLineOnly", { stockCode: line.stockCode }));
   }
-  if (parsed.some((part) => part.decision !== "Accepted") && !Number(draft.decisionCodeId)) {
+  if (parsed.some((part) => decisionRequiresReasonCode(part.decision) && !resolveDispositionDecisionCodeId(part, draft))) {
     throw new Error(t("errors.reasonCodeRequiredAllRows"));
   }
-  if (draft.decisionCodeRequiresNote && !draft.reasonNote.trim()) {
+  if (parsed.some((part) => dispositionPartRequiresNote(part, draft) && !resolveDispositionDecisionNote(part, draft))) {
     throw new Error(t("errors.reasonNoteRequiredForCode"));
   }
   if (parsed.some((part) => part.decision === "Accepted" && !part.targetLocationId && !fallbackAcceptedLocationId)) {
@@ -748,8 +791,8 @@ function buildDispositionRequests(
     decision: part.decision,
     quantity: part.parsedQuantity,
     targetLocationId: part.targetLocationId,
-    decisionCodeId: part.decision === "Accepted" ? undefined : Number(draft.decisionCodeId) || undefined,
-    note: draft.reasonNote.trim() || undefined,
+    decisionCodeId: resolveDispositionDecisionCodeId(part, draft),
+    note: resolveDispositionDecisionNote(part, draft),
     draftDispositionKey: part.key,
   }));
 }
@@ -2282,9 +2325,12 @@ function InspectionDetailPanel({
       let lastResult: QualityDecisionResult | null = null;
 
       if (dispositionRequests.length > 0) {
-        const notes = distributionRows
-          .map(({ draft }) => draft.reasonNote.trim())
-          .filter(Boolean);
+        const notes = [...new Set(
+          distributionRows.flatMap(({ draft }) => [
+            draft.reasonNote.trim(),
+            ...(draft.dispositions ?? []).map((part) => part.reasonNote?.trim() ?? ""),
+          ]).filter(Boolean),
+        )];
         const primaryDecision =
           dispositionRequests.find((part) => part.decision === "Accepted")?.decision
           ?? dispositionRequests[0]?.decision
@@ -3139,6 +3185,18 @@ function InspectionDetailPanel({
                   <div className="mt-2 font-mono text-[0.68rem] text-slate-500">
                     {part.sourceWarehouseCode}/{part.sourceLocationCode} → {part.targetWarehouseCode}/{part.targetLocationCode}
                   </div>
+                  {part.reasonCode || part.reasonNote ? (
+                    <div className="mt-2 text-[0.68rem] leading-relaxed text-slate-600">
+                      {part.reasonCode ? (
+                        <>
+                          {t("detail.history.decisionCode")}: <span className="font-mono font-semibold">{part.reasonCode}</span>
+                          {part.reasonNote ? ` · ${part.reasonNote}` : ""}
+                        </>
+                      ) : (
+                        part.reasonNote
+                      )}
+                    </div>
+                  ) : null}
                   {part.warehouseTransferId ? (
                     <div className="mt-1 text-[0.65rem] font-semibold text-cyan-600">
                       {t("detail.history.datReference", { id: part.warehouseTransferId })}
@@ -3667,13 +3725,13 @@ function LineDecisionPopover({
   const defaultAcceptedWarehouseId = defaultAcceptedDestination?.warehouseId ?? null;
   const defaultRejectedWarehouseId = defaultRejectedDestination?.warehouseId ?? null;
   const advancedDispositions = draft.dispositions ?? [];
-  const decisionCodeFilter = advancedDispositions.find((part) => part.decision !== "Accepted")?.decision
-    ?? (draft.decision !== "Accepted" ? draft.decision : hasRemainder && draft.remainderDecision !== "Accepted"
-      ? draft.remainderDecision
-      : draft.decision || "Accepted");
-  const showDecisionCode = advancedDispositions.some((part) => part.decision && part.decision !== "Accepted")
-    || Boolean(draft.decision && draft.decision !== "Accepted")
-    || Boolean(hasRemainder && draft.remainderDecision && draft.remainderDecision !== "Accepted");
+  const decisionCodeFilter = draft.decision !== "Accepted" ? draft.decision : hasRemainder && draft.remainderDecision !== "Accepted"
+    ? draft.remainderDecision
+    : draft.decision || "Accepted";
+  const showDecisionCode = advancedDispositions.length === 0 && (
+    Boolean(draft.decision && draft.decision !== "Accepted")
+    || Boolean(hasRemainder && draft.remainderDecision && draft.remainderDecision !== "Accepted")
+  );
   const allocatedQuantity = roundQty(
     advancedDispositions.reduce((sum, part) => {
       const quantity = parseQty(part.quantity);
@@ -3723,6 +3781,11 @@ function LineDecisionPopover({
         defaultRejectedLocationId,
         t,
       );
+      const inheritDecision = decisionRequiresReasonCode(draft.decision)
+        ? draft.decision
+        : hasRemainder && decisionRequiresReasonCode(draft.remainderDecision)
+          ? draft.remainderDecision
+          : "";
       onChange({
         stagedDispositionKeys,
         dispositions: parts.map((part) => ({
@@ -3733,28 +3796,27 @@ function LineDecisionPopover({
             fallbackQuarantineWarehouseId,
             defaultRejectedWarehouseId,
           ),
+          ...(decisionRequiresReasonCode(part.decision)
+            && part.decision === inheritDecision
+            && draft.decisionCodeId
+            ? {
+                decisionCodeId: draft.decisionCodeId,
+                reasonCode: draft.reasonCode,
+                decisionCodeRequiresNote: draft.decisionCodeRequiresNote,
+                reasonNote: draft.reasonNote,
+              }
+            : emptyDispositionDecisionCode()),
         })),
       });
     } catch (error) {
       toast.error(message(error, t("errors.quantityDistributionInvalid")));
     }
   };
-  const patchDisposition = (
-    key: string,
-    patch: Partial<DispositionDraft>,
-    resetDecisionCode = false,
-  ) =>
+  const patchDisposition = (key: string, patch: Partial<DispositionDraft>) =>
     onChange({
       dispositions: advancedDispositions.map((part) =>
         part.key === key ? { ...part, ...patch } : part,
       ),
-      ...(resetDecisionCode
-        ? {
-            decisionCodeId: "",
-            reasonCode: "",
-            decisionCodeRequiresNote: false,
-          }
-        : {}),
     });
   const addDisposition = () => {
     if (unallocatedQuantity <= QTY_EPS) return;
@@ -3984,9 +4046,26 @@ function LineDecisionPopover({
                 </div>
                 <button
                   type="button"
-                  onClick={() => advancedDispositions.length > 0
-                    ? onChange({ dispositions: undefined })
-                    : enableDistributionPlan()}
+                  onClick={() => {
+                    if (advancedDispositions.length === 0) {
+                      enableDistributionPlan();
+                      return;
+                    }
+                    const coded = advancedDispositions.find(
+                      (part) => decisionRequiresReasonCode(part.decision) && part.decisionCodeId,
+                    );
+                    onChange({
+                      dispositions: undefined,
+                      ...(coded
+                        ? {
+                            decisionCodeId: coded.decisionCodeId ?? "",
+                            reasonCode: coded.reasonCode ?? "",
+                            decisionCodeRequiresNote: Boolean(coded.decisionCodeRequiresNote),
+                            reasonNote: coded.reasonNote?.trim() || draft.reasonNote,
+                          }
+                        : {}),
+                    });
+                  }}
                   className="shrink-0 rounded-lg border border-cyan-500/30 px-2.5 py-1.5 text-[0.65rem] font-bold text-cyan-600"
                 >
                   {advancedDispositions.length > 0
@@ -4201,7 +4280,8 @@ function LineDecisionPopover({
                               fallbackQuarantineWarehouseId,
                               defaultRejectedWarehouseId,
                             ),
-                          }, true)}
+                            ...emptyDispositionDecisionCode(),
+                          })}
                           options={options}
                           placeholder={t("linePopover.decisionPlaceholder")}
                           className="wms-ops-quality-field !h-10 !min-h-10 !text-xs"
@@ -4335,6 +4415,20 @@ function LineDecisionPopover({
                           <QualityDispositionImageButton {...dispositionImageProps(part)} />
                         </div>
                       ) : null}
+                      {decisionRequiresReasonCode(part.decision) ? (
+                        <QualityDispositionDecisionCodeFields
+                          branchCode={branchCode}
+                          lineId={line.id}
+                          scope={part.key}
+                          decision={part.decision}
+                          decisionCodeId={part.decisionCodeId ?? ""}
+                          reasonCode={part.reasonCode ?? ""}
+                          decisionCodeRequiresNote={Boolean(part.decisionCodeRequiresNote)}
+                          reasonNote={part.reasonNote ?? ""}
+                          compact
+                          onCodeChange={(patch) => patchDisposition(part.key, patch)}
+                        />
+                      ) : null}
                     </div>
                   ))}
                   <button
@@ -4412,6 +4506,99 @@ function LineDecisionPopover({
           )
         : null}
     </>
+  );
+}
+
+function QualityDispositionDecisionCodeFields({
+  branchCode,
+  lineId,
+  scope,
+  decision,
+  decisionCodeId,
+  reasonCode,
+  decisionCodeRequiresNote,
+  reasonNote,
+  compact = false,
+  onCodeChange,
+}: {
+  branchCode: string;
+  lineId: number;
+  scope: string;
+  decision: string;
+  decisionCodeId: string;
+  reasonCode: string;
+  decisionCodeRequiresNote: boolean;
+  reasonNote: string;
+  compact?: boolean;
+  onCodeChange: (patch: Partial<Pick<
+    DispositionDraft,
+    "decisionCodeId" | "reasonCode" | "decisionCodeRequiresNote" | "reasonNote"
+  >>) => void;
+}): ReactElement {
+  const { t } = useModuleTranslation("quality");
+  const fieldClass = compact
+    ? "wms-ops-quality-field !h-10 !min-h-10 !text-xs"
+    : "wms-ops-quality-field !h-10 !min-h-10 !text-sm";
+  return (
+    <div className="space-y-2">
+      <label className="block space-y-1 text-sm">
+        <span className="text-xs font-semibold text-slate-500">
+          {t("linePopover.reasonCodeLabel")}
+        </span>
+        <PagedAppDropdown
+          queryKey={["quality-decision-code-disposition", branchCode, lineId, scope, decision]}
+          fetchPage={(request) => qualityApi.decisionCodeOptions(request, branchCode, decision)}
+          toOption={(item) => ({
+            value: String(item.id),
+            label: `${item.code} · ${item.name}`,
+            description: item.requiresNote ? t("linePopover.reasonNoteRequired") : undefined,
+            meta: item,
+          })}
+          value={decisionCodeId || null}
+          selectedOption={decisionCodeId && reasonCode ? {
+            value: decisionCodeId,
+            label: reasonCode,
+          } : undefined}
+          onValueChange={() => undefined}
+          onOptionChange={(option) => {
+            const item = option?.meta as { code?: string; name?: string; requiresNote?: boolean } | undefined;
+            onCodeChange({
+              decisionCodeId: option?.value ? String(option.value) : "",
+              reasonCode: item?.code && item?.name ? `${item.code} · ${item.name}` : "",
+              decisionCodeRequiresNote: Boolean(item?.requiresNote),
+              reasonNote: item?.requiresNote ? reasonNote : "",
+            });
+          }}
+          placeholder={t("linePopover.reasonCodePlaceholder")}
+          className={fieldClass}
+          searchFields={["code", "name"]}
+          enabled={decisionRequiresReasonCode(decision)}
+          portalContainer={null}
+          contentClassName="!z-[5100]"
+        />
+      </label>
+      {decisionCodeRequiresNote ? (
+        <label className="block space-y-1 text-sm">
+          <span className="text-xs font-semibold text-slate-500">
+            {t("linePopover.reasonLabel")}
+          </span>
+          <OpsFieldShell className="wms-ops-quality-field-shell">
+            <textarea
+              className={cn(
+                OPS_FIELD_CLASS,
+                compact
+                  ? "wms-ops-quality-field min-h-12 w-full resize-y border px-3 py-2 text-xs outline-none"
+                  : "wms-ops-quality-field min-h-16 w-full resize-y border px-3 py-2 text-sm outline-none",
+              )}
+              value={reasonNote}
+              onChange={(event) => onCodeChange({ reasonNote: event.target.value })}
+              placeholder={t("linePopover.reasonPlaceholder")}
+              maxLength={500}
+            />
+          </OpsFieldShell>
+        </label>
+      ) : null}
+    </div>
   );
 }
 
