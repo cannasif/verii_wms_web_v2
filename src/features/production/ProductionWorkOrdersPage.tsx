@@ -1228,27 +1228,16 @@ function WorkOrderDrawer({
   const completeAssignments = async (): Promise<void> => {
     if (blocked || !canCreateTransfer || assigneeGroups.length === 0) return;
     const remainingCount = unassignedLines.size;
-    const isExistingUnlinkedRemainder =
-      (value.listingKind === 'CancellationReturnRemainder' || value.listingKind === 'PartialTransferRemainder')
-      && Number.isFinite(value.transferId) && (value.transferId ?? 0) > 0
-      && Number.isFinite(value.kalanTaskId) && (value.kalanTaskId ?? 0) > 0
-      && !value.existingProductionOrderId
-      && !value.existingProductionHeaderId;
-    const isExistingUnassignedCreated =
-      value.listingKind === 'UnassignedCreatedTransfer'
-      && Number.isFinite(value.transferId) && (value.transferId ?? 0) > 0
+    // Atanmayanlar satırı mevcut bir transfer görevini temsil ediyorsa türünden ve üretim
+    // bağlantısından bağımsız olarak o görevi ata. Aksi halde aynı iş için ikinci transfer oluşur.
+    const isExistingTransferTask =
+      Number.isFinite(value.transferId) && (value.transferId ?? 0) > 0
       && Number.isFinite(value.kalanTaskId) && (value.kalanTaskId ?? 0) > 0;
     setCompletingTransfer(true);
     try {
-      if (isExistingUnlinkedRemainder || isExistingUnassignedCreated) {
+      if (isExistingTransferTask) {
         if (assigneeGroups.length !== 1) {
-          throw new Error(
-            value.listingKind === 'PartialTransferRemainder'
-              ? 'Eksik teslim kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.'
-              : value.listingKind === 'UnassignedCreatedTransfer'
-                ? 'Atama bekleyen transfer aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.'
-                : 'İptal kalan transferi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.',
-          );
+          throw new Error('Mevcut transfer görevi aynı oturumda yalnızca tek bir atama grubu ile kaydedilebilir.');
         }
         const group = assigneeGroups[0];
         await applyProductionTransferGroupAssignment(value.transferId!, value.kalanTaskId!, group);

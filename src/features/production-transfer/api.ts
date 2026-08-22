@@ -45,6 +45,7 @@ export interface ProductionTask {
   startedAtUtc?: string; startedBy?: number; completedAtUtc?: string; completedBy?: number; assignments: ProductionTaskAssignment[]; lines: ProductionTaskLine[];
   originTaskId?: number; originUserId?: number; previousTaskId?: number;
   assignedUsernames?: string[];
+  releasedToWarehousePool: boolean;
 }
 export interface ProductionTaskBoard {
   transferId: number; documentNo: string; transferStatus: string; sourceWarehouseId: number;
