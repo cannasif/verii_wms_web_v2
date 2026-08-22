@@ -1924,6 +1924,45 @@ function LineCard({
       <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
         <Field label={t(`${D}.lines.stock`)}>
           <div className="flex items-stretch gap-2">
+            {variant === "production" ? (
+            <div className="min-w-0 flex-1">
+            <PagedLookupDialog<StockOption>
+              variant="ops"
+              triggerMode="combobox"
+              autoSearchMinLength={2}
+              popoverPortalContainer={null}
+              openDialogOnTouchTap
+              open={false}
+              onOpenChange={(next) => {
+                if (next) setStockDialogOpen(true);
+              }}
+              title={t("stockSelectDialog.title")}
+              description={t("stockSelectDialog.description")}
+              value={stock ? `${stock.erpStockCode} · ${stock.stockName ?? ""}`.trim() : null}
+              placeholder={t(`${D}.lines.stock`)}
+              searchPlaceholder={t("stockSelectDialog.searchPlaceholder")}
+              emptyText={t("stockSelectDialog.noResults")}
+              queryKey={["wt-stock-lookup", line.localId, branchCode]}
+              fetchPage={async ({ pageNumber, pageSize, search, signal }) =>
+                toPagedResponse(await warehouseTransferApi.stocks({
+                  pageNumber,
+                  pageSize,
+                  search,
+                  sortBy: "erpStockCode",
+                  sortDirection: "asc",
+                  signal: signal ?? new AbortController().signal,
+                }, branchCode))
+              }
+              getKey={(item) => String(item.id)}
+              getLabel={(item) => `${item.erpStockCode} · ${item.stockName ?? ""}`}
+              getPrimaryLabel={(item) => item.stockName?.trim() || item.erpStockCode}
+              getSecondaryLabel={(item) => item.erpStockCode}
+              onSelect={(item) => {
+                void applyStock(item);
+              }}
+            />
+            </div>
+            ) : (
             <OpsFieldShell className="min-w-0 flex-1">
             <PagedAppDropdown
               queryKey={["wt-stock", line.localId, branchCode]}
@@ -1957,6 +1996,8 @@ function LineCard({
               minSearchLength={2}
             />
             </OpsFieldShell>
+            )}
+            {variant !== "production" && (
             <button
               type="button"
               onClick={() => setStockDialogOpen(true)}
@@ -1965,6 +2006,7 @@ function LineCard({
             >
               <Search className="size-4" strokeWidth={2.25} />
             </button>
+            )}
           </div>
           <StockSelectDialog
             open={stockDialogOpen}
