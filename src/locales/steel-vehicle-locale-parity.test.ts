@@ -25,6 +25,7 @@ const requiredKeys=[
   'vehicleCheckIn.toast.saveVehicleFailed',
   'vehicleCheckIn.toast.sheetAlreadyAccepted',
   'vehicleCheckIn.toast.sheetCountBelowSaved',
+  'vehicleCheckIn.toast.sheetsMixedExcelAutoSelected',
   'vehicleCheckIn.toast.unknownPlateResolved',
   'vehicleCheckIn.toast.vehicleSaved',
   'vehicleCheckIn.unknownBadge',

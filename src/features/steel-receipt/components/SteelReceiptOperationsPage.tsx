@@ -11,6 +11,10 @@ import {OperationDraftRestoreDialog} from '@/features/operation-drafts/Operation
 import {useOperationDraft} from '@/features/operation-drafts/useOperationDraft';
 import {goodsReceiptV2Api} from '@/features/goods-receipt-v2/api/goods-receipt.api';
 import {locationsApi} from '@/features/locations/api/locations.api';
+import {
+  buildExcludedPutawayLocationTypeFilters,
+  isEligiblePutawayTargetLocation,
+} from '@/features/shared/location-eligibility';
 import {printReceiptLabels} from '@/features/goods-receipt-v2/utils/goods-receipt-label-output';
 import {completeGoodsReceiptDocumentNo,isValidGoodsReceiptDocumentNo,normalizeGoodsReceiptDocumentNo} from '@/features/goods-receipt-v2/utils/goods-receipt-document-reference';
 import {localizeEnumValue} from '@/lib/enum-localization';
@@ -25,10 +29,15 @@ import {
   loadPlacementSource,
 } from '../utils/steel-receipt-placement';
 import {
+  areAllPlacementSheetsSelected,
+  compatiblePlacementSheetsForSelection,
   hasPendingPlacementLines,
   hasSteelReceiptPlacementDraft,
   isPlacementSourceStillPending,
-  restoreSelectedLine,
+  keepPendingPlacementSelection,
+  restoreSelectedLines as restorePlacementSelectedLines,
+  toggleAllPlacementSheetSelection,
+  togglePlacementSheetSelection,
   type LoadPlacementSourceOptions,
   type SteelReceiptPlacementDraft,
 } from '../utils/steel-receipt-placement-draft';
@@ -69,7 +78,7 @@ function ReceiptPanel(){
   const [documentDate,setDocumentDate]=useState(today);
   const [tradeType,setTradeType]=useState<SteelReceiptTradeType>('Domestic');
   const [importFileNumber,setImportFileNumber]=useState('');
-  const [lastResult,setLastResult]=useState<ConvertResult|null>(null);
+  const [lastResult,setLastResult]=useState<(ConvertResult&{waybillNo:string})|null>(null);
   const [printing,setPrinting]=useState(false);
   const [busy,setBusy]=useState(false);
   const [restoring,setRestoring]=useState(false);
@@ -231,8 +240,9 @@ function ReceiptPanel(){
         tradeType,importFileNumber:tradeType==='Foreign'?importFileNumber:undefined,
         description:note,priority:1,assignedUserIds:[],assignToAllActiveUsers:false,
       });
-      toast.success(t(`${R}.convertSuccess`,{documentNo:result.documentNo,count:result.convertedLineCount}));
-      setLastResult(result);idempotencyKey.current=crypto.randomUUID();
+      const waybillNo=receiptNo.trim();
+      toast.success(t(`${R}.convertSuccess`,{documentNo:waybillNo,count:result.convertedLineCount}));
+      setLastResult({...result,waybillNo});idempotencyKey.current=crypto.randomUUID();
       setSelected({});setNote('');
       const refreshed=await loadSource(source.importReferenceNo,{preserveResult:true,silent:true});
       if(refreshed&&!hasPendingReceiptLines(refreshed))void clearDraft();
@@ -245,7 +255,7 @@ function ReceiptPanel(){
       const wanted=new Set(lastResult.generatedLabelIds??[]);
       const labels=(await goodsReceiptV2Api.receiptLabels(lastResult.goodsReceiptId)).filter(label=>wanted.has(label.id));
       if(!labels.length)throw new Error(t(`${R}.noPrintableLabels`));
-      printReceiptLabels(labels,t(`${R}.printTitle`,{documentNo:lastResult.documentNo}));
+      printReceiptLabels(labels,t(`${R}.printTitle`,{documentNo:lastResult.waybillNo||lastResult.documentNo}));
       const unprinted=labels.filter(label=>label.printCount===0).map(label=>label.id);
       if(unprinted.length)await goodsReceiptV2Api.markLabelsPrinted(unprinted);
     }catch(error){toast.error(error instanceof Error?error.message:t(`${R}.printFailed`))}
@@ -253,6 +263,8 @@ function ReceiptPanel(){
   };
   const selectable=source?.lines.filter(eligible)??[];
   const allSelectableSelected=selectable.length>0&&selectable.every(row=>selected[row.id]);
+  const someSelectableSelected=selectable.some(row=>Boolean(selected[row.id]));
+  const toggleAllSelectable=()=>setSelected(allSelectableSelected?{}:Object.fromEntries(selectable.map(row=>[row.id,row])));
   const lastConversionWaybill=useMemo(
     ()=>resolveLastConversionWaybill(source?.lines??[]),
     [source?.lines],
@@ -321,12 +333,12 @@ function ReceiptPanel(){
 
     {source&&<div className="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,.7fr)]">
       <section className="min-w-0 overflow-hidden rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)]">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
-          <div><h2 className="font-black">{t(`${R}.linkedSheetsTitle`)}</h2><p className="text-xs text-slate-500">{t(`${R}.linkedSheetsSummary`,{total:source.lines.length,ready:selectable.length})}</p></div>
-          <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={allSelectableSelected} disabled={!selectable.length} onChange={()=>setSelected(allSelectableSelected?{}:Object.fromEntries(selectable.map(row=>[row.id,row])))} className="size-4 accent-cyan-500"/>{t(`${R}.selectAllEligible`)}</label>
+        <div className="border-b p-4">
+          <h2 className="font-black">{t(`${R}.linkedSheetsTitle`)}</h2>
+          <p className="text-xs text-slate-500">{t(`${R}.linkedSheetsSummary`,{total:source.lines.length,ready:selectable.length})}</p>
         </div>
         <div className="overflow-x-auto"><table className="w-full min-w-[1280px] text-left text-sm">
-          <thead className="bg-black/[.03] text-xs uppercase text-slate-500 dark:bg-white/[.03]"><tr><th className="p-3">{t(`${R}.select`)}</th><th className="p-3">{t(`${R}.dCodeSerial`)}</th><th className="p-3">{t(`${R}.stock`)}</th><th className="p-3">{t(`${R}.expectedQty`)}</th><th className="p-3">{t(`${R}.approvedQty`)}</th><th className="p-3">{t(`${R}.approvalErpStatus`)}</th><th className="p-3">{t(`${R}.conversionDate`)}</th><th className="p-3">{t(`${R}.waybillNo`)}</th><th className="p-3">{t('actions')}</th></tr></thead>
+          <thead className="bg-black/[.03] text-xs uppercase text-slate-500 dark:bg-white/[.03]"><tr><th className="p-3"><label className="flex cursor-pointer items-center gap-2 text-sm font-bold normal-case text-slate-700 dark:text-slate-200"><input type="checkbox" checked={allSelectableSelected} disabled={!selectable.length} ref={element=>{if(element)element.indeterminate=someSelectableSelected&&!allSelectableSelected}} onChange={toggleAllSelectable} aria-label={t(`${R}.selectAllAria`)} className="size-4 accent-cyan-500"/>{t(`${R}.selectAll`)}</label></th><th className="p-3">{t(`${R}.dCodeSerial`)}</th><th className="p-3">{t(`${R}.stock`)}</th><th className="p-3">{t(`${R}.expectedQty`)}</th><th className="p-3">{t(`${R}.approvedQty`)}</th><th className="p-3">{t(`${R}.approvalErpStatus`)}</th><th className="p-3">{t(`${R}.conversionDate`)}</th><th className="p-3">{t(`${R}.waybillNo`)}</th><th className="p-3">{t('actions')}</th></tr></thead>
           <tbody>{source.lines.map(row=>{const canSelect=eligible(row);const hasGoodsReceipt=row.conversionStatus!=='NotCreated'&&!!row.goodsReceiptId;return <tr key={row.id} className={`border-t ${selected[row.id]?'bg-cyan-500/10':!canSelect?'opacity-65':''}`}>
             <td className="p-3"><input type="checkbox" checked={Boolean(selected[row.id])} disabled={!canSelect} onChange={()=>toggle(row)} className="size-4 accent-cyan-500" aria-label={t(`${R}.selectRowAria`,{dCode:row.dCode})}/></td>
             <td className="p-3"><strong className="font-mono text-cyan-500">{row.dCode}</strong><small className="block text-slate-500">{row.supplierSerialNo}</small></td>
@@ -398,7 +410,7 @@ function ReceiptPanel(){
       </section>
       <Field label={t(`${R}.orderNote`)}><textarea className="input min-h-24" value={note} onChange={e=>setNote(e.target.value)} placeholder={t(`${R}.orderNotePlaceholder`)}/></Field>
       <button disabled={busy||!selectedRows.length||!receiptNoValid||!documentDate||!tradeSelectionValid} onClick={()=>void convert()} className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-bold text-white disabled:opacity-40">{busy?<Loader2 className="mr-2 inline size-4 animate-spin"/>:<ArrowRight className="mr-2 inline size-4"/>}{t(`${R}.completeDirectReceipt`)}</button>
-      {lastResult&&<section className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><div className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 size-5 text-emerald-500"/><div><strong className="block">{lastResult.documentNo}</strong><small className="text-slate-500">{t(`${R}.receiptCompletedNote`)}</small></div></div>{(lastResult.generatedLabelIds?.length??0)>0&&<button type="button" disabled={printing} onClick={()=>void printLabels()} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/40 px-3 py-2 text-sm font-bold text-violet-500 disabled:opacity-40">{printing?<Loader2 className="size-4 animate-spin"/>:<Printer className="size-4"/>}{t(`${R}.printReceiptLabels`)}</button>}</section>}
+      {lastResult&&<section className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"><div className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 size-5 text-emerald-500"/><div><strong className="block">{lastResult.waybillNo||lastResult.documentNo}</strong><small className="text-slate-500">{t(`${R}.receiptCompletedNote`)}</small></div></div>{(lastResult.generatedLabelIds?.length??0)>0&&<button type="button" disabled={printing} onClick={()=>void printLabels()} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/40 px-3 py-2 text-sm font-bold text-violet-500 disabled:opacity-40">{printing?<Loader2 className="size-4 animate-spin"/>:<Printer className="size-4"/>}{t(`${R}.printReceiptLabels`)}</button>}</section>}
     </aside>
     </div>}
   </div>;
@@ -449,8 +461,10 @@ function PlacementPanel(){
   const [pendingLines,setPendingLines]=useState<SteelLineRow[]>([]);
   const [input,setInput]=useState('');
   const [search,setSearch]=useState('');
-  const [selected,setSelected]=useState<SteelLineRow|null>(null);
+  const [selectedSheets,setSelectedSheets]=useState<SteelLineRow[]>([]);
   const [location,setLocation]=useState<string|null>(null);
+  const [pinnedWarehouseId,setPinnedWarehouseId]=useState(0);
+  const [pinnedWarehouseCode,setPinnedWarehouseCode]=useState<number|undefined>();
   const [busy,setBusy]=useState(false);
   const [restoring,setRestoring]=useState(false);
   const [restoreDialogOpen,setRestoreDialogOpen]=useState(false);
@@ -470,19 +484,23 @@ function PlacementPanel(){
     setBusy(true);
     try{
       const result=await loadPlacementSource(normalized);
+      const sourceChanged=Boolean(source?.importReferenceNo&&source.importReferenceNo!==result.source.importReferenceNo);
       setSource(result.source);
       setPendingLines(result.pendingLines);
       setSelectedSourceReference(result.source.importReferenceNo);
       setReference(result.source.importReferenceNo);
-      const restoredLine=options.restoreSelectedLineId!=null
-        ?restoreSelectedLine(result.pendingLines,options.restoreSelectedLineId)
-        :null;
-      setSelected(current=>{
-        if(options.restoreSelectedLineId!=null)return restoredLine;
-        return current&&result.pendingLines.some(line=>line.id===current.id)?current:null;
-      });
-      if(options.restoreSelectedLineId!=null){
-        setLocation(restoredLine&&options.restoreLocationId?options.restoreLocationId:null);
+      if(sourceChanged&&!options.silent){
+        setLocation(null);
+        setPinnedWarehouseId(0);
+        setPinnedWarehouseCode(undefined);
+      }
+      const restoringSelection=options.restoreSelectedLineIds!=null||options.restoreSelectedLineId!=null;
+      const restoredSheets=restoringSelection
+        ?restorePlacementSelectedLines(result.pendingLines,options.restoreSelectedLineIds,options.restoreSelectedLineId)
+        :[];
+      setSelectedSheets(current=>restoringSelection?restoredSheets:keepPendingPlacementSelection(current,result.pendingLines));
+      if(restoringSelection){
+        setLocation(restoredSheets.length&&options.restoreLocationId?options.restoreLocationId:null);
       }
       if(options.restoreSearch!=null){
         setSearch(options.restoreSearch);
@@ -495,8 +513,10 @@ function PlacementPanel(){
       setSource(null);
       setPendingLines([]);
       setSelectedSourceReference(null);
-      setSelected(null);
+      setSelectedSheets([]);
       setLocation(null);
+      setPinnedWarehouseId(0);
+      setPinnedWarehouseCode(undefined);
       if(options.silent)void clearDraftRef.current();
       if(!options.silent)toast.error(error instanceof Error?error.message:t(`${R}.sourceLoadFailed`));
       return false;
@@ -512,6 +532,7 @@ function PlacementPanel(){
     void loadSourceRef.current(draft.importReferenceNo,{
       silent:true,
       restoreSelectedLineId:draft.selectedLineId,
+      restoreSelectedLineIds:draft.selectedLineIds,
       restoreLocationId:draft.locationId,
       restoreSearch:draft.search,
     }).finally(()=>setRestoring(false));
@@ -519,10 +540,11 @@ function PlacementPanel(){
   const draftPayload=useMemo<SteelReceiptPlacementDraft>(()=>({
     importReferenceNo:source?.importReferenceNo??selectedSourceReference??'',
     reference,
-    selectedLineId:selected?.id??null,
+    selectedLineId:selectedSheets[0]?.id??null,
+    selectedLineIds:selectedSheets.map(row=>row.id),
     locationId:location,
     search,
-  }),[location,reference,search,selected,selectedSourceReference,source?.importReferenceNo]);
+  }),[location,reference,search,selectedSheets,selectedSourceReference,source?.importReferenceNo]);
   const operationDraft=useOperationDraft({
     operationType:'steel-receipt-placement',
     userId,
@@ -556,50 +578,136 @@ function PlacementPanel(){
     ()=>filterPlacementLinesBySearch(pendingLines,search),
     [pendingLines,search],
   );
-  const selectedWarehouseId=selected?resolveTargetWarehouseId(selected):0;
+  const primarySelected=selectedSheets[0]??null;
+  const selectedWarehouseId=primarySelected?resolveTargetWarehouseId(primarySelected):0;
   const lineFallback=useQuery({
-    queryKey:['steel-placement-line-warehouse',selected?.id],
-    queryFn:()=>steelReceiptApi.line(selected!.id),
-    enabled:!!selected&&selectedWarehouseId<=0,
+    queryKey:['steel-placement-line-warehouse',primarySelected?.id],
+    queryFn:()=>steelReceiptApi.line(primarySelected!.id),
+    enabled:!!primarySelected&&selectedWarehouseId<=0,
   });
-  const targetWarehouseId=selected
-    ?(selectedWarehouseId>0?selectedWarehouseId:resolveTargetWarehouseId(lineFallback.data??selected))
+  const selectedResolvedWarehouseId=primarySelected
+    ?(selectedWarehouseId>0?selectedWarehouseId:resolveTargetWarehouseId(lineFallback.data??primarySelected))
     :0;
-  const warehouseCode=selected?resolveWarehouseCode(lineFallback.data??selected):undefined;
-  const activeRow=lineFallback.data??selected;
+  const selectedWarehouseCode=primarySelected?resolveWarehouseCode(lineFallback.data??primarySelected):undefined;
+  const targetWarehouseId=selectedResolvedWarehouseId>0?selectedResolvedWarehouseId:pinnedWarehouseId;
+  const warehouseCode=selectedWarehouseCode??pinnedWarehouseCode;
+  useEffect(()=>{
+    if(selectedResolvedWarehouseId<=0)return;
+    setPinnedWarehouseId(selectedResolvedWarehouseId);
+    if(selectedWarehouseCode)setPinnedWarehouseCode(selectedWarehouseCode);
+  },[selectedResolvedWarehouseId,selectedWarehouseCode]);
+  const activeRow=lineFallback.data??primarySelected;
+  const receivingLocationIds=useMemo(()=>{
+    const ids=new Set<number>();
+    selectedSheets.forEach(row=>{
+      const id=resolveReceivingLocationId(row);
+      if(id>0)ids.add(id);
+    });
+    const fallbackId=activeRow?resolveReceivingLocationId(activeRow):0;
+    if(fallbackId>0)ids.add(fallbackId);
+    return ids;
+  },[activeRow,selectedSheets]);
   const receivingLocationId=activeRow?resolveReceivingLocationId(activeRow):0;
   const receivingLocationLabel=activeRow?resolveReceivingLocationLabel(activeRow):null;
   const sourceLocation=useQuery({
     queryKey:['steel-placement-source-location',receivingLocationId],
     queryFn:()=>locationsApi.getById(receivingLocationId),
-    enabled:!!selected&&receivingLocationId>0&&!receivingLocationLabel,
+    enabled:!!primarySelected&&receivingLocationId>0&&!receivingLocationLabel,
   });
   const sourceShelfText=receivingLocationLabel
     ??(sourceLocation.data?`${sourceLocation.data.code} · ${sourceLocation.data.name}${sourceLocation.data.locationType?` (${sourceLocation.data.locationType})`:''}`:null);
   const occupancy=useQuery({queryKey:['steel-occupancy',location],queryFn:()=>steelReceiptApi.occupancy(Number(location)),enabled:!!location});
   const nextStack=useMemo(()=>{const items=occupancy.data??[];return Math.max(items.length,...items.map(x=>x.stackOrderNo??0))+1},[occupancy.data]);
+  const pendingStackItems=useMemo(
+    ()=>selectedSheets.map((row,index)=>({dCode:row.dCode,stackOrder:nextStack+index})),
+    [nextStack,selectedSheets],
+  );
   const fetchTargetLocations=useCallback(async(request:Parameters<typeof goodsReceiptV2Api.locations>[0])=>{
-    const page=await goodsReceiptV2Api.locations(request,targetWarehouseId);
-    if(receivingLocationId<=0)return page;
-    const items=page.items.filter(item=>item.id!==receivingLocationId);
+    const excludedIds=receivingLocationIds.size>0?receivingLocationIds:undefined;
+    const page=await goodsReceiptV2Api.locations({
+      ...request,
+      filterLogic:'and',
+      filters:[
+        ...(Array.isArray(request.filters)?request.filters:[]),
+        ...buildExcludedPutawayLocationTypeFilters(),
+      ],
+    },targetWarehouseId);
+    const items=page.items.filter(item=>isEligiblePutawayTargetLocation(item,{
+      warehouseId:targetWarehouseId,
+      excludedIds,
+    }));
     return {...page,items};
-  },[targetWarehouseId,receivingLocationId]);
+  },[targetWarehouseId,receivingLocationIds]);
   useEffect(()=>{
-    if(receivingLocationId>0&&location===String(receivingLocationId))setLocation(null);
-  },[receivingLocationId,location]);
-  const choose=(row:SteelLineRow)=>{setSelected(row);setLocation(null)};
+    if(!location)return;
+    if(receivingLocationIds.has(Number(location)))setLocation(null);
+  },[receivingLocationIds,location]);
+  const toggleSheet=(row:SteelLineRow)=>{
+    const warehouse=resolveTargetWarehouseId(row);
+    setSelectedSheets(current=>{
+      if(current.some(item=>item.id===row.id)){
+        return togglePlacementSheetSelection(current,row);
+      }
+      if(current.length){
+        const currentWarehouse=resolveTargetWarehouseId(current[0]);
+        if(currentWarehouse>0&&warehouse>0&&currentWarehouse!==warehouse){
+          toast.error(t(`${P}.warehouseMismatch`));
+          return current;
+        }
+      }else if(warehouse>0&&targetWarehouseId>0&&warehouse!==targetWarehouseId){
+        setLocation(null);
+      }
+      return togglePlacementSheetSelection(current,row);
+    });
+  };
+  const allCompatibleVisible=compatiblePlacementSheetsForSelection(selectedSheets,visibleLines,resolveTargetWarehouseId,targetWarehouseId);
+  const allVisibleSelected=areAllPlacementSheetsSelected(selectedSheets,allCompatibleVisible);
+  const someVisibleSelected=allCompatibleVisible.some(row=>selectedSheets.some(item=>item.id===row.id));
+  const toggleAllVisible=()=>{
+    const result=toggleAllPlacementSheetSelection(selectedSheets,visibleLines,resolveTargetWarehouseId,targetWarehouseId);
+    if(result.skippedWarehouseMismatch)toast.error(t(`${P}.warehouseMismatch`));
+    if(!selectedSheets.length&&result.selected.length){
+      const warehouse=resolveTargetWarehouseId(result.selected[0]);
+      if(warehouse>0&&targetWarehouseId>0&&warehouse!==targetWarehouseId)setLocation(null);
+    }
+    setSelectedSheets(result.selected);
+  };
   const place=async()=>{
-    if(!selected||!location||!source){toast.error(t(`${P}.sheetAndShelfRequired`));return}
+    if(!selectedSheets.length||!location||!source){toast.error(t(`${P}.sheetAndShelfRequired`));return}
     setBusy(true);
+    let placed=0;
     try{
-      const result=await steelReceiptApi.place(selected.id,{locationId:Number(location),rowVersion:selected.rowVersion});
-      toast.success(t(`${P}.placeSuccess`,{dCode:selected.dCode,order:result.stackOrderNo}));
-      setSelected(null);
-      setLocation(null);
+      let lastOrder=nextStack;
+      for(const row of selectedSheets){
+        const current=pendingLines.find(line=>line.id===row.id)??row;
+        const result=await steelReceiptApi.place(current.id,{locationId:Number(location),rowVersion:current.rowVersion});
+        lastOrder=result.stackOrderNo;
+        placed+=1;
+      }
+      if(selectedSheets.length===1){
+        toast.success(t(`${P}.placeSuccess`,{dCode:selectedSheets[0].dCode,order:lastOrder}));
+      }else{
+        toast.success(t(`${P}.placeSuccessMulti`,{
+          count:selectedSheets.length,
+          first:selectedSheets[0].dCode,
+          last:selectedSheets[selectedSheets.length-1].dCode,
+        }));
+      }
+      if(targetWarehouseId>0)setPinnedWarehouseId(targetWarehouseId);
+      if(warehouseCode)setPinnedWarehouseCode(warehouseCode);
+      setSelectedSheets([]);
       await loadSource(source.importReferenceNo,{silent:true});
       await cache.invalidateQueries({queryKey:['steel-placement-import-sources']});
       await cache.invalidateQueries({queryKey:['steel-occupancy']});
-    }catch(e){toast.error(e instanceof Error?e.message:t(`${P}.placeFailed`))}finally{setBusy(false)}
+    }catch(e){
+      const message=e instanceof Error?e.message:t(`${P}.placeFailed`);
+      toast.error(placed>0
+        ?t(`${P}.placePartialFailed`,{placed,failed:selectedSheets.length-placed,message})
+        :message);
+      await loadSource(source.importReferenceNo,{silent:true});
+      await cache.invalidateQueries({queryKey:['steel-placement-import-sources']});
+      await cache.invalidateQueries({queryKey:['steel-occupancy']});
+    }finally{setBusy(false)}
   };
   return <div className="space-y-5">
     <OperationDraftRestoreDialog
@@ -667,34 +775,84 @@ function PlacementPanel(){
           </div>
         </div>
         <SearchBar value={input} setValue={setInput} run={()=>setSearch(input.trim())}/>
-        <div className="space-y-2 p-4">{visibleLines.map(row=><button key={row.id} onClick={()=>choose(row)} className={`w-full rounded-xl border p-3 text-left ${selected?.id===row.id?'border-cyan-500 bg-cyan-500/10':''}`}><strong className="font-mono text-cyan-500">{row.dCode}</strong><span className="ml-2">{row.stockCode}</span><small className="block text-slate-500">{row.supplierSerialNo} · {formatProjectNumber(row.approvedQuantity)} {row.unitCode}</small></button>)}</div>
+        <div className="space-y-2 p-4">{visibleLines.length>0&&<label className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 ${allVisibleSelected?'border-cyan-500 bg-cyan-500/10':''}`}>
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              ref={element=>{if(element)element.indeterminate=someVisibleSelected&&!allVisibleSelected}}
+              onChange={toggleAllVisible}
+              aria-label={t(`${P}.selectAllAria`)}
+              className="size-4 accent-cyan-500"
+            />
+            <span className="text-sm font-bold">{t(`${P}.selectAll`)}</span>
+          </label>}
+        {visibleLines.map(row=>{
+          const selectedIndex=selectedSheets.findIndex(item=>item.id===row.id);
+          const isSelected=selectedIndex>=0;
+          return <div
+            key={row.id}
+            role="button"
+            tabIndex={0}
+            onClick={event=>{
+              if((event.target as HTMLElement).closest('input'))return;
+              toggleSheet(row);
+            }}
+            onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSheet(row)}}}
+            className={`flex w-full cursor-pointer items-start gap-3 rounded-xl border p-3 text-left ${isSelected?'border-cyan-500 bg-cyan-500/10':''}`}
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={()=>toggleSheet(row)}
+              onClick={event=>event.stopPropagation()}
+              aria-label={t(`${P}.selectSheetAria`,{dCode:row.dCode})}
+              className="mt-1 size-4 accent-cyan-500"
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <strong className="font-mono text-cyan-500">{row.dCode}</strong>
+                <span>{row.stockCode}</span>
+                {isSelected&&<span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:text-cyan-300">{selectedIndex+1}</span>}
+              </div>
+              <small className="block text-slate-500">{row.supplierSerialNo} · {formatProjectNumber(row.approvedQuantity)} {row.unitCode}</small>
+            </div>
+          </div>;
+        })}</div>
         {!busy&&!visibleLines.length&&<Empty text={search.trim()?t(`${P}.emptySearch`):t(`${P}.empty`)}/>}
       </section>
-      <section className="space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><SectionHead title={t(`${P}.occupancyTitle`)} text={selected?`${selected.dCode} · ${selected.stockCode}${warehouseCode?` · ${t(`${P}.warehouseLabel`,{code:warehouseCode})}`:''}`:t(`${P}.occupancyTextSelect`)}/>
-        {selected&&<>{targetWarehouseId<=0&&!lineFallback.isLoading&&<p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700">{t(`${P}.warehouseMissing`)}</p>}
-        <Field label={t(`${P}.sourceShelf`)}><div className="input flex min-h-11 items-center bg-black/[.03] text-sm text-slate-700 dark:bg-white/[.03] dark:text-slate-200">{sourceLocation.isLoading?t(`${P}.sourceShelfLoading`):sourceShelfText??(receivingLocationId>0?`#${receivingLocationId}`:t(`${P}.sourceShelfMissing`))}</div><p className="text-xs text-slate-500">{t(`${P}.sourceShelfHint`)}</p></Field>
-        <Field label={t(`${P}.targetShelf`)}><PagedAppDropdown key={`${selected.id}-${targetWarehouseId}-${receivingLocationId}`} queryKey={['steel-putaway',selected.id,targetWarehouseId,receivingLocationId]} fetchPage={fetchTargetLocations} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.locationType})} value={location} onValueChange={setLocation} searchable enabled={targetWarehouseId>0} dependencies={[targetWarehouseId,receivingLocationId]} disabled={targetWarehouseId<=0||lineFallback.isLoading} placeholder={lineFallback.isLoading?t(`${P}.warehouseLoading`):t(`${P}.targetShelfPlaceholder`)}/></Field>
+      <section className="space-y-4 rounded-2xl border border-[var(--wms-app-border)] bg-[var(--wms-app-panel)] p-5"><SectionHead title={t(`${P}.occupancyTitle`)} text={primarySelected
+        ?selectedSheets.length>1
+          ?t(`${P}.selectedSheetsSummary`,{count:selectedSheets.length,first:selectedSheets[0].dCode,last:selectedSheets[selectedSheets.length-1].dCode,warehouse:warehouseCode?` · ${t(`${P}.warehouseLabel`,{code:warehouseCode})}`:''})
+          :`${primarySelected.dCode} · ${primarySelected.stockCode}${warehouseCode?` · ${t(`${P}.warehouseLabel`,{code:warehouseCode})}`:''}`
+        :t(`${P}.occupancyTextSelect`)}/>
+        {(primarySelected||location)&&<>{primarySelected&&targetWarehouseId<=0&&!lineFallback.isLoading&&<p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-700">{t(`${P}.warehouseMissing`)}</p>}
+        {primarySelected&&<Field label={t(`${P}.sourceShelf`)}><div className="input flex min-h-11 items-center bg-black/[.03] text-sm text-slate-700 dark:bg-white/[.03] dark:text-slate-200">{sourceLocation.isLoading?t(`${P}.sourceShelfLoading`):sourceShelfText??(receivingLocationId>0?`#${receivingLocationId}`:t(`${P}.sourceShelfMissing`))}</div><p className="text-xs text-slate-500">{t(`${P}.sourceShelfHint`)}</p></Field>}
+        <Field label={t(`${P}.targetShelf`)}><PagedAppDropdown key={`${targetWarehouseId}-${[...receivingLocationIds].join('-')}`} queryKey={['steel-putaway',targetWarehouseId,[...receivingLocationIds]]} fetchPage={fetchTargetLocations} toOption={x=>({value:String(x.id),label:`${x.code} · ${x.name}`,description:x.locationType})} value={location} onValueChange={setLocation} searchable enabled={targetWarehouseId>0} dependencies={[targetWarehouseId,...receivingLocationIds]} disabled={targetWarehouseId<=0||(!!primarySelected&&lineFallback.isLoading)} placeholder={primarySelected&&lineFallback.isLoading?t(`${P}.warehouseLoading`):t(`${P}.targetShelfPlaceholder`)}/></Field>
         {location&&<><div className="grid gap-4 lg:grid-cols-[.8fr_1.2fr]">
           <section className="overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10 p-5">
             <div className="flex items-center justify-between"><div><span className="text-xs font-bold uppercase tracking-widest text-cyan-500">{t(`${P}.autoPlacement`)}</span><h3 className="mt-1 text-xl font-black">{t(`${P}.stackOnTop`)}</h3></div><Layers3 className="size-10 text-cyan-500"/></div>
-            <div className="mt-5 grid grid-cols-2 gap-3"><Metric label={t(`${P}.sheetsOnShelf`)} value={String(occupancy.data?.length??0)}/><Metric label={t(`${P}.newStackOrder`)} value={String(nextStack)}/></div>
-            <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-600">{t(`${P}.stackOrderNote`)}</p>
+            <div className="mt-5 grid grid-cols-2 gap-3"><Metric label={t(`${P}.sheetsOnShelf`)} value={String(occupancy.data?.length??0)}/><Metric label={t(`${P}.newStackOrder`)} value={selectedSheets.length>1?`${nextStack}–${nextStack+selectedSheets.length-1}`:String(nextStack)}/></div>
+            <p className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-600">{selectedSheets.length>1?t(`${P}.stackOrderNoteMulti`,{first:selectedSheets[0].dCode,last:selectedSheets[selectedSheets.length-1].dCode}):t(`${P}.stackOrderNote`)}</p>
           </section>
-          <SteelStackVisual items={occupancy.data??[]} pendingCode={selected.dCode} nextStack={nextStack}/>
+          <SteelStackVisual items={occupancy.data??[]} pendingItems={pendingStackItems}/>
         </div>
         <div><strong className="text-sm">{t(`${P}.stackOrderList`,{count:occupancy.data?.length??0})}</strong><div className="mt-2 grid gap-2 md:grid-cols-2">{[...(occupancy.data??[])].sort((a,b)=>(b.stackOrderNo??0)-(a.stackOrderNo??0)).map(item=><div key={item.placementId} className="rounded-xl border p-3 text-xs"><strong>{t(`${P}.stackItem`,{order:item.stackOrderNo,dCode:item.dCode})}</strong><span className="block text-slate-500">{item.stockCode} · {item.supplierSerialNo}</span></div>)}</div>{!occupancy.isLoading&&!occupancy.data?.length&&<p className="mt-2 text-xs text-slate-500">{t(`${P}.emptyShelf`)}</p>}</div>
-        <button disabled={busy||occupancy.isLoading} onClick={()=>void place()} className="w-full rounded-xl bg-cyan-600 px-4 py-3 font-bold text-white disabled:opacity-40"><Layers3 className="mr-2 inline size-4"/>{t(`${P}.placeButton`,{order:nextStack})}</button></>}</>}</section>
+        <button disabled={busy||occupancy.isLoading||!selectedSheets.length} onClick={()=>void place()} className="w-full rounded-xl bg-cyan-600 px-4 py-3 font-bold text-white disabled:opacity-40"><Layers3 className="mr-2 inline size-4"/>{selectedSheets.length>1?t(`${P}.placeButtonMulti`,{count:selectedSheets.length}):t(`${P}.placeButton`,{order:nextStack})}</button></>}</>}</section>
     </div>}
   </div>;
 }
 
-function SteelStackVisual({items,pendingCode,nextStack}:{items:Array<{placementId:number;dCode:string;stackOrderNo?:number}>;pendingCode:string;nextStack:number}){
+function SteelStackVisual({items,pendingItems}:{items:Array<{placementId:number;dCode:string;stackOrderNo?:number}>;pendingItems:Array<{dCode:string;stackOrder:number}>}){
   const {t}=useTranslation('common');
   const P=`${O}.placement`;
-  const visible=[...items].sort((a,b)=>(a.stackOrderNo??0)-(b.stackOrderNo??0)).slice(-6);
-  return <section className="relative min-h-72 overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900 to-slate-950 p-5 text-white [perspective:900px]">
+  const visible=[...items].sort((a,b)=>(a.stackOrderNo??0)-(b.stackOrderNo??0));
+  const stackMinHeight=Math.max(208,visible.length*32+pendingItems.length*36+36);
+  return <section className="relative overflow-hidden rounded-2xl border bg-gradient-to-b from-slate-900 to-slate-950 p-5 text-white [perspective:900px]">
     <div className="absolute inset-x-8 bottom-5 h-10 rounded-[50%] bg-cyan-400/10 blur-xl"/>
-    <div className="relative flex h-52 flex-col-reverse items-center justify-start gap-1 [transform-style:preserve-3d]">{visible.map((item,index)=><div key={item.placementId} className="h-7 w-[78%] rounded border border-slate-400/40 bg-gradient-to-r from-slate-700 via-slate-300 to-slate-700 px-3 py-1 text-[10px] font-bold text-slate-950 shadow-xl" style={{transform:`translateZ(${index*5}px) translateX(${index%2?3:-3}px)`}}>{item.stackOrderNo}. {item.dCode}</div>)}<div className="h-8 w-[82%] animate-pulse rounded border-2 border-cyan-300 bg-gradient-to-r from-cyan-700 via-cyan-200 to-cyan-700 px-3 py-1 text-xs font-black text-slate-950 shadow-[0_0_30px_rgba(34,211,238,.35)]">{nextStack}. {pendingCode} · {t(`${P}.newBadge`)}</div></div>
+    <div className="relative flex flex-col-reverse items-center justify-start gap-1 [transform-style:preserve-3d]" style={{minHeight:stackMinHeight}}>
+      {visible.map((item,index)=><div key={item.placementId} className="h-7 w-[78%] shrink-0 rounded border border-slate-400/40 bg-gradient-to-r from-slate-700 via-slate-300 to-slate-700 px-3 py-1 text-[10px] font-bold text-slate-950 shadow-xl" style={{transform:`translateZ(${index*5}px) translateX(${index%2?3:-3}px)`}}>{item.stackOrderNo}. {item.dCode}</div>)}
+      {pendingItems.map((item,index)=><div key={`${item.dCode}-${item.stackOrder}`} className="h-8 w-[82%] shrink-0 animate-pulse rounded border-2 border-cyan-300 bg-gradient-to-r from-cyan-700 via-cyan-200 to-cyan-700 px-3 py-1 text-xs font-black text-slate-950 shadow-[0_0_30px_rgba(34,211,238,.35)]" style={{transform:`translateZ(${(visible.length+index)*5}px)`}}>{item.stackOrder}. {item.dCode} · {t(`${P}.newBadge`)}</div>)}
+    </div>
     <div className="mx-auto h-4 w-[92%] rounded bg-gradient-to-r from-slate-800 via-slate-500 to-slate-800 shadow-2xl"/><p className="mt-3 text-center text-xs text-slate-400">{t(`${P}.stackPreviewHint`)}</p>
   </section>;
 }

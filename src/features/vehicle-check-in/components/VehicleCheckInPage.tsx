@@ -38,10 +38,20 @@ import {getNextLightboxFocusIndex} from '@/lib/wms-image-lightbox';
 import type {PagedResponse} from '@/types/api';
 import {useAuthStore} from '@/stores/auth-store';
 import {vehicleCheckInApi} from '../api/vehicle-check-in.api';
-import {canEnableUnknownPlateResolve} from '../unknown-plate-resolve';
+import {
+  buildKnownPlateExcelCandidateFilters,
+  canEnableUnknownPlateResolve,
+  collectKnownPlateExcelReferences,
+  matchesKnownPlateExcel,
+} from '../unknown-plate-resolve';
 import {
   acceptanceTargetMatches,
+  formatDriverName,
   hydrateVehicleCheckInForm,
+  parseDriverName,
+  parseSteelSheetCountInput,
+  resolveVehicleCheckInSelectAll,
+  sanitizeSteelSheetCountInput,
 } from '../vehicle-check-in-form';
 import type {
   AcceptedSteelPlate,
@@ -133,13 +143,6 @@ const mergeImages=(current:File[],incoming:File[],limit:number)=>{
   return [...current,...unique].slice(0,limit);
 };
 const norm=(v?:string|null)=>(v??'').trim().toLocaleLowerCase('tr-TR');
-const formatDriverName=(firstName?:string,lastName?:string)=>{
-  if(!firstName?.trim()&&!lastName?.trim())return'';
-  if(!lastName)return firstName??'';
-  if(!firstName?.trim())return lastName;
-  return `${firstName} ${lastName}`;
-};
-const parseDriverName=(value:string)=>{if(!value)return{driverFirstName:'',driverLastName:''};const space=value.indexOf(' ');if(space===-1)return{driverFirstName:value,driverLastName:''};return{driverFirstName:value.slice(0,space),driverLastName:value.slice(space+1)}};
 const selectInputContents=(event:FocusEvent<HTMLInputElement>|MouseEvent<HTMLInputElement>)=>event.currentTarget.select();
 const toPagedResponse=<T,>(page:GridPage<T>):PagedResponse<T>=>({
   data:page.items,
@@ -156,6 +159,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
   const [searchParams,setSearchParams]=useSearchParams();
   const branch=useAuthStore(s=>s.branch?.code??'0');
   const [form,setForm]=useState<SaveVehicleCheckInRequest>(()=>empty(branch));
+  const [sheetCountText,setSheetCountText]=useState(()=>String(empty(branch).steelSheetCount));
   const [record,setRecord]=useState<VehicleCheckInDetail|null>(null);
   const [vehicleFiles,setVehicleFiles]=useState<File[]>([]);
   const [plateFiles,setPlateFiles]=useState<Record<number,File[]>>({});
@@ -260,22 +264,34 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     setCandidateSortBy(column);
     setCandidateSortDirection('asc');
   },[candidateSortBy]);
+  const resolveExcelReferences=useMemo(
+    ()=>resolvingPlateId?collectKnownPlateExcelReferences(knownAcceptedPlates):[],
+    [knownAcceptedPlates,resolvingPlateId],
+  );
+  const resolveExcelFilters=useMemo(
+    ()=>buildKnownPlateExcelCandidateFilters(resolveExcelReferences),
+    [resolveExcelReferences],
+  );
   const candidates=useQuery({
-    queryKey:['steel-vehicle-acceptance-candidates',branch,candidateSearch?.value,candidateSearch?.run,form.steelSheetCount,candidateSortBy,candidateSortDirection],
+    queryKey:['steel-vehicle-acceptance-candidates',branch,candidateSearch?.value,candidateSearch?.run,form.steelSheetCount,candidateSortBy,candidateSortDirection,resolveExcelReferences],
     enabled:Boolean(candidateSearch),
     queryFn:()=>vehicleCheckInApi.steelCandidates(branch,{
       pageNumber:1,
       pageSize:500,
       search:candidateSearch?.value||null,
       searchFields:['dCode','supplierSerialNo','secondarySerialNo','stockCode','stockName','importReferenceNo','sourceFileName','netsisOrderNo'],
-      filterLogic:'and',
-      filters:[],
+      filterLogic:resolveExcelFilters.length>1?'or':'and',
+      filters:resolveExcelFilters,
       sortBy:candidateSortBy,
       sortDirection:candidateSortDirection,
     }),
   });
 
-  const candidateRows=useMemo(()=>candidates.data?.items??[],[candidates.data?.items]);
+  const candidateRows=useMemo(()=>{
+    const rows=candidates.data?.items??[];
+    if(resolveExcelReferences.length===0)return rows;
+    return rows.filter(row=>matchesKnownPlateExcel(row.importReferenceNo,resolveExcelReferences));
+  },[candidates.data?.items,resolveExcelReferences]);
   const hydratedMatch=useMemo(()=>{
     const q=norm(sheetInput);
     if(q.length<2||!candidateRows.length)return null;
@@ -300,6 +316,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     const header=detail.header;
     const nextForm=hydrateVehicleCheckInForm(header);
     setForm(nextForm);
+    setSheetCountText(String(nextForm.steelSheetCount));
     setSavedFormBaseline(toVehicleFormSnapshot(nextForm));
   },[]);
   const hydrateWithAcceptance=useCallback(async(detail:VehicleCheckInDetail)=>{
@@ -436,13 +453,23 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
       }
       return;
     }
+    const {targets,mixedExcel}=resolveVehicleCheckInSelectAll(
+      visibleRows,
+      Object.values(selected).map(item=>item.row),
+      reservedPlanLineIds,
+    );
     if(select){
+      if(mixedExcel){
+        toast.warning(t('vehicleCheckIn.toast.sheetsMixedExcelAutoSelected',{
+          defaultValue:'Farklı Excel aktarımlarına ait levhalar tümü ile birlikte seçilemez. Aynı Excel’deki uygun levhalar seçildi.',
+        }));
+      }
       setSelected(current=>{
         const next={...current};
         let count=Object.keys(next).length+unknownSlots.length;
         let skipped=0;
-        for(const row of visibleRows){
-          if(next[row.id]||reservedPlanLineIds.has(row.id))continue;
+        for(const row of targets){
+          if(next[row.id])continue;
           if(count>=remainingSelectionSlots){skipped++;continue}
           next[row.id]={row,note:''};
           count++;
@@ -454,7 +481,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     }
     setSelected(current=>{
       const next={...current};
-      visibleRows.forEach(row=>{delete next[row.id]});
+      targets.forEach(row=>{delete next[row.id]});
       return next;
     });
   };
@@ -583,6 +610,16 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
     }
     return selected;
   },[resolvingPlateId,resolveCandidate,selected]);
+  const selectAllCandidateRows=useMemo(()=>{
+    if(resolvingPlateId){
+      return candidateRows.filter(row=>!reservedPlanLineIds.has(row.id)).slice(0,1);
+    }
+    return resolveVehicleCheckInSelectAll(
+      candidateRows,
+      selectedPlates.map(item=>item.row),
+      reservedPlanLineIds,
+    ).targets;
+  },[candidateRows,reservedPlanLineIds,resolvingPlateId,selectedPlates]);
   const startUnknownPlateResolve=(plateId:number)=>{
     setResolvingPlateId(plateId);
     setResolveCandidate(null);
@@ -665,14 +702,33 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
           label={t('vehicleCheckIn.field.sheetCount',{defaultValue:'SAC levha adedi *'})}
           errorTarget="steelSheetCount"
           errorKeys="levha adedi|sac levha adedi|1-50|levha sayısı|seçilen levha sayısı|levha seçebilirsiniz|levha daha seçilmeli|levha seçilebilir"
-        ><input className="input" type="number" min={Math.max(1,savedAcceptedCount)} max="50" step="1" value={form.steelSheetCount} onFocus={selectInputContents} onClick={selectInputContents} onChange={event=>{
-          const next=Number(event.target.value);
-          if(next<savedAcceptedCount){
-            toast.error(t('vehicleCheckIn.toast.sheetCountBelowSaved',{count:savedAcceptedCount,defaultValue:'Kayıtlı {{count}} levha varken hedef adet daha düşük olamaz.'}));
-            return;
-          }
-          patch('steelSheetCount',next);
-        }}/></Field>
+        ><input
+          className="input"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          autoComplete="off"
+          value={sheetCountText}
+          onFocus={selectInputContents}
+          onClick={selectInputContents}
+          onBlur={()=>setSheetCountText(parseSteelSheetCountInput(sheetCountText)==null?'0':sheetCountText)}
+          onChange={event=>{
+            const text=sanitizeSteelSheetCountInput(event.target.value);
+            const next=parseSteelSheetCountInput(text);
+            if(next==null){
+              setSheetCountText(text);
+              return;
+            }
+            if(next<savedAcceptedCount){
+              toast.error(t('vehicleCheckIn.toast.sheetCountBelowSaved',{count:savedAcceptedCount,defaultValue:'Kayıtlı {{count}} levha varken hedef adet daha düşük olamaz.'}));
+              setSheetCountText(String(form.steelSheetCount));
+              return;
+            }
+            const clamped=Math.min(50,next);
+            setSheetCountText(String(clamped));
+            patch('steelSheetCount',clamped);
+          }}
+        /></Field>
         <div className="md:col-span-2 xl:col-span-3"><Field label={t('vehicleCheckIn.field.acceptanceNote',{defaultValue:'Saha / kabul notu'})}><textarea className="input min-h-20" value={form.note||''} onChange={event=>patch('note',event.target.value)} maxLength={1000}/></Field></div>
       </div>
     </Panel>
@@ -725,7 +781,7 @@ export function VehicleCheckInPage({embedded=false,initialId,onCompleted}:{embed
           </div>
         </div>
       )}
-      {candidateSearch&&<CandidateTable rows={candidateRows} loading={candidates.isFetching} selected={candidateTableSelected} onToggle={togglePlate} onToggleAll={toggleAllCandidates} sortBy={candidateSortBy} sortDirection={candidateSortDirection} onSort={changeCandidateSort}/>}
+      {candidateSearch&&<CandidateTable rows={candidateRows} selectAllRows={selectAllCandidateRows} loading={candidates.isFetching} selected={candidateTableSelected} onToggle={togglePlate} onToggleAll={toggleAllCandidates} sortBy={candidateSortBy} sortDirection={candidateSortDirection} onSort={changeCandidateSort}/>}
     </Panel>
 
     {selectedCount>0&&<Panel emphasized title={t('vehicleCheckIn.section.selectedSheets',{defaultValue:'4 · Seçilen levhalar ({{selected}}/{{total}})',selected:footerReadyCount,total:form.steelSheetCount})} icon={<MapPin className="size-5"/>}>
@@ -974,16 +1030,16 @@ function CandidateSortHeader({label,columnKey,sortBy,sortDirection,onSort}:{labe
   </th>;
 }
 
-function CandidateTable({rows,loading,selected,onToggle,onToggleAll,sortBy,sortDirection,onSort}:{rows:SteelVehicleAcceptanceCandidate[];loading:boolean;selected:Record<number,SelectedPlate>;onToggle:(row:SteelVehicleAcceptanceCandidate)=>void;onToggleAll:(rows:SteelVehicleAcceptanceCandidate[],select:boolean)=>void;sortBy:string;sortDirection:'asc'|'desc';onSort:(column:CandidateSortKey)=>void}){
+function CandidateTable({rows,selectAllRows,loading,selected,onToggle,onToggleAll,sortBy,sortDirection,onSort}:{rows:SteelVehicleAcceptanceCandidate[];selectAllRows:SteelVehicleAcceptanceCandidate[];loading:boolean;selected:Record<number,SelectedPlate>;onToggle:(row:SteelVehicleAcceptanceCandidate)=>void;onToggleAll:(rows:SteelVehicleAcceptanceCandidate[],select:boolean)=>void;sortBy:string;sortDirection:'asc'|'desc';onSort:(column:CandidateSortKey)=>void}){
   const {t}=useTranslation('common');
   const selectAllRef=useRef<HTMLInputElement>(null);
-  const visibleSelectedCount=rows.filter(row=>selected[row.id]).length;
-  const allVisibleSelected=rows.length>0&&visibleSelectedCount===rows.length;
+  const visibleSelectedCount=selectAllRows.filter(row=>selected[row.id]).length;
+  const allVisibleSelected=selectAllRows.length>0&&visibleSelectedCount===selectAllRows.length;
   const someVisibleSelected=visibleSelectedCount>0&&!allVisibleSelected;
   useEffect(()=>{if(selectAllRef.current)selectAllRef.current.indeterminate=someVisibleSelected},[someVisibleSelected]);
   return <div className="wms-ops-list mt-5 wms-ops-table-wrap wms-ops-data-grid-wrap wms-ops-scrollbar wms-ops-table-h-scroll overflow-auto rounded-xl border border-[var(--wms-ops-card-border)]">
     <table className="wms-ops-data-grid w-full min-w-[1100px] border-collapse text-sm">
-      <thead className="sticky top-0 z-10 bg-[var(--wms-app-panel-muted)] text-left text-xs uppercase tracking-wide text-[var(--wms-app-text-muted)]"><tr><th className="wms-ops-table-head relative border-b border-r border-[var(--wms-app-border)] px-1 py-2 font-semibold"><div className="flex min-h-10 items-center px-2"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} disabled={loading||rows.length===0} onChange={event=>onToggleAll(rows,event.target.checked)} className="size-5 accent-cyan-600" aria-label={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})} title={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})}/></div></th><CandidateSortHeader label={t('vehicleCheckIn.table.dCodeExcel',{defaultValue:'DCode / Excel'})} columnKey="dCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.serial',{defaultValue:'Seri'})} columnKey="supplierSerialNo" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.stock',{defaultValue:'Stok'})} columnKey="stockCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.sizeQuality',{defaultValue:'Ölçü / kalite'})} columnKey="combinedSize" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.quantity',{defaultValue:'Miktar'})} columnKey="expectedQuantity" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.warehouseRack',{defaultValue:'Depo / kabul rafı'})} columnKey="warehouseCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.evidence',{defaultValue:'Kanıt'})} columnKey="attachmentCount" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/></tr></thead>
+      <thead className="sticky top-0 z-10 bg-[var(--wms-app-panel-muted)] text-left text-xs uppercase tracking-wide text-[var(--wms-app-text-muted)]"><tr><th className="wms-ops-table-head relative border-b border-r border-[var(--wms-app-border)] px-1 py-2 font-semibold"><div className="flex min-h-10 items-center px-2"><input ref={selectAllRef} type="checkbox" checked={allVisibleSelected} disabled={loading||selectAllRows.length===0} onChange={event=>onToggleAll(rows,event.target.checked)} className="size-5 accent-cyan-600" aria-label={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})} title={t('vehicleCheckIn.table.selectAll',{defaultValue:'Tümünü seç'})}/></div></th><CandidateSortHeader label={t('vehicleCheckIn.table.dCodeExcel',{defaultValue:'DCode / Excel'})} columnKey="dCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.serial',{defaultValue:'Seri'})} columnKey="supplierSerialNo" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.stock',{defaultValue:'Stok'})} columnKey="stockCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.sizeQuality',{defaultValue:'Ölçü / kalite'})} columnKey="combinedSize" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.quantity',{defaultValue:'Miktar'})} columnKey="expectedQuantity" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.warehouseRack',{defaultValue:'Depo / kabul rafı'})} columnKey="warehouseCode" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/><CandidateSortHeader label={t('vehicleCheckIn.table.evidence',{defaultValue:'Kanıt'})} columnKey="attachmentCount" sortBy={sortBy} sortDirection={sortDirection} onSort={onSort}/></tr></thead>
       <tbody>
         {loading&&<tr><td colSpan={8} className="wms-ops-grid-state-cell border-b border-[var(--wms-app-border)] p-5 text-[var(--wms-app-text-muted)]">{t('vehicleCheckIn.table.loading',{defaultValue:'Uygun levhalar aranıyor...'})}</td></tr>}
         {!loading&&rows.length===0&&<tr><td colSpan={8} className="wms-ops-grid-state-cell border-b border-[var(--wms-app-border)] p-5 text-[var(--wms-app-text-muted)]">{t('vehicleCheckIn.table.empty',{defaultValue:'Kabul bekleyen uygun SAC levhası bulunamadı.'})}</td></tr>}

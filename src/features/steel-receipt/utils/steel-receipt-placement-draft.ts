@@ -1,9 +1,15 @@
 import { steelReceiptApi } from '../api/steel-receipt.api';
 
 export {
+  areAllPlacementSheetsSelected,
+  compatiblePlacementSheetsForSelection,
   hasPendingPlacementLines,
   hasSteelReceiptPlacementDraft,
+  keepPendingPlacementSelection,
   restoreSelectedLine,
+  restoreSelectedLines,
+  toggleAllPlacementSheetSelection,
+  togglePlacementSheetSelection,
   type LoadPlacementSourceOptions,
   type SteelReceiptPlacementDraft,
 } from './steel-receipt-placement-draft.helpers';
